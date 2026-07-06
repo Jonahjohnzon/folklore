@@ -211,15 +211,15 @@ async function handleLocksChange(next: CreatorLocks) {
     }
   }
 
-  async function uploadPendingCoverIfAny(id: string) {
-    if (!chapterCoverFile) return;
-    const { data } = await ChapterService.uploadCover(params.bookId, id, chapterCoverFile);
-    setChapterCoverFile(null);
-    setChapterCoverPreview((prev) => {
-      if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
-      return data.chapter.coverUrl ?? null;
-    });
-  }
+  // async function uploadPendingCoverIfAny(id: string) {
+  //   if (!chapterCoverFile) return;
+  //   const { data } = await ChapterService.uploadCover(params.bookId, id, chapterCoverFile);
+  //   setChapterCoverFile(null);
+  //   setChapterCoverPreview((prev) => {
+  //     if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+  //     return data.chapter.coverUrl ?? null;
+  //   });
+  // }
 
   function validateChapter(): string | null {
     if (!title.trim()) return "Add a chapter title before saving.";
@@ -229,6 +229,7 @@ async function handleLocksChange(next: CreatorLocks) {
 
   // --- Persistence: create the chapter on first save, update it after ---
   async function persistChapter() {
+    try{
     if (!editor) return null;
     const content = editor.getHTML();
     const payload = {
@@ -248,6 +249,10 @@ async function handleLocksChange(next: CreatorLocks) {
     await ChapterService.update(params.bookId, chapterId, payload);
     return chapterId;
   }
+  catch(err){
+    console.log(err)
+  }
+  }
 
   async function handleSaveDraft() {
     if (!editor || saving || publishing) return;
@@ -260,7 +265,7 @@ async function handleLocksChange(next: CreatorLocks) {
     setSaveError(null);
     try {
       const id = await persistChapter();
-      if (id) await uploadPendingCoverIfAny(id);
+      // if (id) await uploadPendingCoverIfAny(id);
       setLastSavedAt(new Date());
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Couldn't save the draft.");
@@ -281,7 +286,7 @@ async function handleLocksChange(next: CreatorLocks) {
     try {
       const id = await persistChapter();
       if (id) {
-        await uploadPendingCoverIfAny(id);
+        // await uploadPendingCoverIfAny(id);
         await ChapterService.publish(params.bookId, id);
       }
       setLastSavedAt(new Date());

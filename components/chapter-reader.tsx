@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ChevronLeft, ChevronRight, Minus, Plus,
   Maximize, Minimize, Settings2, Volume2,
@@ -21,6 +22,7 @@ import { useSnapshot } from "valtio";
 import { store } from "@/app/store/userStore";
 import { SHEET_THEMES } from "@/lib/sheet-themes";
 import { getSheetSurfaceStyle } from "@/lib/sheet-surface";
+import { RecommendedSidebar } from "./recommended-sidebar";
 
 const FONTS: { id: string; label: string; stack: string }[] = [
   { id: "serif", label: "Source Serif", stack: "var(--font-body)" },
@@ -32,66 +34,83 @@ const FONTS: { id: string; label: string; stack: string }[] = [
 const PAGE_TURN_SOUND = PAGE_SOUNDS.find((s) => s.id === "page-turn") ?? null;
 
 export function ChapterReader({
-  bookSlug, bookTitle, chapter, theme, prevId, nextId,
+ bookSlug, bookId, bookTitle, chapter, theme, prevId, nextId,
 }: {
   bookSlug: string;
+  bookId: string;
   bookTitle: string;
   chapter: PublicChapterDetail;
   theme: PublicChapterTheme | null;
   prevId?: string;
   nextId?: string;
 }) {
+  const router = useRouter();
   const presentation = useMemo(() => getChapterPresentation(theme), [theme]);
+  const [ambientAttention, setAmbientAttention] = useState(false);
 
-  // NOTE: chapter.audioIntroUrl is a raw URL from the DB (e.g.
-  // "/sounds/thunder-crack.mp3"), not a PLATFORM_SOUNDS catalog id. This
-  // lookup only works if PLATFORM_SOUNDS ids happen to be full URLs — worth
-  // confirming against lib/sounds.ts. If ids are short slugs instead, this
-  // should use chapter.audioIntroUrl directly as the <audio> src.
-  const ambientSound  = PLATFORM_SOUNDS.find((s) => s.id === chapter?.audioId) ?? null;
-  
+  const authorAmbientSound = PLATFORM_SOUNDS.find((s) => s.id === chapter?.audioId) ?? null;
+
   const [mounted, setMounted] = useState(false);
   const [prefs, setPrefs] = useState<ReaderPrefs | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [ambientPlaying, setAmbientPlaying] = useState(false);
   const ambientAudioRef = useRef<HTMLAudioElement>(null);
 
-  // Derived synchronously from chapter.content — no effect/state round-trip,
-  // so there's never a tick where `blocks` is empty on a real render, and
-  // the index of each block is stable, so it's safe to use as paragraphIndex.
   const blocks = useMemo(() => splitIntoBlocks(chapter.content), [chapter.content]);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeParagraph, setActiveParagraph] = useState<number | null>(null);
-
   const [progress, setProgress] = useState(0);
-
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [loadingComments, setLoadingComments] = useState(false);
 
   const containerRef = useRef<HTMLElement>(null);
   const pageTurnAudioRef = useRef<HTMLAudioElement>(null);
 
+  const mode = prefs?.mode ?? "author";
+  const effectiveFontId = presentation.locks.font || mode === "author" ? presentation.fontId : prefs?.fontId ?? presentation.fontId;
+  const effectiveFontSize = prefs?.fontSize ?? presentation.fontSize;
 
+  // Two SEPARATE gates. Previously both ambient and page-turn shared one
+  // `soundAllowed` flag that was really just the ambient on/off — so toggling
+  // page-turn on/off while ambient was off (or vice versa) had no effect on
+  // page-turn playback at all. Each sound now checks only its own toggle.
+  const ambientAllowed = presentation.locks.sound ? true : mode === "author" ? true : prefs?.soundOn ?? true;
+  const pageTurnAllowed = presentation.locks.sound ? true : mode === "author" ? true : Boolean(prefs?.pageTurnSoundId);
+
+  const ambientSound = useMemo(() => {
+    const wantsOverride = mode === "custom" && !presentation.locks.sound && prefs?.ambientSoundId;
+    if (wantsOverride) {
+      return PLATFORM_SOUNDS.find((s) => s.id === prefs!.ambientSoundId) ?? authorAmbientSound;
+    }
+    return authorAmbientSound;
+  }, [mode, presentation.locks.sound, prefs?.ambientSoundId, authorAmbientSound]);
 
   function toggleAmbientSound() {
-      const audio = ambientAudioRef.current;
-      if (!audio || !soundAllowed) return;
-      if (ambientPlaying) {
-        audio.pause();
-        setAmbientPlaying(false);
-      } else {
-        audio.play().catch(() => setAmbientPlaying(false));
-        setAmbientPlaying(true);
-      }
+    const audio = ambientAudioRef.current;
+    if (!audio || !ambientAllowed) return;
+    if (ambientPlaying) {
+      audio.pause();
+      setAmbientPlaying(false);
+    } else {
+      audio.play().catch(() => setAmbientPlaying(false));
+      setAmbientPlaying(true);
     }
+  }
+
   useEffect(() => {
     const stored = loadReaderPrefs();
     setPrefs(stored);
     setSettingsOpen(stored === null);
     setMounted(true);
-    
   }, [chapter.content, chapter._id]);
+
+  useEffect(() => {
+    if (!mounted || !ambientSound || !ambientAllowed) return;
+    setAmbientAttention(true);
+    const timeout = setTimeout(() => setAmbientAttention(false), 3 * 1200 + 200);
+    return () => clearTimeout(timeout);
+  }, [mounted, ambientSound, ambientAllowed, chapter._id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -159,7 +178,8 @@ export function ChapterReader({
       fontSize: prefs?.fontSize ?? presentation.fontSize,
       themeId: prefs?.themeId ?? SHEET_THEMES[0].id,
       soundOn: prefs?.soundOn ?? true,
-      pageTurnSoundId: prefs?.pageTurnSoundId ?? PAGE_TURN_SOUND?.id ?? null,
+      ambientSoundId: prefs?.ambientSoundId ?? null,
+      pageTurnSoundId: prefs?.pageTurnSoundId ?? null,
       ...partial,
     };
 
@@ -172,10 +192,31 @@ export function ChapterReader({
     setPrefs(next);
   }
 
-  const mode = prefs?.mode ?? "author";
-  const effectiveFontId = presentation.locks.font || mode === "author" ? presentation.fontId : prefs?.fontId ?? presentation.fontId;
-  const soundAllowed = presentation.locks.sound ? true : mode === "author" ? true : prefs?.soundOn ?? true;
-  const effectiveFontSize = prefs?.fontSize ?? presentation.fontSize;
+  // Called from the settings modal's Save button. The click itself is a
+  // user gesture, so this is the one place we can reliably start ambient
+  // playback in response to picking a sound, instead of making the reader
+  // click a second, separate toggle button right after.
+  function handleSettingsSave(next: ReaderPrefs) {
+    saveReaderPrefs(next);
+    setPrefs(next);
+    setSettingsOpen(false);
+
+    const nextAmbientAllowed = presentation.locks.sound
+      ? true
+      : next.mode === "author"
+      ? true
+      : next.soundOn;
+
+    if (nextAmbientAllowed && ambientAudioRef.current) {
+      ambientAudioRef.current.play().then(
+        () => setAmbientPlaying(true),
+        () => setAmbientPlaying(false)
+      );
+    } else {
+      ambientAudioRef.current?.pause();
+      setAmbientPlaying(false);
+    }
+  }
 
   const effectiveTheme = useMemo(() => {
     const wantsCustomTheme = mode === "custom" && !presentation.locks.theme;
@@ -198,28 +239,26 @@ export function ChapterReader({
 
   const effectiveFont = FONTS.find((f) => f.id === effectiveFontId) ?? FONTS[0];
 
-
-
-  const pageTurnSound = PLATFORM_SOUNDS.find((s) => s.id === (prefs?.pageTurnSoundId ?? PAGE_TURN_SOUND?.id)) ?? PAGE_TURN_SOUND;
-  function playPageTurn() {
-    if (!soundAllowed || !pageTurnSound) return;
+  function playPageTurn(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+    if (!pageTurnAllowed || !pageTurnAudioRef.current) return;
+    e.preventDefault();
     const audio = pageTurnAudioRef.current;
-    if (!audio) return;
     audio.currentTime = 0;
     audio.play().catch(() => {});
+    setTimeout(() => router.push(href), 150);
   }
 
-useEffect(() => {
-  if (!soundAllowed && ambientPlaying) {
+  useEffect(() => {
+    if (!ambientAllowed && ambientPlaying) {
+      ambientAudioRef.current?.pause();
+      setAmbientPlaying(false);
+    }
+  }, [ambientAllowed, ambientPlaying]);
+
+  useEffect(() => {
     ambientAudioRef.current?.pause();
     setAmbientPlaying(false);
-  }
-}, [soundAllowed, ambientPlaying]);
-
-useEffect(() => {
-  ambientAudioRef.current?.pause();
-  setAmbientPlaying(false);
-}, [chapter._id]);
+  }, [chapter._id]);
 
   function handleCommentPosted(paragraphIndex: number) {
     setCommentCounts((prev) => ({
@@ -232,9 +271,13 @@ useEffect(() => {
 
   return (
     <main ref={containerRef} className="relative bg-bg pb-24 [&:fullscreen]:overflow-y-auto [&:fullscreen]:pb-12">
-      
+
       {PAGE_TURN_SOUND && <audio ref={pageTurnAudioRef} src={PAGE_TURN_SOUND.url} className="hidden" />}
-      {ambientSound && <audio ref={ambientAudioRef} src={ambientSound.url} loop className="hidden" />}
+      {/* key forces the element to remount (and load the new src cleanly)
+          when the reader switches ambient sounds mid-session, rather than
+          mutating the src attribute on an element that may already be
+          mid-playback. */}
+      {ambientSound && <audio key={ambientSound.id} ref={ambientAudioRef} src={ambientSound.url} loop className="hidden" />}
 
       {presentation.customCss && <style>{presentation.customCss}</style>}
 
@@ -267,16 +310,21 @@ useEffect(() => {
               </button>
             </div>
 
-           {ambientSound && soundAllowed && (
-            <button
-              onClick={toggleAmbientSound}
-              aria-label={ambientPlaying ? `Pause ${ambientSound.label}` : `Play ${ambientSound.label}`}
-              title={ambientPlaying ? `Pause: ${ambientSound.label}` : `Play: ${ambientSound.label}`}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-muted hover:border-accent hover:text-accent"
-            >
-              <Volume2 size={13} className={ambientPlaying ? "text-accent" : undefined} />
-            </button>
-          )}
+            {ambientSound && ambientAllowed && (
+              <button
+                onClick={toggleAmbientSound}
+                aria-label={ambientPlaying ? `Pause ${ambientSound.label}` : `Play ${ambientSound.label}`}
+                title={ambientPlaying ? `Pause: ${ambientSound.label}` : `Play: ${ambientSound.label}`}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs font-medium transition ${
+                  ambientPlaying
+                    ? "border-accent text-accent"
+                    : "border-hairline text-ink-muted hover:border-accent hover:text-accent"
+                } ${ambientAttention ? "ambient-attention" : ""}`}
+              >
+                <Volume2 size={13} />
+                {ambientPlaying ? "Ambient on" : "Ambient sound"}
+              </button>
+            )}
 
             <button
               onClick={() => setSettingsOpen(true)}
@@ -297,8 +345,9 @@ useEffect(() => {
           </div>
         </div>
       </div>
+      <div className="mx-auto flex max-w-7xl gap-6 px-4  pt-14 sm:px-6">
 
-      <article className="mx-auto max-w-4xl px-4 pt-14 sm:px-6">
+      <article className="min-w-0 max-w-4xl flex-1">
         <div className="relative">
           <span
             aria-hidden
@@ -338,7 +387,7 @@ useEffect(() => {
           {prevId ? (
             <Link
               href={`/book/${bookSlug}/chapter/${prevId}`}
-              onClick={playPageTurn}
+              onClick={(e) => playPageTurn(e, `/book/${bookSlug}/chapter/${prevId}`)}
               className="flex flex-1 items-center gap-1.5 rounded-xl border border-hairline px-4 py-3.5 font-sans text-sm font-medium text-ink-muted transition hover:border-accent hover:text-accent sm:flex-initial sm:justify-center"
             >
               <ChevronLeft size={16} /> Previous
@@ -347,7 +396,7 @@ useEffect(() => {
           {nextId && (
             <Link
               href={`/book/${bookSlug}/chapter/${nextId}`}
-              onClick={playPageTurn}
+              onClick={(e) => playPageTurn(e, `/book/${bookSlug}/chapter/${nextId}`)}
               className="group flex flex-1 items-center justify-between gap-3 rounded-xl bg-accent px-5 py-3.5 font-sans text-accent-ink transition hover:opacity-90"
             >
               <span className="flex flex-col items-start leading-tight">
@@ -361,7 +410,10 @@ useEffect(() => {
 
         <CommentSection chapterId={String(chapter._id)} />
       </article>
-
+      <div className="hidden shrink-0 lg:block">
+        <RecommendedSidebar bookId={bookId} />
+      </div>
+        </div>
       <ParagraphCommentPanel
         open={activeParagraph !== null}
         chapterId={chapter._id}
@@ -376,9 +428,9 @@ useEffect(() => {
         <ReaderSettingsModal
           open={settingsOpen}
           presentation={presentation}
-          authorSoundLabel={ambientSound?.label ?? null}
+          authorSoundLabel={authorAmbientSound?.label ?? null}
           currentPrefs={prefs}
-          onSave={(next) => { saveReaderPrefs(next); setPrefs(next); setSettingsOpen(false); }}
+          onSave={handleSettingsSave}
           onClose={() => setSettingsOpen(false)}
         />
       )}
@@ -393,6 +445,21 @@ useEffect(() => {
           padding-right: 0.1em;
           padding-top: 0.04em;
           color: inherit;
+        }
+
+        .ambient-attention {
+          animation: ambient-pulse 1.2s ease-in-out 3;
+        }
+
+        @keyframes ambient-pulse {
+          0%, 100% {
+            border-color: var(--color-hairline, currentColor);
+            box-shadow: 0 0 0 0 transparent;
+          }
+          50% {
+            border-color: var(--color-accent, #6366f1);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent, #6366f1) 25%, transparent);
+          }
         }
       `}</style>
     </main>

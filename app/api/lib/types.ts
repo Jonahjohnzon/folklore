@@ -89,7 +89,8 @@ export type NotificationType =
   | "payout_initiated"
   | "payout_completed"
   | "earnings_update"
-  | "subscription_expiring";
+  | "subscription_expiring"
+  | "chapter_unlocked";
 
 // ── Sound Effects (JSONB shape) ───────────────────────────────
 export interface SoundEffect {

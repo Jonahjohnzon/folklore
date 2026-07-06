@@ -60,3 +60,39 @@ export function newReviewTemplate(opts: { actorName: string; bookTitle: string; 
     </div>`;
   return { subject: `${opts.actorName} reviewed ${opts.bookTitle}`, html, text };
 }
+
+// lib/email/templates.ts — add alongside the existing templates
+export function earningsUpdateTemplate(opts: {
+  bookTitle: string;
+  chapterTitle: string;
+  coins: number;
+  link: string;
+}) {
+  const text = `You earned ${opts.coins} coins from a chapter unlock on "${opts.bookTitle}" (${opts.chapterTitle}).\n\nView it: ${opts.link}`;
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px">
+      <p>You earned <strong>${opts.coins} coins</strong> from a chapter unlock on <strong>${opts.bookTitle}</strong>:</p>
+      <p style="font-size:18px">${opts.chapterTitle}</p>
+      <a href="${opts.link}" style="display:inline-block;padding:10px 20px;background:#111;color:#fff;border-radius:6px;text-decoration:none">View chapter</a>
+    </div>`;
+  return { subject: `You earned ${opts.coins} coins on ${opts.bookTitle}`, html, text };
+}
+
+// lib/email/templates.ts — add alongside the existing templates
+export function chapterUnlockedTemplate(opts: {
+  bookTitle: string;
+  chapterTitle: string;
+  coins: number;
+  newBalance: number;
+  link: string;
+}) {
+  const text = `You unlocked "${opts.chapterTitle}" (${opts.bookTitle}) for ${opts.coins} coins. Your new balance is ${opts.newBalance} coins.\n\nRead it: ${opts.link}`;
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px">
+      <p>You unlocked a chapter of <strong>${opts.bookTitle}</strong>:</p>
+      <p style="font-size:18px">${opts.chapterTitle}</p>
+      <p style="color:#555">Spent: <strong>${opts.coins} coins</strong> · New balance: <strong>${opts.newBalance} coins</strong></p>
+      <a href="${opts.link}" style="display:inline-block;padding:10px 20px;background:#111;color:#fff;border-radius:6px;text-decoration:none">Start reading</a>
+    </div>`;
+  return { subject: `You unlocked ${opts.chapterTitle}`, html, text };
+}

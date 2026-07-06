@@ -6,7 +6,7 @@ export const store = proxy({
   hydrated: false,
   _id: null as string | null,
   authChecked: false, // flips true once the initial /api/pages/auth/me check resolves — use this to avoid a logged-out flash on refresh
-
+  coinBalance: 0,
   // auth credentials (public-safe)
   email: "",
   emailVerified: false,
@@ -36,7 +36,7 @@ export const store = proxy({
 
   // personalisation
   preferences: {} as Record<string, unknown>,
-
+  
   createdAt: null as string | null,
   updatedAt: null as string | null,
   websiteUrl:null as string | null,

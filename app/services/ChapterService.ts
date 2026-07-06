@@ -54,6 +54,14 @@ export interface PublicChapterDetail {
   audioId: string | null;
 }
 
+export interface UnlockResult {
+  unlocked: boolean;
+  newBalance: number | null;
+  alreadyUnlocked?: boolean;
+  alreadyFree?: boolean;
+  isAuthor?: boolean;
+}
+
 export interface PublicChapterTheme {
   _id: string | null;
   bookId: string;
@@ -68,6 +76,7 @@ export interface PublicChapterTheme {
   bgMusicVolume: number;
   customCss: string | null;
 }
+
 
 export const ChapterService = {
   create: (bookId: string, body: CreateChapterBody) =>
@@ -120,8 +129,14 @@ export const ChapterService = {
     return api.get<{ data:{liked: boolean; likesCount: number} }>(`/api/chapters/${chapterId}/like`);
     },
  
-  toggleLike(chapterId: string) {
-  return api.post<{ data:{liked: boolean; likesCount: number} }>(`/api/chapters/${chapterId}/like`);
+    toggleLike(chapterId: string) {
+    return api.post<{ data:{liked: boolean; likesCount: number} }>(`/api/chapters/${chapterId}/like`);
+    },
+  unlock(chapterId: string) {
+    return api.post<{ data: UnlockResult }>(`/api/chapters/${chapterId}/unlock`, {});
+  },
+  getUnlockStatus(chapterId: string) {
+    return api.get<{ data: { unlocked: boolean } }>(`/api/chapters/${chapterId}/unlock`);
   },
  
 };

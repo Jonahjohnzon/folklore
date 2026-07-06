@@ -57,8 +57,9 @@ export interface PublicChapterSummary {
   orderIndex: number;
   title: string;
   wordCount: number;
-  accessType: string;
+  accessType: string; // now may come back as "free" when bypassed
   coinsRequired: number;
+  unlocked: boolean; 
 }
 
 export interface PublicReview {
@@ -152,10 +153,10 @@ export const BookService = {
     getBySlug: (slug: string) =>
     api.get<{ success: boolean; data: { book: PublicBook } }>(`/api/books/by-slug/${slug}`),
 
-  getChaptersBySlug: (slug: string) =>
-    api.get<{ success: boolean; data: { chapters: PublicChapterSummary[] } }>(
-      `/api/books/by-slug/${slug}/chapters`
-    ),
+      getChaptersBySlug: (slug: string) =>
+        api.get<{ success: boolean; data: { isAuthor: boolean; chapters: PublicChapterSummary[] } }>(
+          `/api/books/by-slug/${slug}/chapters`
+        ),
 
   getReviewsBySlug: (slug: string) =>
     api.get<{ success: boolean; data: { reviews: PublicReview[] } }>(

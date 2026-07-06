@@ -5,7 +5,7 @@ import { X, Check, Lock, Volume2, VolumeX } from "lucide-react";
 import type { ChapterPresentation } from "@/lib/chapter-presentation";
 import type { ReaderPrefs } from "@/lib/reader-prefs";
 import { SHEET_THEMES } from "@/lib/sheet-themes";
-import { PLATFORM_SOUNDS, DEFAULT_PAGE_TURN_SOUND_ID } from "@/lib/sounds";
+import { PLATFORM_SOUNDS, SOUND_CATEGORIES, DEFAULT_PAGE_TURN_SOUND_ID } from "@/lib/sounds";
 
 const FONT_OPTIONS = [
   { id: "serif", label: "Source Serif" },
@@ -30,9 +30,17 @@ export function ReaderSettingsModal({
   const [fontId, setFontId] = useState(currentPrefs?.fontId ?? presentation.fontId);
   const [fontSize] = useState(currentPrefs?.fontSize ?? presentation.fontSize);
   const [themeId, setThemeId] = useState(currentPrefs?.themeId ?? SHEET_THEMES[0].id);
+
+  // soundOn = ambient sound on/off. ambientSoundId = which one, when the
+  // reader overrides the author's choice. null means "use the author's pick."
   const [soundOn, setSoundOn] = useState(currentPrefs?.soundOn ?? true);
-  const [pageTurnSoundId, setPageTurnSoundId] = useState<string | null>(
-    currentPrefs?.pageTurnSoundId ?? DEFAULT_PAGE_TURN_SOUND_ID
+  const [ambientSoundId, setAmbientSoundId] = useState<string | null>(
+    currentPrefs?.ambientSoundId ?? null
+  );
+
+  // Page-turn is a single fixed sound — plain on/off, not a picker.
+  const [pageTurnOn, setPageTurnOn] = useState(
+    (currentPrefs?.pageTurnSoundId ?? null) !== null
   );
 
   if (!open) return null;
@@ -40,7 +48,15 @@ export function ReaderSettingsModal({
   const isFirstRun = !currentPrefs;
 
   function buildPrefs(): ReaderPrefs {
-    return { mode, fontId, fontSize, themeId, soundOn, pageTurnSoundId };
+    return {
+      mode,
+      fontId,
+      fontSize,
+      themeId,
+      soundOn,
+      ambientSoundId,
+      pageTurnSoundId: pageTurnOn ? DEFAULT_PAGE_TURN_SOUND_ID : null,
+    };
   }
 
   function handleClose() {
@@ -51,7 +67,8 @@ export function ReaderSettingsModal({
         fontSize: presentation.fontSize,
         themeId: SHEET_THEMES[0].id,
         soundOn: true,
-        pageTurnSoundId: DEFAULT_PAGE_TURN_SOUND_ID,
+        ambientSoundId: null,
+        pageTurnSoundId: null,
       });
     } else {
       onClose();
@@ -154,36 +171,71 @@ export function ReaderSettingsModal({
               {presentation.locks.sound ? (
                 <LockedNote label={authorSoundLabel ? `${authorSoundLabel} (always on)` : "None"} />
               ) : (
-                <button
-                  onClick={() => setSoundOn((s) => !s)}
-                  className="mt-2 flex w-full items-center justify-between rounded-lg border border-hairline bg-bg px-3 py-2"
-                >
-                  <span className="flex items-center gap-2 font-sans text-sm text-ink">
-                    {soundOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
-                    {authorSoundLabel ?? "Ambient sound"}
-                  </span>
-                  <span className={`rounded-full px-2.5 py-1 font-sans text-xs font-medium ${soundOn ? "bg-accent/10 text-accent" : "bg-hairline/40 text-ink-muted"}`}>
-                    {soundOn ? "On" : "Off"}
-                  </span>
-                </button>
+                <>
+                  <button
+                    onClick={() => setSoundOn((s) => !s)}
+                    className="mt-2 flex w-full items-center justify-between rounded-lg border border-hairline bg-bg px-3 py-2"
+                  >
+                    <span className="flex items-center gap-2 font-sans text-sm text-ink">
+                      {soundOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                      {ambientSoundId
+                        ? PLATFORM_SOUNDS.find((s) => s.id === ambientSoundId)?.label ?? "Ambient sound"
+                        : authorSoundLabel ?? "Ambient sound"}
+                    </span>
+                    <span className={`rounded-full px-2.5 py-1 font-sans text-xs font-medium ${soundOn ? "bg-accent/10 text-accent" : "bg-hairline/40 text-ink-muted"}`}>
+                      {soundOn ? "On" : "Off"}
+                    </span>
+                  </button>
+
+                  {soundOn && (
+                    <div className="mt-2 max-h-48 overflow-y-auto scrollbar-thin rounded-lg border border-hairline bg-bg">
+                      <SoundOption
+                        label={authorSoundLabel ? `${authorSoundLabel} (author's pick)` : "Author's pick"}
+                        selected={ambientSoundId === null}
+                        onClick={() => setAmbientSoundId(null)}
+                      />
+                      {SOUND_CATEGORIES.map((cat) => {
+                        const items = PLATFORM_SOUNDS.filter((s) => s.category === cat.id);
+                        if (items.length === 0) return null;
+                        return (
+                          <div key={cat.id}>
+                            <p className="border-b border-t border-hairline bg-hairline/10 px-3 py-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+                              {cat.label}
+                            </p>
+                            {items.map((s) => (
+                              <SoundOption
+                                key={s.id}
+                                label={s.label}
+                                selected={ambientSoundId === s.id}
+                                onClick={() => setAmbientSoundId(s.id)}
+                              />
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
             <div>
               <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Page-turn sound</p>
               {presentation.locks.sound ? (
-                <LockedNote label={PLATFORM_SOUNDS.find((s) => s.id === DEFAULT_PAGE_TURN_SOUND_ID)?.label ?? "None"} />
+                <LockedNote label="Page turn (always on)" />
               ) : (
-                <select
-                  value={pageTurnSoundId ?? ""}
-                  onChange={(e) => setPageTurnSoundId(e.target.value || null)}
-                  className="mt-2 w-full rounded-lg border border-hairline bg-bg px-3 py-2 font-sans text-sm text-ink"
+                <button
+                  onClick={() => setPageTurnOn((p) => !p)}
+                  className="mt-2 flex w-full items-center justify-between rounded-lg border border-hairline bg-bg px-3 py-2"
                 >
-                  <option value="">None</option>
-                  {PLATFORM_SOUNDS.map((s) => (
-                    <option key={s.id} value={s.id}>{s.label}</option>
-                  ))}
-                </select>
+                  <span className="flex items-center gap-2 font-sans text-sm text-ink">
+                    {pageTurnOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                    Page turn
+                  </span>
+                  <span className={`rounded-full px-2.5 py-1 font-sans text-xs font-medium ${pageTurnOn ? "bg-accent/10 text-accent" : "bg-hairline/40 text-ink-muted"}`}>
+                    {pageTurnOn ? "On" : "Off"}
+                  </span>
+                </button>
               )}
             </div>
           </div>
@@ -196,6 +248,29 @@ export function ReaderSettingsModal({
           {isFirstRun ? "Start reading" : "Save preferences"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function SoundOption({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <div
+      role="option"
+      aria-selected={selected}
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={`flex cursor-pointer items-center justify-between border-b border-hairline px-3 py-2 font-sans text-sm transition last:border-b-0 ${
+        selected ? "bg-accent/10 text-accent" : "text-ink hover:bg-hairline/20"
+      }`}
+    >
+      {label}
+      {selected && <Check size={14} className="shrink-0 text-accent" />}
     </div>
   );
 }

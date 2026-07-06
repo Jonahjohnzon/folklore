@@ -20,7 +20,7 @@ interface DispatchInput {
   link: string;
   email?: {
     templateName: keyof typeof templates;
-    templateArgs: Record<string, string>;
+    templateArgs: Record<string, string  | number>;
   };
 }
 // Limit to the keys that actually exist on INotificationPreference
@@ -53,6 +53,7 @@ const PREFERENCE_FIELD: Record<NotificationType, EmailPrefField | null> = {
   payout_completed: null,
   earnings_update: null,
   subscription_expiring: null,
+  chapter_unlocked: null
 }
 
 export async function dispatchNotification(input: DispatchInput) {

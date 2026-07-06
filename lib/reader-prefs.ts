@@ -9,6 +9,7 @@ export interface ReaderPrefs {
   themeId: string;
   soundOn: boolean;
   pageTurnSoundId: string | null;
+  ambientSoundId: string | null;
 }
 
 const STORAGE_KEY = "lore:reader-prefs";

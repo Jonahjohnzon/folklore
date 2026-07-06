@@ -25,7 +25,6 @@ import {
 import { ThemeSwitcher } from "./theme-switcher";
 import { CoinDisplay } from "./coin-display";
 import { Avatar } from "./avatar";
-import { coinBalance } from "@/lib/mock-data";
 import { store } from "@/app/store/userStore";
 import { AuthService } from "@/app/services/auth";
 import { Skeleton } from "./skeleton";
@@ -533,7 +532,7 @@ export function Navbar() {
           {/* Coin balance and notifications only mean something once you're
               signed in — hiding them for logged-out visitors instead of
               showing a "0" balance or an empty, meaningless bell. */}
-          {!isLoading && isLoggedIn && <CoinDisplay balance={coinBalance} />}
+          {!isLoading && isLoggedIn && <CoinDisplay balance={snap.coinBalance} />}
 
           <ThemeSwitcher />
 

@@ -22,7 +22,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       .populate({ path: "authorId", select: "penName avatarUrl followerCount username" })
       .populate({ path: "tags", select: "name slug" })
       .lean();
-      console.log(slug)
 
     if (!book) throw new NotFoundError("Book not found");
 

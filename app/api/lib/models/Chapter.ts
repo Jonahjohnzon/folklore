@@ -1,5 +1,5 @@
 import { Schema, model, models, Types, Model } from "mongoose";
-import type { ChapterAccess, SoundEffect } from "../types";
+import type { ChapterAccess } from "../types";
 
 export interface IChapter {
   _id: Types.ObjectId;
@@ -16,7 +16,7 @@ export interface IChapter {
 
   // sound experience
   audioId?: string;
-  soundEffects: SoundEffect[];
+  
 
   // engagement counters (denormalized for fast reads; kept in sync via
   // $inc in the like/comment routes rather than counted on every request)
@@ -29,15 +29,7 @@ export interface IChapter {
 }
 
 // Embedded sub-schema for sound effects
-const SoundEffectSchema = new Schema<SoundEffect>(
-  {
-    trigger: { type: String, enum: ["scroll_pct", "paragraph_id"], required: true },
-    value: { type: Number, required: true },
-    url: { type: String, required: true },
-    volume: { type: Number, default: 0.6, min: 0, max: 1 },
-  },
-  { _id: false }
-);
+
 
 const ChapterSchema = new Schema<IChapter>(
   {
@@ -62,7 +54,6 @@ const ChapterSchema = new Schema<IChapter>(
     coinsRequired: { type: Number, default: 0 },
 
     audioId: { type: String },
-    soundEffects: { type: [SoundEffectSchema], default: [] },
 
     likesCount: { type: Number, default: 0 },
     commentsCount: { type: Number, default: 0 },

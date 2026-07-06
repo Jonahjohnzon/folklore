@@ -5,14 +5,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Loader2, BookX } from "lucide-react";
 import { ChapterReader } from "@/components/chapter-reader";
-import { BookService } from "@/app/services/BookService";
+import { BookService, type PublicBook } from "@/app/services/BookService";
 import { ChapterService, type PublicChapterDetail, type PublicChapterTheme } from "@/app/services/ChapterService";
 import { SignalService } from "@/app/services/SignalService";
 
 export default function ChapterPage() {
   const params = useParams<{ slug: string; chapterId: string }>();
 
-  const [bookTitle, setBookTitle] = useState<string | null>(null);
+  const [book, setBook] = useState<PublicBook | null>(null);
   const [chapter, setChapter] = useState<PublicChapterDetail | null>(null);
   const [theme, setTheme] = useState<PublicChapterTheme | null>(null);
   const [prevId, setPrevId] = useState<string | null>(null);
@@ -33,16 +33,17 @@ export default function ChapterPage() {
     ])
       .then(([bookRes, chapterRes]) => {
         if (cancelled) return;
-        
-        setBookTitle(bookRes.data.book.title);
+
+        setBook(bookRes.data.book);
         setChapter(chapterRes.data.chapter);
         setPrevId(chapterRes.data.prevId);
         setNextId(chapterRes.data.nextId);
         setTheme(chapterRes.data.theme);
-      SignalService.log("read_chapter", {
-      bookId: bookRes.data.book._id,
-      chapterId: chapterRes.data.chapter._id || undefined,
-    });
+
+        SignalService.log("read_chapter", {
+          bookId: bookRes.data.book._id,
+          chapterId: chapterRes.data.chapter._id || undefined,
+        });
       })
       .catch((err) => {
         if (cancelled) return;
@@ -67,7 +68,7 @@ export default function ChapterPage() {
     );
   }
 
-  if (notFoundState || !chapter || !bookTitle) {
+  if (notFoundState || !chapter || !book) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-muted">
         <BookX size={28} />
@@ -81,8 +82,9 @@ export default function ChapterPage() {
 
   return (
     <ChapterReader
-      bookSlug={params.slug}
-      bookTitle={bookTitle}
+      bookSlug={book.slug}
+      bookId={book._id}
+      bookTitle={book.title}
       chapter={chapter}
       theme={theme}
       prevId={prevId ?? undefined}

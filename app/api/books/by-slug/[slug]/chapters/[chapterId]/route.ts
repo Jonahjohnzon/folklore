@@ -1,12 +1,13 @@
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Book } from "@/app/api/lib/models/Book";
 import { Chapter } from "@/app/api/lib/models/Chapter";
+import { ChapterUnlock } from "@/app/api/lib/models/ChapterUnlock";
 import { BookTheme } from "@/app/api/lib/models/BookTheme";
 import { ReadingProgress } from "@/app/api/lib/models/ReadingProgress";
 import { LibraryEntry } from "@/app/api/lib/models/LibraryEntry";
 import { BadgeAwardService } from "@/lib/badges/BadgeAwardService";
 import { ok, fail } from "@/app/api/response";
-import { NotFoundError } from "@/app/api/lib/db/errors";
+import { NotFoundError, ForbiddenError } from "@/app/api/lib/db/errors";
 import { withAuth } from "@/app/api/auth/withAuth";
 const VISIBLE_STATUSES = ["ongoing", "completed", "hiatus"];
 
@@ -28,9 +29,27 @@ export const GET = withAuth(async (req, ctx) => {
     const chapter = await Chapter.findById(chapterId).lean();
     if (!chapter) throw new NotFoundError("Chapter not found");
 
+    const userId = req.user?.sub;
+    const isOwnBook = Boolean(book.authorId && userId && String(book.authorId) === String(userId));
+
+    // --- paywall enforcement ---
+    // This must happen before anything below reads/returns chapter.content.
+    // The book-detail page gates navigation behind the unlock modal, but a
+    // reader can hit this route directly by URL, so the check has to live
+    // here too — never trust the client to have already paid.
+    const isPaidChapter = chapter.accessType === "coins" || chapter.accessType === "purchase";
+    if (isPaidChapter && !isOwnBook) {
+      if (!userId) {
+        throw new ForbiddenError("Sign in and unlock this chapter to read it");
+      }
+      const hasUnlock = await ChapterUnlock.exists({ chapterId, userId });
+      if (!hasUnlock) {
+        throw new ForbiddenError("Unlock this chapter with coins to read it");
+      }
+    }
+
     await Book.updateOne({ _id: book._id }, { $inc: { totalReads: 1 } });
 
-    const userId = req.user?.sub;
     if (userId) {
       const now = new Date();
 
@@ -73,7 +92,6 @@ export const GET = withAuth(async (req, ctx) => {
       }
 
       // Don't credit an author reading/previewing their own book.
-      const isOwnBook = book.authorId && String(book.authorId) === String(userId);
       if (isFirstReadOfChapter && !isOwnBook) {
         await BadgeAwardService.recordChapterRead(userId);
       }
@@ -90,7 +108,7 @@ export const GET = withAuth(async (req, ctx) => {
         coverUrl: chapter.coverUrl ?? null,
         accessType: chapter.accessType,
         coinsRequired: chapter.coinsRequired,
-        audioIntroUrl: chapter.audioIntroUrl ?? null,
+        audioId: chapter.audioId ?? null,
       },
       prevId: idx > 0 ? String(published[idx - 1]._id) : null,
       nextId: idx < published.length - 1 ? String(published[idx + 1]._id) : null,

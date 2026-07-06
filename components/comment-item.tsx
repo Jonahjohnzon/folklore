@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, ThumbsUp } from "lucide-react";
+import { MessageCircle, Heart } from "lucide-react";
 import { CommentComposer } from "@/components/comment-composer";
 import { CommentService, type CommentDTO } from "@/app/services/CommentService";
 import { formatTimeAgo } from "@/lib/format-time-ago";
@@ -88,7 +88,7 @@ export function CommentItem({
   }
 
   return (
-    <div className="flex gap-3" id={`comment-${comment._id}`}>
+    <div className={`flex gap-3 ${!isReply ? "border border-hairline bg-surface" : " bg-accent-ink"}  p-3 rounded-lg`} id={`comment-${comment._id}`}>
       <Avatar name={comment.user?.name ?? "Reader"} url={comment.user?.avatarUrl ?? null} />
 
       <div className="min-w-0 flex-1">
@@ -108,8 +108,8 @@ export function CommentItem({
               liked ? "text-accent" : "text-ink-muted hover:text-accent"
             }`}
           >
-            <ThumbsUp size={12} className={liked ? "fill-current" : ""} />
-            Love{likesCount > 0 ? ` · ${likesCount}` : ""}
+            <Heart size={12} className={liked ? "fill-current" : ""} />
+            {likesCount > 0 ? `  ${likesCount}` : ""}
           </button>
 
           {!isReply && (

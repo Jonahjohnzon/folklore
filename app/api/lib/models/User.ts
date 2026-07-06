@@ -35,6 +35,7 @@ export interface IUser {
   role: string;
   // personalisation blob
   preferences: Record<string, unknown>;
+  coinBalance:number;
 
   createdAt: Date;
   updatedAt: Date;
@@ -91,6 +92,7 @@ const UserSchema = new Schema<IUser>(
 
     preferences: { type: Schema.Types.Mixed, default: {} },
     onboardingCompletedAt: { type: Date },
+    coinBalance:{type:Number},
     interestTags: [{ type: Schema.Types.ObjectId, ref: "Tag", default: [] }],
     readingStats: {
       chaptersReadCount: { type: Number, default: 0 },

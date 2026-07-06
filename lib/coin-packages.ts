@@ -1,38 +1,40 @@
 export interface CoinPackage {
   id: string;
-  baseCoins: number;
+  coins: number;
   bonusCoins: number;
-  usdPrice: number;
-  /** Curated, not derived — this is the one subjective badge we allow. */
+  nairaPrice: number; // what Paystack actually charges, in ₦
+  usdPrice: number;   // what the crypto checkout actually charges, in $
   popular?: boolean;
 }
 
+// These two prices are NOT required to match at some fixed FX rate — set
+// each one to whatever you actually want to charge in that market/rail.
 export const COIN_PACKAGES: CoinPackage[] = [
-  { id: "starter", baseCoins: 100, bonusCoins: 0, usdPrice: 0.99 },
-  { id: "popular", baseCoins: 500, bonusCoins: 50, usdPrice: 4.99, popular: true },
-  { id: "value", baseCoins: 1000, bonusCoins: 200, usdPrice: 9.99 },
-  { id: "plus", baseCoins: 2000, bonusCoins: 600, usdPrice: 19.99 },
-  { id: "pro", baseCoins: 5000, bonusCoins: 2000, usdPrice: 49.99 },
-  { id: "max", baseCoins: 10000, bonusCoins: 5000, usdPrice: 99.99 },
+  { id: "starter", coins: 100, bonusCoins: 0, nairaPrice: 1380, usdPrice: 0.99 },
+  { id: "popular", coins: 550, bonusCoins: 50, nairaPrice: 7500, usdPrice: 4.99, popular: true },
+  { id: "value", coins: 1200, bonusCoins: 150, nairaPrice: 15000, usdPrice: 9.99 },
+  { id: "plus", coins: 2500, bonusCoins: 400, nairaPrice: 30000, usdPrice: 19.99 },
+  { id: "max", coins: 6500, bonusCoins: 1200, nairaPrice: 75000, usdPrice: 49.99 },
+  { id: "whale", coins: 14000, bonusCoins: 3000, nairaPrice: 150000, usdPrice: 99.99 },
 ];
 
 export function totalCoins(pkg: CoinPackage): number {
-  return pkg.baseCoins + pkg.bonusCoins;
+  return pkg.coins + pkg.bonusCoins;
 }
 
 export function bonusPercent(pkg: CoinPackage): number {
-  if (pkg.baseCoins === 0) return 0;
-  return Math.round((pkg.bonusCoins / pkg.baseCoins) * 100);
+  return pkg.coins > 0 ? Math.round((pkg.bonusCoins / pkg.coins) * 100) : 0;
 }
 
-/** Cost in USD cents per coin — the figure that actually reveals which pack is the best deal. */
-export function costPerCoin(pkg: CoinPackage): number {
-  return (pkg.usdPrice * 100) / totalCoins(pkg);
+// Cost-per-coin depends on which currency you're comparing in.
+export function costPerCoinNaira(pkg: CoinPackage): number {
+  return pkg.nairaPrice / totalCoins(pkg);
+}
+export function costPerCoinUsd(pkg: CoinPackage): number {
+  return pkg.usdPrice / totalCoins(pkg);
 }
 
-/** The package with the lowest cost-per-coin — computed, not curated. */
-export function bestValuePackageId(): string {
-  return COIN_PACKAGES.reduce((best, pkg) =>
-    costPerCoin(pkg) < costPerCoin(best) ? pkg : best
-  ).id;
+export function bestValuePackageId(currency: "NGN" | "USD"): string {
+  const costFn = currency === "NGN" ? costPerCoinNaira : costPerCoinUsd;
+  return COIN_PACKAGES.reduce((best, p) => (costFn(p) < costFn(best) ? p : best)).id;
 }

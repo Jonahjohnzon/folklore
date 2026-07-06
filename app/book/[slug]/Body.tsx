@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,6 +15,9 @@ import {
 } from "@/app/services/BookService";
 import { LibraryService, type LibraryStatus } from "@/app/services/LibraryService";
 import { ReviewService } from "@/app/services/ReviewService";
+import { CoinService } from "@/app/services/coinService";
+import ChapterUnlockModal from "@/components/ChapterUnlockModal";
+
 
 function formatReads(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M reads`;
@@ -37,6 +41,9 @@ export default function BookDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFoundState, setNotFoundState] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coinBalance, setCoinBalance] = useState<number | null>(null);
+  const [unlockTarget, setUnlockTarget] = useState<PublicChapterSummary | null>(null)
+  const [isAuthor, setIsAuthor] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,13 +57,13 @@ export default function BookDetailPage() {
       BookService.getReviewsBySlug(params.slug),
     ])
       .then(([bookRes, chaptersRes, reviewsRes]) => {
-      
         if (cancelled) return;
         setBook(bookRes.data.book);
         setChapters(chaptersRes.data.chapters);
+        setIsAuthor(chaptersRes.data.isAuthor);
         setReviews(reviewsRes.data.reviews);
       })
-      .catch((err) => {
+        .catch((err) => {
         if (cancelled) return;
         if (err?.status === 404 || err?.response?.status === 404) setNotFoundState(true);
         else setError(err instanceof Error ? err.message : "Couldn't load this book.");
@@ -69,6 +76,12 @@ export default function BookDetailPage() {
       cancelled = true;
     };
   }, [params.slug]);
+
+  useEffect(() => {
+  CoinService.getBalance()
+    .then((res) => setCoinBalance(res.data.coinBalance))
+    .catch(() => setCoinBalance(0));
+}, []);
 
   useEffect(() => {
     if (!book) return;
@@ -287,30 +300,63 @@ export default function BookDetailPage() {
               {chapters.length === 0 && (
                 <p className="px-4 py-6 font-sans text-sm text-ink-muted">No chapters published yet.</p>
               )}
+              {unlockTarget && (
+                  <ChapterUnlockModal
+                    bookSlug={book.slug}
+                    chapterId={unlockTarget._id}
+                    chapterTitle={unlockTarget.title}
+                    coinsRequired={unlockTarget.coinsRequired}
+                    currentBalance={coinBalance}
+                    onClose={() => setUnlockTarget(null)}
+                    onUnlocked={(newBalance) => {
+                      if (newBalance !== null) setCoinBalance(newBalance);
+                      setUnlockTarget(null);
+                    }}
+                  />
+                )}
               {chapters.map((c) => {
-                const locked = c.accessType === "coins" || c.accessType === "purchase" || c.accessType === "subscriber_only";
-                return (
-                  <Link
-                    key={c._id}
-                    href={`/book/${book.slug}/chapter/${c._id}`}
-                    className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-bg"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-sans text-sm font-medium text-ink">
-                        {c.orderIndex}. {c.title}
-                      </p>
-                      <p className="font-sans text-xs text-ink-muted">{c.wordCount.toLocaleString()} words</p>
-                    </div>
-                    {locked ? (
-                      <span className="flex shrink-0 items-center gap-1 rounded-full bg-bg px-2.5 py-1 font-sans text-xs font-semibold text-gold">
-                        <Coins size={12} /> {c.coinsRequired}
-                      </span>
-                    ) : (
-                      <Lock size={0} />
-                    )}
-                  </Link>
-                );
-              })}
+                  const locked = !c.unlocked;
+                
+                  const commonInner = (
+                    <>
+                      <div className="min-w-0">
+                        <p className="truncate font-sans text-sm font-medium text-ink">
+                          {c.orderIndex}. {c.title}
+                        </p>
+                        <p className="font-sans text-xs text-ink-muted">{c.wordCount.toLocaleString()} words</p>
+                      </div>
+                      {locked ? (
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-bg px-2.5 py-1 font-sans text-xs font-semibold text-gold">
+                          <Coins size={12} /> {c.coinsRequired}
+                        </span>
+                      ) : (
+                        <Lock size={0} />
+                      )}
+                    </>
+                  );
+
+                  if (locked) {
+                    return (
+                      <button
+                        key={c._id}
+                        onClick={() => setUnlockTarget(c)}
+                        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-bg"
+                      >
+                        {commonInner}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={c._id}
+                      href={`/book/${book.slug}/chapter/${c._id}`}
+                      className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-bg"
+                    >
+                      {commonInner}
+                    </Link>
+                  );
+                })}
             </div>
 
             {/* Reviews */}
