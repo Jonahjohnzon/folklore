@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { Coins, Music, X, Lock, Unlock, ImagePlus } from "lucide-react";
+
+import { Coins, Music, X, Lock, Unlock } from "lucide-react";
 import type { ChapterAccess } from "@/lib/types";
 import { PLATFORM_SOUNDS } from "@/lib/sounds";
 import { SHEET_THEMES } from "@/lib/sheet-themes";
@@ -30,16 +30,10 @@ export default function ChapterSidebar({
   access, onAccessChange, coins, onCoinsChange,
   selectedSoundId, onClearSound, onOpenSoundPicker,
   sheetThemeId, onSheetThemeChange, locks, onLocksChange,
-  coverPreview, onCoverSelect, onRemoveCover,
 }: ChapterSidebarProps) {
   const selectedSound = PLATFORM_SOUNDS.find((s) => s.id === selectedSoundId) ?? null;
-  const coverInputRef = useRef<HTMLInputElement>(null);
 
-  function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) onCoverSelect(file);
-    e.target.value = "";
-  }
+  
 
   return (
     <aside className="flex flex-col gap-4">
@@ -82,7 +76,7 @@ export default function ChapterSidebar({
           <h2 className="flex items-center mb-2 gap-1.5 font-sans text-sm font-semibold text-ink">
             <Music size={14} className="text-accent" /> Sound experience
           </h2>
-          <button 
+          {/* <button 
             onClick={() => onLocksChange({ ...locks, sound: !locks.sound })}
             aria-pressed={locks.sound}
             className={`flex items-center cursor-pointer mb-2 gap-1 rounded-full border px-2 py-1 font-sans text-[11px] ${
@@ -91,10 +85,10 @@ export default function ChapterSidebar({
           >
             {locks.sound ? <Lock size={11} /> : <Unlock size={11} />}
             {locks.sound ? "Locked" : "Reader can turn off"}
-          </button>
+          </button> */}
         </div>
         <p className="mt-1 font-sans text-xs text-ink-muted">
-          Plays when readers open this chapter. Choose from our licensed library.
+          Plays as chapter background sound. Choose from our licensed library.
         </p>
 
         {selectedSound && (
@@ -110,7 +104,7 @@ export default function ChapterSidebar({
           onClick={onOpenSoundPicker}
           className="mt-3 w-full rounded-lg border-2 border-dashed border-ink-muted/30 bg-bg py-2.5 font-sans text-xs font-medium text-ink-muted transition hover:border-accent hover:text-accent"
         >
-          {selectedSound ? "Change sound" : "+ Choose entry sound"}
+          {selectedSound ? "Change sound" : "+ Choose background sound"}
         </button>
       </div>
 
@@ -133,50 +127,7 @@ export default function ChapterSidebar({
         </div>
       </div>
 
-      <div className="rounded-xl border border-hairline bg-surface p-4 shadow-sm">
-        <h2 className="font-sans text-sm font-semibold text-ink">
-          Cover <span className="font-normal text-ink-muted">(optional)</span>
-        </h2>
-        <p className="mt-1 font-sans text-xs text-ink-muted">Shown wherever this chapter is listed.</p>
-
-        <input
-          ref={coverInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleCoverChange}
-        />
-        <button
-          onClick={() => coverInputRef.current?.click()}
-          className="group relative mt-3 flex aspect-2/3 w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-ink-muted/30 bg-bg transition hover:border-accent hover:bg-accent/5"
-        >
-          {coverPreview ? (
-            <img src={coverPreview} alt="Chapter cover preview" className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex flex-col items-center gap-2 px-4 text-center">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10">
-                <ImagePlus size={18} className="text-accent" />
-              </div>
-              <span className="font-sans text-xs font-medium text-ink-muted">+ Upload cover</span>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-black/0 transition group-hover:bg-black/10" />
-          {coverPreview && (
-            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-2.5 py-1 font-sans text-[11px] font-medium text-white opacity-0 transition group-hover:opacity-100">
-              Change cover
-            </span>
-          )}
-        </button>
-
-        {coverPreview && (
-          <button
-            onClick={onRemoveCover}
-            className="mt-2 w-full rounded-lg border border-hairline bg-bg py-1.5 font-sans text-xs font-medium text-ink-muted transition hover:border-red-300 hover:text-red-600"
-          >
-            Remove cover
-          </button>
-        )}
-      </div>
+      
     </aside>
   );
 }

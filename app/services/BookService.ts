@@ -1,6 +1,5 @@
 import ApiClient from "@/app/ApiCore";
 import type { BookStatus } from "@/lib/types";
-import { uploadImageToCloudinary } from "@/lib/cloudinary-client";
 
 const api = new ApiClient();
 
@@ -126,6 +125,9 @@ export const BookService = {
 
   remove: (bookId: string) => api.delete<{ success: boolean }>(`/api/books/${bookId}`),
 
+  restore: (bookId: string) =>
+    api.post<{ success: boolean; data: { book: Book } }>(`/api/books/${bookId}/restore`, {}),
+
   // Uploads straight to Cloudinary from the browser (signed by our backend,
   // see lib/cloudinary-client.ts), then just persists the resulting URL —
   // the image bytes never pass through our own server.
@@ -163,4 +165,3 @@ export const BookService = {
     return api.get<{ data:{books: BookDTO[]} }>(`/api/pages/users/${username}/books`);
 },
 };
-

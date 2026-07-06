@@ -7,10 +7,10 @@ import { LibraryEntry } from "@/app/api/lib/models/LibraryEntry";
 import { BadgeAwardService } from "@/lib/badges/BadgeAwardService";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError } from "@/app/api/lib/db/errors";
-import { optionalAuth } from "@/app/api/auth/optionalAuth";
+import { withAuth } from "@/app/api/auth/withAuth";
 const VISIBLE_STATUSES = ["ongoing", "completed", "hiatus"];
 
-export const GET = optionalAuth(async (req, ctx) => {
+export const GET = withAuth(async (req, ctx) => {
   try {
     await connectToDatabase();
     const { slug, chapterId } = await ctx.params;

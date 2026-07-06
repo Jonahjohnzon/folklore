@@ -112,7 +112,7 @@ export function EditBookModal({
         {wasRemoved && (
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 font-sans text-sm text-amber-800">
             <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-            <span>This book was removed. Saving here will set it back to <strong>Draft</strong> — restore it fully first if that's not what you want.</span>
+            <span>This book was removed. Saving here will set it back to <strong>Draft</strong> — restore it fully first if that&apos;s not what you want.</span>
           </div>
         )}
 

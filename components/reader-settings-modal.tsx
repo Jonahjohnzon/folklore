@@ -28,7 +28,7 @@ export function ReaderSettingsModal({
 }: ReaderSettingsModalProps) {
   const [mode, setMode] = useState<"author" | "custom">(currentPrefs?.mode ?? "author");
   const [fontId, setFontId] = useState(currentPrefs?.fontId ?? presentation.fontId);
-  const [fontSize, setFontSize] = useState(currentPrefs?.fontSize ?? presentation.fontSize);
+  const [fontSize] = useState(currentPrefs?.fontSize ?? presentation.fontSize);
   const [themeId, setThemeId] = useState(currentPrefs?.themeId ?? SHEET_THEMES[0].id);
   const [soundOn, setSoundOn] = useState(currentPrefs?.soundOn ?? true);
   const [pageTurnSoundId, setPageTurnSoundId] = useState<string | null>(
@@ -150,7 +150,7 @@ export function ReaderSettingsModal({
             </div>
 
             <div>
-              <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Entrance sound</p>
+              <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Background sound</p>
               {presentation.locks.sound ? (
                 <LockedNote label={authorSoundLabel ? `${authorSoundLabel} (always on)` : "None"} />
               ) : (

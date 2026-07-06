@@ -14,7 +14,7 @@ import { CommentSection } from "@/components/comment-section";
 import type { PublicChapterDetail, PublicChapterTheme } from "@/app/services/ChapterService";
 import { CommentService, type ParagraphCommentDTO } from "@/app/services/CommentService";
 import { getChapterPresentation } from "@/lib/chapter-presentation";
-import { PLATFORM_SOUNDS } from "@/lib/sounds";
+import { PLATFORM_SOUNDS, PAGE_SOUNDS } from "@/lib/sounds";
 import { loadReaderPrefs, saveReaderPrefs, type ReaderPrefs } from "@/lib/reader-prefs";
 import { splitIntoBlocks } from "@/lib/reader-blocks";
 import { useSnapshot } from "valtio";
@@ -29,7 +29,7 @@ const FONTS: { id: string; label: string; stack: string }[] = [
   { id: "mono", label: "Plex Mono", stack: "var(--font-mono)" },
 ];
 
-const PAGE_TURN_SOUND = PLATFORM_SOUNDS.find((s) => s.id === "page-turn") ?? null;
+const PAGE_TURN_SOUND = PAGE_SOUNDS.find((s) => s.id === "page-turn") ?? null;
 
 export function ChapterReader({
   bookSlug, bookTitle, chapter, theme, prevId, nextId,
@@ -48,11 +48,13 @@ export function ChapterReader({
   // lookup only works if PLATFORM_SOUNDS ids happen to be full URLs — worth
   // confirming against lib/sounds.ts. If ids are short slugs instead, this
   // should use chapter.audioIntroUrl directly as the <audio> src.
-  const entranceSound = PLATFORM_SOUNDS.find((s) => s.id === chapter?.audioIntroUrl) ?? null;
-
+  const ambientSound  = PLATFORM_SOUNDS.find((s) => s.id === chapter?.audioId) ?? null;
+  
   const [mounted, setMounted] = useState(false);
   const [prefs, setPrefs] = useState<ReaderPrefs | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [ambientPlaying, setAmbientPlaying] = useState(false);
+  const ambientAudioRef = useRef<HTMLAudioElement>(null);
 
   // Derived synchronously from chapter.content — no effect/state round-trip,
   // so there's never a tick where `blocks` is empty on a real render, and
@@ -68,10 +70,21 @@ export function ChapterReader({
   const [loadingComments, setLoadingComments] = useState(false);
 
   const containerRef = useRef<HTMLElement>(null);
-  const entranceAudioRef = useRef<HTMLAudioElement>(null);
   const pageTurnAudioRef = useRef<HTMLAudioElement>(null);
-  const bgMusicAudioRef = useRef<HTMLAudioElement>(null);
 
+
+
+  function toggleAmbientSound() {
+      const audio = ambientAudioRef.current;
+      if (!audio || !soundAllowed) return;
+      if (ambientPlaying) {
+        audio.pause();
+        setAmbientPlaying(false);
+      } else {
+        audio.play().catch(() => setAmbientPlaying(false));
+        setAmbientPlaying(true);
+      }
+    }
   useEffect(() => {
     const stored = loadReaderPrefs();
     setPrefs(stored);
@@ -185,19 +198,7 @@ export function ChapterReader({
 
   const effectiveFont = FONTS.find((f) => f.id === effectiveFontId) ?? FONTS[0];
 
-  useEffect(() => {
-    if (!mounted || !entranceAudioRef.current || !entranceSound || !soundAllowed) return;
-    const audio = entranceAudioRef.current;
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
-  }, [mounted, chapter._id, entranceSound, soundAllowed]);
 
-  function replayEntranceSound() {
-    const audio = entranceAudioRef.current;
-    if (!audio) return;
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
-  }
 
   const pageTurnSound = PLATFORM_SOUNDS.find((s) => s.id === (prefs?.pageTurnSoundId ?? PAGE_TURN_SOUND?.id)) ?? PAGE_TURN_SOUND;
   function playPageTurn() {
@@ -208,13 +209,17 @@ export function ChapterReader({
     audio.play().catch(() => {});
   }
 
-  useEffect(() => {
-    const audio = bgMusicAudioRef.current;
-    if (!audio || !presentation.bgMusicUrl) return;
-    audio.volume = presentation.bgMusicVolume;
-    if (soundAllowed) audio.play().catch(() => {});
-    else audio.pause();
-  }, [soundAllowed, presentation.bgMusicUrl, presentation.bgMusicVolume]);
+useEffect(() => {
+  if (!soundAllowed && ambientPlaying) {
+    ambientAudioRef.current?.pause();
+    setAmbientPlaying(false);
+  }
+}, [soundAllowed, ambientPlaying]);
+
+useEffect(() => {
+  ambientAudioRef.current?.pause();
+  setAmbientPlaying(false);
+}, [chapter._id]);
 
   function handleCommentPosted(paragraphIndex: number) {
     setCommentCounts((prev) => ({
@@ -227,9 +232,9 @@ export function ChapterReader({
 
   return (
     <main ref={containerRef} className="relative bg-bg pb-24 [&:fullscreen]:overflow-y-auto [&:fullscreen]:pb-12">
-      {entranceSound && <audio ref={entranceAudioRef} src={entranceSound.url} className="hidden" />}
+      
       {PAGE_TURN_SOUND && <audio ref={pageTurnAudioRef} src={PAGE_TURN_SOUND.url} className="hidden" />}
-      {presentation.bgMusicUrl && <audio ref={bgMusicAudioRef} src={presentation.bgMusicUrl} loop className="hidden" />}
+      {ambientSound && <audio ref={ambientAudioRef} src={ambientSound.url} loop className="hidden" />}
 
       {presentation.customCss && <style>{presentation.customCss}</style>}
 
@@ -262,16 +267,16 @@ export function ChapterReader({
               </button>
             </div>
 
-            {entranceSound && soundAllowed && (
-              <button
-                onClick={replayEntranceSound}
-                aria-label={`Replay ${entranceSound.label}`}
-                title={`Replay: ${entranceSound.label}`}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-muted hover:border-accent hover:text-accent"
-              >
-                <Volume2 size={13} />
-              </button>
-            )}
+           {ambientSound && soundAllowed && (
+            <button
+              onClick={toggleAmbientSound}
+              aria-label={ambientPlaying ? `Pause ${ambientSound.label}` : `Play ${ambientSound.label}`}
+              title={ambientPlaying ? `Pause: ${ambientSound.label}` : `Play: ${ambientSound.label}`}
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-muted hover:border-accent hover:text-accent"
+            >
+              <Volume2 size={13} className={ambientPlaying ? "text-accent" : undefined} />
+            </button>
+          )}
 
             <button
               onClick={() => setSettingsOpen(true)}
@@ -371,7 +376,7 @@ export function ChapterReader({
         <ReaderSettingsModal
           open={settingsOpen}
           presentation={presentation}
-          authorSoundLabel={entranceSound?.label ?? null}
+          authorSoundLabel={ambientSound?.label ?? null}
           currentPrefs={prefs}
           onSave={(next) => { saveReaderPrefs(next); setPrefs(next); setSettingsOpen(false); }}
           onClose={() => setSettingsOpen(false)}

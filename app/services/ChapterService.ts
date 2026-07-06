@@ -15,7 +15,7 @@ export interface Chapter {
   coverUrl?: string | null;
   accessType: ChapterAccess;
   coinsRequired: number;
-  audioIntroUrl?: string;
+  audioId?: string;
   soundEffects: SoundOption[];
   publishedAt?: string;
   createdAt: string;
@@ -51,7 +51,7 @@ export interface PublicChapterDetail {
   coverUrl: string | null;
   accessType: ChapterAccess;
   coinsRequired: number;
-  audioIntroUrl: string | null;
+  audioId: string | null;
 }
 
 export interface PublicChapterTheme {

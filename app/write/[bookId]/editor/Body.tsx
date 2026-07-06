@@ -26,7 +26,7 @@ import { FontSize } from "@/components/editor/FontSize";
 import type {CreatorLocks} from "@/lib/chapter-presentation";
 import { BookService, type Book } from "@/app/services/BookService";
 import { ChapterService } from "@/app/services/ChapterService";
-import { soundUrlForId, soundIdForUrl } from "@/lib/sound-effects";
+import {  soundIdForUrl } from "@/lib/sound-effects";
 
 
 export default function ChapterEditorPage({ params }: { params: { bookId: string } }) {
@@ -120,7 +120,6 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
   useEffect(() => {
   BookService.getTheme(params.bookId)
     .then(({ data }) => {
-      console.log(data)
       setSheetThemeId(data.theme.sheetThemeId ?? DEFAULT_SHEET_THEME_ID);
       setLocks(data.theme.locks ?? { theme: false, font: false, sound: false });
     })
@@ -142,7 +141,7 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
         setTitle(chapter.title);
         setAccess(chapter.accessType);
         setCoins(chapter.coinsRequired || 20);
-        setSelectedSoundId(soundIdForUrl(chapter.audioIntroUrl));
+        setSelectedSoundId(soundIdForUrl(chapter.audioId));
         setChapterCoverPreview(chapter.coverUrl ?? null);
         editor.commands.setContent(chapter.content || "<p></p>");
         updateWordCount(editor.getText());
@@ -237,7 +236,7 @@ async function handleLocksChange(next: CreatorLocks) {
       content,
       accessType: access,
       coinsRequired: access === "coins" ? coins : undefined,
-      audioIntroUrl: soundUrlForId(selectedSoundId),
+      audioId: selectedSoundId,
     };
 
     if (!chapterId) {

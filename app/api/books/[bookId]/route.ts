@@ -84,7 +84,11 @@ export const DELETE = withAuth(async (req, ctx) => {
     if (!book) throw new NotFoundError("Book not found");
     if (String(book.authorId) !== req.user.sub) throw new ForbiddenError("Not your book");
 
-    book.statusBeforeDelete = book.status;
+    if (book.status === "removed") {
+      return ok({ book });
+    }
+
+    book.statusBeforeDelete = book.status || null;
     book.status = "removed";
     book.deletedAt = new Date();
     await book.save();

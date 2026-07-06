@@ -15,7 +15,7 @@ export interface IChapter {
   coinsRequired: number; // only relevant when accessType = 'coins'
 
   // sound experience
-  audioIntroUrl?: string;
+  audioId?: string;
   soundEffects: SoundEffect[];
 
   // engagement counters (denormalized for fast reads; kept in sync via
@@ -61,7 +61,7 @@ const ChapterSchema = new Schema<IChapter>(
     },
     coinsRequired: { type: Number, default: 0 },
 
-    audioIntroUrl: { type: String },
+    audioId: { type: String },
     soundEffects: { type: [SoundEffectSchema], default: [] },
 
     likesCount: { type: Number, default: 0 },
