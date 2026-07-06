@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------
+   LORE — theme tokens
+   Tailwind v4 uses CSS-first config: no tailwind.config.js.
+   We map our CSS variables into Tailwind's @theme so utilities
+   like bg-surface / text-ink / border-hair are generated.
+--------------------------------------------------------- */
+
+@theme inline {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-body: "Source Serif 4", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-hairline: var(--hairline);
+  --color-gold: var(--gold);
+  --color-danger: var(--danger);
+}
+
+/*Default =  Midnight — dark reading mode */
+
+:root,
+[data-theme="midnight"] {
+  --bg: #121019;
+  --surface: #1b1824;
+  --surface-raised: #211d2e;
+  --ink: #ece6da;
+  --ink-muted: #948c9e;
+  --accent: #e3a458;
+  --accent-ink: #1b1824;
+  --hairline: #322c40;
+  --gold: #e3c178;
+  --danger: #e0716b;
+}
+
+
+
+
+/* Parchment (warm editorial light) */
+[data-theme="parchment"] {
+  --bg: #f4efe3;
+  --surface: #fffcf6;
+  --surface-raised: #ffffff;
+  --ink: #2b2420;
+  --ink-muted: #8a7a64;
+  --accent: #c1602b;
+  --accent-ink: #fff8ef;
+  --hairline: #e4d8c2;
+  --gold: #b48a3f;
+  --danger: #a8403a;
+}
+
+
+/* Coppice — mossy fantasy green, dark */
+[data-theme="coppice"] {
+  --bg: #0f1c16;
+  --surface: #16261e;
+  --surface-raised: #1c2f25;
+  --ink: #e6efe4;
+  --ink-muted: #8fa698;
+  --accent: #d8b35f;
+  --accent-ink: #0f1c16;
+  --hairline: #2a3c32;
+  --gold: #d8b35f;
+  --danger: #d77a6b;
+}
+
+/* Quartz — blush romance, light */
+[data-theme="quartz"] {
+  --bg: #faeef1;
+  --surface: #fff7f8;
+  --surface-raised: #ffffff;
+  --ink: #3a232a;
+  --ink-muted: #9c7680;
+  --accent: #ad3f5c;
+  --accent-ink: #fff5f7;
+  --hairline: #f0d9de;
+  --gold: #c08a3e;
+  --danger: #ad3f5c;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Reading typography for chapter prose */
+.prose-reader {
+  font-family: var(--font-body);
+  line-height: 1.85;
+}
+.prose-reader p {
+  margin-bottom: 1.4em;
+}
+
+/* Thin scrollbars for rails */
+.rail::-webkit-scrollbar {
+  height: 6px;
+}
+.rail::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Add to globals.css — makes the empty contenteditable show its placeholder text */
+.empty-placeholder:empty::before {
+  content: attr(data-placeholder);
+  color: currentColor;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+
+/* Placeholder text */
+.tiptap-sheet p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: inherit;
+  opacity: 0.4;
+}
+
+/* Table */
+.tiptap-sheet table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+}
+.tiptap-sheet td,
+.tiptap-sheet th {
+  border: 1px solid var(--hairline, #ccc);
+  padding: 8px;
+  min-width: 60px;
+  position: relative;
+}
+.tiptap-sheet th {
+  background: rgba(0, 0, 0, 0.03);
+  font-weight: 600;
+}
+.tiptap-sheet .selectedCell {
+  background: rgba(124, 58, 237, 0.08);
+}
+.tiptap-sheet .column-resize-handle {
+  background-color: var(--accent, #7c3aed);
+  width: 2px;
+}
+
+/* Links */
+.tiptap-sheet a {
+  color: var(--accent, #7c3aed);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Scene-break rule */
+.tiptap-sheet hr {
+  border: none;
+  border-top: 1px solid var(--hairline, #ccc);
+  margin: 24px auto;
+  width: 40%;
+}
+
+.tiptap-sheet ul,
+.tiptap-sheet ol {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+.tiptap-sheet ul {
+  list-style: disc outside;
+}
+.tiptap-sheet ol {
+  list-style: decimal outside;
+}
+.tiptap-sheet ul ul {
+  list-style: circle outside;
+}
+.tiptap-sheet ul ul ul {
+  list-style: square outside;
+}
+.tiptap-sheet li {
+  margin: 0.25rem 0;
+}
+.tiptap-sheet li p {
+  margin: 0; /* Tiptap wraps list item text in <p>, kill the extra spacing */
+}
