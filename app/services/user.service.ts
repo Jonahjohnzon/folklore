@@ -42,6 +42,14 @@ export interface UpdateUserBody {
   websiteUrl?:string
 }
 
+export interface NotificationPrefs {
+  notifyNewChapter: boolean;
+  notifyComments: boolean;
+  notifyReviews: boolean;
+  notifyNewFollower: boolean;
+  emailDigest: boolean;
+  emailProductUpdates: boolean;
+}
 
 
 export const UserService = {
@@ -70,4 +78,15 @@ unblockUser: (username: string) =>
   api.delete<{ success: boolean }>(`/api/pages/users/${username}/block`),
 updatePrivacySettings: (settings: Record<string, unknown>) =>
   api.patch<{ success: boolean }>("/api/pages/users/me/privacy", settings),
+getNotificationPrefs: () =>
+  api.get<{ success: boolean; data: { prefs: NotificationPrefs } }>(
+    "/api/pages/users/me/notification-prefs"
+  ),
+
+updateNotificationPrefs: (prefs: Partial<NotificationPrefs>) =>
+  api.patch<{ success: boolean; data: { prefs: NotificationPrefs } }>(
+    "/api/pages/users/me/notification-prefs",
+    prefs
+  ),
+
 };

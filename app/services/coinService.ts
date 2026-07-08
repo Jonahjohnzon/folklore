@@ -2,6 +2,7 @@ import ApiClient from "@/app/ApiCore";
 const api = new ApiClient();
 
 export interface CoinActivityItem {
+  status: string;
   id: string;
   label: string;
   coins: number;

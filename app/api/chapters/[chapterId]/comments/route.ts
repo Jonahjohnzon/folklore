@@ -2,11 +2,11 @@ import { Types } from "mongoose";
 import { Comment } from "@/app/api/lib/models/Comment";
 import { CommentLike } from "@/app/api/lib/models/CommentLike";
 import { serializeComment } from "@/app/api/lib/serialize-comment";
-import {connectToDatabase} from "@/app/api/lib/db/connect";
+import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Chapter } from "@/app/api/lib/models/Chapter";
 import { Book } from "@/app/api/lib/models/Book";
 import { withAuth } from "@/app/api/auth/withAuth";
-import {ok, fail} from "@/app/api/response";
+import { ok, fail } from "@/app/api/response";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { PopulatedCommentDoc } from "@/app/api/lib/serialize-comment";
 
@@ -15,9 +15,9 @@ const MAX_PAGE_SIZE = 50;
 const MAX_CONTENT_LENGTH = 2000;
 
 export const GET = withAuth(async (req, ctx) => {
-   await connectToDatabase();
+  await connectToDatabase();
   const { chapterId } = await ctx.params;
- if (!chapterId) return fail("Invalid chapter id");
+  if (!chapterId) return fail("Invalid chapter id");
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, Number(searchParams.get("page") ?? 1));
@@ -34,15 +34,15 @@ export const GET = withAuth(async (req, ctx) => {
 
   const userId = req.user?.sub;
 
-const [total, comments] = await Promise.all([
-  Comment.countDocuments(filter),
-  Comment.find(filter)
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .populate("userId", "name username avatarUrl")
-    .lean() as unknown as Promise<PopulatedCommentDoc[]>,
-]);
+  const [total, comments] = await Promise.all([
+    Comment.countDocuments(filter),
+    Comment.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("userId", "name username avatarUrl")
+      .lean() as unknown as Promise<PopulatedCommentDoc[]>,
+  ]);
 
   let likedIds = new Set<string>();
   if (userId && comments.length > 0) {
@@ -62,11 +62,12 @@ const [total, comments] = await Promise.all([
     total,
     hasMore: page * limit < total,
   });
-})
+});
 
 export const POST = withAuth(async (req, ctx) => {
-  await connectToDatabase();
-  const { chapterId } = await ctx.params;
+   await connectToDatabase();
+  const params = await ctx.params;
+  const chapterId = Array.isArray(params.chapterId) ? params.chapterId[0] : params.chapterId;
   if (!chapterId) return fail("Invalid chapter id");
 
   const userId = req.user?.sub;
@@ -108,10 +109,9 @@ export const POST = withAuth(async (req, ctx) => {
     Chapter.findByIdAndUpdate(chapterId, { $inc: { commentsCount: 1 } }),
   ]);
 
-// POST handler — same idea, after populate + toObject()
-const populated = await comment.populate("userId", "name username avatarUrl");
-const populatedObj = populated.toObject() as unknown as PopulatedCommentDoc;
-const actorName = populatedObj.userId?.name || populatedObj.userId?.username || "Someone";
+  const populated = await comment.populate("userId", "name username avatarUrl");
+  const populatedObj = populated.toObject() as unknown as PopulatedCommentDoc;
+  const actorName = populatedObj.userId?.name || populatedObj.userId?.username || "Someone";
 
   // --- notification dispatch ---
   // fire-and-forget-ish: awaited so errors are caught by the route's own error
@@ -119,12 +119,16 @@ const actorName = populatedObj.userId?.name || populatedObj.userId?.username || 
   const book = await Book.findById(chapter.bookId).select("authorId title slug").lean();
 
   if (book) {
-    const fullLink = `https://yourdomain.com/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
-    const appLink = `/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
-
     if (parentId && parent) {
       // reply — notify the parent comment's author (unless replying to yourself)
+      // IMPORTANT: link anchors on the PARENT comment id, because the reply itself
+      // is hidden inside a collapsed thread until the parent is expanded. The reply's
+      // own id is passed as `highlight` so the frontend can scroll/flash it once
+      // the thread is expanded.
       if (String(parent.userId) !== String(userId)) {
+        const appLink = `/book/${book.slug}/chapter/${chapterId}?highlight=${comment._id}#comment-${parentId}`;
+        const fullLink = `https://yourdomain.com/book/${book.slug}/chapter/${chapterId}?highlight=${comment._id}#comment-${parentId}`;
+
         await dispatchNotification({
           userId: parent.userId,
           type: "comment_reply",
@@ -148,6 +152,9 @@ const actorName = populatedObj.userId?.name || populatedObj.userId?.username || 
     } else {
       // top-level comment — notify the book's author (unless commenting on your own book)
       if (String(book.authorId) !== String(userId)) {
+        const appLink = `/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
+        const fullLink = `https://yourdomain.com/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
+
         await dispatchNotification({
           userId: book.authorId,
           type: "new_comment",
@@ -172,4 +179,4 @@ const actorName = populatedObj.userId?.name || populatedObj.userId?.username || 
   }
 
   return ok({ comment: serializeComment(populatedObj, new Set()) });
-})
+});

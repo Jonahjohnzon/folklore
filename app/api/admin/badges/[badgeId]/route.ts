@@ -5,6 +5,7 @@ import { Badge } from "@/app/api/lib/models/Badge";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ValidationError } from "@/app/api/lib/db/errors";
 
+
 export const PATCH = withAdmin(async (req, ctx) => {
   try {
     await connectToDatabase();

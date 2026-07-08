@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, User, AtSign, KeyRound, Bell, ShieldCheck, TriangleAlert } from "lucide-react";
 import { ProfileTab } from "./edit-profile/ProfileTab";
@@ -32,6 +32,15 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
     privacy: false,
     danger: false,
   });
+
+
+    useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+    }, []);
 
   const markDirty = (tab: TabId, value: boolean) =>
     setDirty((prev) => (prev[tab] === value ? prev : { ...prev, [tab]: value }));
@@ -111,7 +120,6 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
           {active === "account" && <AccountTab onDirtyChange={(v) => markDirty("account", v)} />}
           {active === "password" && <PasswordTab onDirtyChange={(v) => markDirty("password", v)} />}
           {active === "notifications" && <NotificationsTab onDirtyChange={(v) => markDirty("notifications", v)} />}
-          {active === "privacy" && <PrivacyTab onDirtyChange={(v) => markDirty("privacy", v)} />}
           {active === "danger" && <DangerZoneTab onAccountDeleted={onClose} />}
         </div>
       </div>
@@ -122,3 +130,5 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
   if (typeof document === "undefined") return null;
   return createPortal(content, document.body);
 }
+
+//  {active === "privacy" && <PrivacyTab onDirtyChange={(v) => markDirty("privacy", v)} />}

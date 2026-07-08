@@ -1,4 +1,4 @@
-import type { NextApiRequest } from "next";
+
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { loginSchema } from "@/app/api/validation/auth.schema";
 import { loginUser } from "@/app/api/services/auth.service";

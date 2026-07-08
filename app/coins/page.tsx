@@ -1,10 +1,10 @@
 "use client";
 import { CoinService, type CoinActivityItem } from "@/app/services/coinService";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import {
   Coins, Check, ShieldCheck, CreditCard, Bitcoin, Landmark,
-  ArrowUpRight, ArrowDownRight, Info, ArrowLeft, Loader2,
+  ArrowUpRight, ArrowDownRight, Info, ArrowLeft, Loader2, Clock,
 } from "lucide-react";
 import { formatNaira, formatUsd, formatNairaPerCoin, formatUsdPerCoin } from "@/lib/currency";
 import {
@@ -15,8 +15,42 @@ import { startCoinCheckout, startCryptoCheckout, goToCheckout, CheckoutError } f
 
 type PaymentMethod = "paystack" | "crypto";
 
+const PENDING_POLL_INTERVAL_MS = 4000;
+const PENDING_POLL_MAX_ATTEMPTS = 20;
+
 export default function CoinsPage() {
+  return (
+    <Suspense fallback={<CoinsPageFallback />}>
+      <CoinsPageContent />
+    </Suspense>
+  );
+}
+
+// Lightweight skeleton shown before the client can read search params —
+// mirrors the page's basic shape so there's no jarring layout shift.
+function CoinsPageFallback() {
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <div className="mb-8">
+        <p className="font-sans text-xs font-medium uppercase tracking-wide text-accent">Wallet</p>
+        <h1 className="mt-0.5 font-display text-3xl font-bold text-ink">Buy coins</h1>
+      </div>
+      <div className="mb-8 flex items-center gap-4 rounded-2xl border border-hairline bg-surface-raised px-6 py-5 shadow-sm">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold/15 text-gold">
+          <Coins size={26} />
+        </div>
+        <p className="flex items-center gap-2 font-display text-xl font-semibold text-ink-muted">
+          <Loader2 size={16} className="animate-spin" /> Loading…
+        </p>
+      </div>
+    </main>
+  );
+}
+
+function CoinsPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [activity, setActivity] = useState<CoinActivityItem[] | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState(COIN_PACKAGES[1].id);
   const [method, setMethod] = useState<PaymentMethod>("paystack");
@@ -24,28 +58,56 @@ export default function CoinsPage() {
 
   const [email, setEmail] = useState("");
   const [balance, setBalance] = useState<number | null>(null);
-  
+
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [balRes, actRes] = await Promise.all([
-          CoinService.getBalance(),
-          CoinService.getTransactions(),
-        ]);
-        if (cancelled) return;
-        setBalance(balRes.data.coinBalance);
-        setActivity(actRes.data);
-      } catch (err: any) {
-        if (!cancelled) setLoadError(err?.message ?? "Sign in to see your balance.");
-      }
-    })();
-    return () => { cancelled = true; };
+  const [awaitingCryptoConfirmation, setAwaitingCryptoConfirmation] = useState(
+    searchParams.get("status") === "pending"
+  );
+
+  const loadWallet = useCallback(async () => {
+    try {
+      const [balRes, actRes] = await Promise.all([
+        CoinService.getBalance(),
+        CoinService.getTransactions(),
+      ]);
+      setBalance(balRes.data.coinBalance);
+      setActivity(actRes.data.filter((item) => item.status !== "pending"));
+      return balRes.data.coinBalance;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setLoadError(err?.message ?? "Sign in to see your balance.");
+      return null;
+    }
   }, []);
+
+  useEffect(() => {
+    loadWallet();
+  }, [loadWallet]);
+
+  useEffect(() => {
+    if (!awaitingCryptoConfirmation) return;
+
+    let attempts = 0;
+    const startingBalance = balance;
+
+    const interval = setInterval(async () => {
+      attempts += 1;
+      const fresh = await loadWallet();
+
+      const balanceChanged = startingBalance !== null && fresh !== null && fresh !== startingBalance;
+      if (balanceChanged || attempts >= PENDING_POLL_MAX_ATTEMPTS) {
+        setAwaitingCryptoConfirmation(false);
+        clearInterval(interval);
+        router.replace("/coins");
+      }
+    }, PENDING_POLL_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingCryptoConfirmation]);
 
   const bestValueId = bestValuePackageId(currency);
   const selectedPackage = COIN_PACKAGES.find((p) => p.id === selectedPackageId)!;
@@ -65,6 +127,7 @@ useEffect(() => {
         const { paymentUrl } = await startCryptoCheckout({ packageId: selectedPackageId, email: email.trim() });
         goToCheckout(paymentUrl);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setCheckoutError(err instanceof CheckoutError ? err.message : "Something went wrong. Try again.");
       setIsCheckingOut(false);
@@ -87,6 +150,18 @@ useEffect(() => {
         </p>
       </div>
 
+      {awaitingCryptoConfirmation && (
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-gold/30 bg-gold/10 px-5 py-4">
+          <Loader2 size={18} className="animate-spin text-gold" />
+          <div>
+            <p className="font-sans text-sm font-medium text-ink">Confirming your crypto payment…</p>
+            <p className="font-sans text-xs text-ink-muted">
+              This can take a minute or two depending on the network. Your coins will appear here automatically.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8 flex items-center gap-4 rounded-2xl border border-hairline bg-surface-raised px-6 py-5 shadow-sm">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold/15 text-gold">
           <Coins size={26} />
@@ -107,13 +182,17 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Payment method chosen FIRST — it determines which currency the whole page prices in */}
       <section className="mb-6 rounded-2xl border border-hairline bg-surface-raised p-5 shadow-sm">
         <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Pay with</p>
         <div className="flex flex-wrap gap-2">
           <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Card / bank transfer / mobile money (₦)" />
           <MethodButton active={method === "crypto"} onClick={() => setMethod("crypto")} icon={Bitcoin} label="Crypto ($)" />
         </div>
+        {method === "crypto" && (
+          <p className="mt-2.5 flex items-center gap-1.5 font-sans text-xs text-ink-muted">
+            <Clock size={12} /> Crypto payments confirm on-chain — coins are credited a few minutes after payment.
+          </p>
+        )}
       </section>
 
       <section className="mb-10">

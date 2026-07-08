@@ -17,7 +17,8 @@ interface UnlockResult {
 
 export const POST = withAuth(async (req, ctx) => {
   await connectToDatabase();
-  const { chapterId } = await ctx.params;
+  const params = await ctx.params;
+  const chapterId = Array.isArray(params.chapterId) ? params.chapterId[0] : params.chapterId;
   if (!chapterId) return fail("Invalid chapter id");
 
   const userId = req.user?.sub;
@@ -154,7 +155,7 @@ export const POST = withAuth(async (req, ctx) => {
   // chapters (price === 0) — nothing actually changed hands in either case.
   if (!result.alreadyUnlocked && price > 0 && book) {
     const chapterLink = `/book/${book.slug}/chapter/${chapterId}`;
-    const fullChapterLink = `https://yourdomain.com${chapterLink}`;
+    const fullChapterLink = `https://tipatale.com${chapterLink}`;
 
     // Notify the author they earned coins.
     if (authorId) {

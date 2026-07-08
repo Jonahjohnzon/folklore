@@ -5,7 +5,6 @@ interface StartCheckoutInput {
   userId: string;
   packageId: string;
   usdAmount: number;
-  coins: number; // pre-resolved total (base + bonus) from totalCoins(pkg)
   reference: string;
 }
 
@@ -14,19 +13,17 @@ interface StartCheckoutResult {
 }
 
 export const cryptoCheckoutProvider = {
-  async startCheckout({
-    userId,
-    packageId,
-    usdAmount,
-    coins,
-    reference,
-  }: StartCheckoutInput): Promise<StartCheckoutResult> {
+  async startCheckout({ userId, packageId, usdAmount, reference }: StartCheckoutInput): Promise<StartCheckoutResult> {
+    // Pending transaction row now, so the webhook has something to find and
+    // finalize when it lands. coins is 0 here — filled in by the caller's
+    // package lookup at webhook time, or you can pass it in if you prefer
+    // to snapshot it now (see note below).
     await Transaction.create({
       userId,
       type: "purchase",
       status: "pending",
-      coins,
-      label: `Coin purchase (crypto) — pending`,
+      coins: 0, // set to the actual package coin amount below
+      label: "Coin purchase (crypto) — pending",
       paymentMethod: "crypto",
       packageId,
       amount: usdAmount,
@@ -38,8 +35,8 @@ export const cryptoCheckoutProvider = {
       amount: usdAmount.toFixed(2),
       currency: "USD",
       orderId: reference,
-      urlReturn: `https://tipatale.com/coins?status=pending`,
-      urlCallback: `https://tipatale.com/api/payments/crypto/webhook`,
+      urlReturn: `https://yourdomain.com/coins?status=pending`,
+      urlCallback: `https://yourdomain.com/api/payments/crypto/webhook`,
     });
 
     return { paymentUrl: invoice.url };

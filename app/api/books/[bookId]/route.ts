@@ -88,7 +88,7 @@ export const DELETE = withAuth(async (req, ctx) => {
       return ok({ book });
     }
 
-    book.statusBeforeDelete = book.status || null;
+    book.statusBeforeDelete = book.status || "draft";
     book.status = "removed";
     book.deletedAt = new Date();
     await book.save();

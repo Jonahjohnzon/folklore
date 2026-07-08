@@ -1,13 +1,13 @@
-import { optionalAuth } from "@/app/api/auth/optionalAuth";
+
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { User } from "@/app/api/lib/models/User";
 import { Follow } from "@/app/api/lib/models/Follow";
 import { UserBadge } from "@/app/api/lib/models/UserBadge";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Badge } from "@/app/api/lib/models/Badge"; // ensures model is registered before .populate()
+
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError } from "@/app/api/lib/db/errors";
 import { withAuth } from "@/app/api/auth/withAuth";
+import  "@/app/api/lib/models/Badge";
 
 
 export const GET = withAuth(async (req, ctx) => {

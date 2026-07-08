@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import {
   Coins, CheckCircle2, XCircle, Loader2, ArrowRight, RefreshCcw, ReceiptText,
 } from "lucide-react";
@@ -18,6 +18,28 @@ interface VerifyResult {
 }
 
 export default function PaymentThankYouPage() {
+  return (
+    <Suspense fallback={<ThankYouFallback />}>
+      <PaymentThankYouContent />
+    </Suspense>
+  );
+}
+
+// Minimal loading state shown for the brief moment before the client can
+// read search params — keeps the same visual language as the "checking" state.
+function ThankYouFallback() {
+  return (
+    <main className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-accent">
+        <Loader2 size={28} className="animate-spin" />
+      </div>
+      <h1 className="font-display text-2xl font-bold text-ink">Confirming your payment…</h1>
+      <p className="mt-1.5 font-sans text-sm text-ink-muted">This only takes a moment. Don&apos;t close this page.</p>
+    </main>
+  );
+}
+
+function PaymentThankYouContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -58,7 +80,6 @@ export default function PaymentThankYouPage() {
     return () => { cancelled = true; };
   }, [reference, pollCount]);
 
-  // auto-retry a couple of times while pending (crypto confirmations can lag)
   useEffect(() => {
     if (state !== "pending" || pollCount >= 3) return;
     const t = setTimeout(() => setPollCount((c) => c + 1), 4000);
