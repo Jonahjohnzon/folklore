@@ -49,6 +49,8 @@ export interface IUser {
     lastReadDate: Date | null;
   };
   blockedUsers: Types.ObjectId[];
+  googleId?: string;
+  authProviders: string[];
 
 }
 
@@ -56,7 +58,7 @@ export interface IUser {
 const UserSchema = new Schema<IUser>(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true },
+    passwordHash: { type: String},
 
     username: { type: String, required: true, unique: true, trim: true },
     displayName: { type: String },
@@ -101,6 +103,8 @@ const UserSchema = new Schema<IUser>(
       lastReadDate: { type: Date, default: null },
     },
     blockedUsers: [{ type: Schema.Types.ObjectId, ref: "User", default: [] }],
+    googleId: { type: String, unique: true, sparse: true },
+    authProviders: { type: [String], default: ["password"] }, 
   },
   { timestamps: true }
 );

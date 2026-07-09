@@ -54,5 +54,7 @@ changePassword: (body: { currentPassword: string; newPassword: string }) =>
   api.post<{ success: boolean }>("/api/pages/auth/change-password", body),
 requestEmailChange: (email: string) =>
   api.post<{ success: boolean }>("/api/pages/auth/request-email-change", { email }),
+googleSignIn: (idToken: string) =>
+  api.post<AuthResponse>("/api/pages/auth/google", { idToken }),
 
 };

@@ -9,8 +9,9 @@ import { ok, fail } from "@/app/api/response";
 export const GET = withAuth(async (req) => {
   try {
     const reference = new URL(req.url).searchParams.get("reference");
+    
     if (!reference) return fail(new Error("Missing reference"));
-
+    console.log(reference)
     await connectToDatabase();
 
     const txn = await Transaction.findOne({ providerReference: reference, userId: req.user.sub });

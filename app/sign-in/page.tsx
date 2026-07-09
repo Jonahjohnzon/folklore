@@ -9,7 +9,8 @@ import { hydrateStore } from "../store/StoreHydrator";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { TextField } from "@/components/auth/TextField";
 import { PasswordField } from "@/components/auth/PasswordField";
-import { SocialAuthDivider, SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
+import { SocialAuthDivider } from "@/components/auth/SocialAuthButtons";
+import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 
 interface FormErrors {
   identifier?: string;

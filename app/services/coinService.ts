@@ -17,4 +17,16 @@ export const CoinService = {
   getTransactions() {
     return api.get<{ data: CoinActivityItem[] }>("/api/coins/transactions");
   },
+  verifyPayment: (reference: string) =>
+  api.get<{
+    success: boolean;
+    data: {
+      status: "pending" | "completed" | "failed";
+      coinsCredited?: number;
+      newBalance?: number;
+      packageLabel?: string;
+      amountLabel?: string;
+      reference?: string;
+    };
+  }>("/api/pages/coins/verify", { reference }),
 };

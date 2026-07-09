@@ -6,6 +6,7 @@ import {
   Coins, CheckCircle2, XCircle, Loader2, ArrowRight, RefreshCcw, ReceiptText,
 } from "lucide-react";
 import Link from "next/link";
+import { CoinService } from "@/app/services/coinService";
 
 type VerifyState = "checking" | "success" | "pending" | "failed";
 
@@ -25,8 +26,6 @@ export default function PaymentThankYouPage() {
   );
 }
 
-// Minimal loading state shown for the brief moment before the client can
-// read search params — keeps the same visual language as the "checking" state.
 function ThankYouFallback() {
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
@@ -38,6 +37,9 @@ function ThankYouFallback() {
     </main>
   );
 }
+
+const MAX_POLLS = 6;
+const POLL_INTERVAL_MS = 3000;
 
 function PaymentThankYouContent() {
   const router = useRouter();
@@ -59,14 +61,19 @@ function PaymentThankYouContent() {
 
     async function verify() {
       try {
-        const res = await fetch(`/api/coins/verify?reference=${encodeURIComponent(reference!)}`);
-        const json = await res.json();
+        const res = await CoinService.verifyPayment(reference!);
         if (cancelled) return;
 
-        if (json.ok && json.data.status === "completed") {
-          setResult(json.data);
+        if (res.success && res.data.status === "completed") {
+          setResult({
+            coinsCredited: res.data.coinsCredited!,
+            newBalance: res.data.newBalance!,
+            packageLabel: res.data.packageLabel!,
+            amountLabel: res.data.amountLabel!,
+            reference: res.data.reference!,
+          });
           setState("success");
-        } else if (json.ok && json.data.status === "pending") {
+        } else if (res.success && res.data.status === "pending") {
           setState("pending");
         } else {
           setState("failed");
@@ -81,8 +88,9 @@ function PaymentThankYouContent() {
   }, [reference, pollCount]);
 
   useEffect(() => {
-    if (state !== "pending" || pollCount >= 3) return;
-    const t = setTimeout(() => setPollCount((c) => c + 1), 4000);
+    if (state !== "pending" && state !== "checking") return;
+    if (pollCount >= MAX_POLLS) return;
+    const t = setTimeout(() => setPollCount((c) => c + 1), POLL_INTERVAL_MS);
     return () => clearTimeout(t);
   }, [state, pollCount]);
 
@@ -115,10 +123,8 @@ function PaymentThankYouContent() {
                 +{result.coinsCredited.toLocaleString()} coins
               </span>
             </div>
-            <div className="mt-4 space-y-2 border-t border-hairline pt-4 text-left font-sans text-sm">
-              <Row label="Package" value={result.packageLabel} />
+            <div className="mt-4 space-y-2 overflow-hidden border-t border-hairline pt-4 text-left font-sans text-sm">
               <Row label="Amount charged" value={result.amountLabel} />
-              <Row label="New balance" value={`${result.newBalance.toLocaleString()} coins`} />
               <Row label="Reference" value={result.reference} mono />
             </div>
           </div>

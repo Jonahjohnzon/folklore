@@ -124,8 +124,8 @@ function CoinsPageContent() {
         const { authorizationUrl } = await startCoinCheckout({ packageId: selectedPackageId, email: email.trim() });
         goToCheckout(authorizationUrl);
       } else {
-        const { paymentUrl } = await startCryptoCheckout({ packageId: selectedPackageId, email: email.trim() });
-        goToCheckout(paymentUrl);
+        // const { paymentUrl } = await startCryptoCheckout({ packageId: selectedPackageId, email: email.trim() });
+        // goToCheckout(paymentUrl);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {

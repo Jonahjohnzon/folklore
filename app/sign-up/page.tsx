@@ -12,11 +12,12 @@ import { TextField } from "@/components/auth/TextField";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { UsernameField } from "@/components/auth/UsernameField";
 import { DateOfBirthFields } from "@/components/auth/DateOfBirthFields";
-import { SocialAuthDivider, SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
+import { SocialAuthDivider } from "@/components/auth/SocialAuthButtons";
 import {
   isValidEmail, getPasswordStrength, buildDateFromParts, calculateAge,
   MIN_SIGNUP_AGE, MATURE_CONTENT_AGE,
 } from "@/lib/validation/auth";
+import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 
 interface FormErrors {
   email?: string;

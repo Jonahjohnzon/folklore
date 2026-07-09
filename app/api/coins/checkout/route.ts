@@ -27,7 +27,7 @@ export const POST = withAuth(async (req) => {
         email,
         amount: Math.round(pkg.nairaPrice * 100), // kobo
         reference,
-        callback_url: `${process.env.APP_URL}/payment/thank-you`,
+        callback_url: `${process.env.APP_URL}/coins/thank-you?reference=${reference}`,
         metadata: { packageId, userId: req.user.sub },
       }),
     });
