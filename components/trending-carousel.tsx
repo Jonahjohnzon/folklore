@@ -57,7 +57,7 @@ export function TrendingCarousel({ books }: { books: Book[] }) {
           <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-ink sm:text-5xl">
             {book.title}
           </h1>
-          <p className="mt-4 max-w-lg font-body text-base leading-relaxed text-ink-muted sm:text-lg">
+          <p className="mt-4 max-w-lg font-body text-base leading-relaxed text-ink-muted sm:text-lg line-clamp-3 ">
             {book.description}
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
