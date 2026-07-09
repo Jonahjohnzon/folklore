@@ -7,9 +7,92 @@ import StoreHydrator from "@/app/store/StoreHydrator";
 
 
 
+const SITE_NAME = "TipaTale";
+const SITE_URL = "https://tipatale.com";
+const DESCRIPTION =
+  "Read and write serialized fiction — romance, fantasy, thrillers, and more. Discover new stories, support the authors you love, and publish your own on TipaTale.";
+
 export const metadata: Metadata = {
-  title: "Lore — stories worth staying up for",
-  description: "Read and write serialized fiction. Fantasy, romance, sci-fi, and more.",
+  metadataBase: new URL(SITE_URL),
+
+  title: {
+    default: `${SITE_NAME} — Read and Write Stories Online`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DESCRIPTION,
+
+  applicationName: SITE_NAME,
+  generator: "Next.js",
+  keywords: [
+    "TipaTale",
+    "web novels",
+    "read stories online",
+    "fanfiction",
+    "serialized fiction",
+    "romance novels",
+    "fantasy stories",
+    "write stories online",
+    "self-publishing platform",
+    "story app",
+  ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
+
+  manifest: "/site.webmanifest",
+
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — Read and Write Stories Online`,
+    description: DESCRIPTION,
+    locale: "en_US",
+    images: [
+      {
+        url: "/opengraph.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} — Read and Write Stories Online`,
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — Read and Write Stories Online`,
+    description: DESCRIPTION,
+    images: ["/opengraph.png"],
+    // creator: "@tipatale", // uncomment and set if you have a Twitter/X handle
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+
+  alternates: {
+    canonical: SITE_URL,
+  },
+
+  category: "entertainment",
+
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 // Runs before React hydrates / before first paint, so the correct
@@ -32,7 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
         <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        <meta name="cryptomus" content="30767fff" />
+        <meta name="cryptomus" content="8bcee79e" />
       </head>
       <body>
         <StoreHydrator />

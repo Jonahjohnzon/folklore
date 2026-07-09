@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSnapshot } from "valtio";
@@ -500,8 +500,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-hairline bg-surface/90 backdrop-blur supports-backdrop-filter:bg-surface/75">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent font-display text-base text-accent-ink">L</span>
-          Lore
+         <Image src="/logo.png" alt="TipaTale" width={62} height={62} priority />
         </Link>
 
         <nav className="ml-2 hidden items-center gap-5 lg:flex">
