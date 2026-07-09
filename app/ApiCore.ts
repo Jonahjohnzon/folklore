@@ -38,6 +38,7 @@ api.interceptors.response.use(
     const requestUrl: string = error.config?.url ?? "";
     const message: string = error.response.data?.error.message ?? error.message;
 
+
     switch (status) {
       case 401: {
         const isAuthAction = AUTH_ACTION_PATHS.some((path) => requestUrl.includes(path));
@@ -60,7 +61,7 @@ api.interceptors.response.use(
         return Promise.reject("Not found.");
 
       case 422:
-        return Promise.reject(error.response.data);
+        return Promise.reject(error.response.data?.error);
 
       case 429:
         return Promise.reject("Too many requests. Slow down.");

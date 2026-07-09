@@ -2,7 +2,7 @@
 import { getSheetSurfaceStyle, SheetOpeningRule, SHEET_MAX_WIDTH, SHEET_PADDING, SHEET_RADIUS } from "@/lib/sheet-surface";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Save, UploadCloud, FileUp, Loader2 } from "lucide-react";
+import { Save, UploadCloud, FileUp, Loader2, CheckCircle2 } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -28,6 +28,10 @@ import { BookService, type Book } from "@/app/services/BookService";
 import { ChapterService } from "@/app/services/ChapterService";
 import {  soundIdForUrl } from "@/lib/sound-effects";
 
+// How long the "Chapter saved!" / "Chapter published!" toast stays on screen.
+const TOAST_DURATION_MS = 3500;
+
+type ToastKind = "saved" | "published";
 
 export default function ChapterEditorPage({ params }: { params: { bookId: string } }) {
   const searchParams = useSearchParams();
@@ -61,6 +65,11 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Obvious success feedback — a toast that pops up after a save/publish
+  // completes, plus its own timer so a later action can cancel/replace it.
+  const [toast, setToast] = useState<ToastKind | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const sheetRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,6 +77,18 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
 
   const updateWordCount = useCallback((text: string) => {
     setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
+  }, []);
+
+  const showToast = useCallback((kind: ToastKind) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast(kind);
+    toastTimerRef.current = setTimeout(() => setToast(null), TOAST_DURATION_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
   }, []);
 
   const editor = useEditor({
@@ -211,15 +232,7 @@ async function handleLocksChange(next: CreatorLocks) {
     }
   }
 
-  // async function uploadPendingCoverIfAny(id: string) {
-  //   if (!chapterCoverFile) return;
-  //   const { data } = await ChapterService.uploadCover(params.bookId, id, chapterCoverFile);
-  //   setChapterCoverFile(null);
-  //   setChapterCoverPreview((prev) => {
-  //     if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
-  //     return data.chapter.coverUrl ?? null;
-  //   });
-  // }
+
 
   function validateChapter(): string | null {
     if (!title.trim()) return "Add a chapter title before saving.";
@@ -267,6 +280,7 @@ async function handleLocksChange(next: CreatorLocks) {
       const id = await persistChapter();
       // if (id) await uploadPendingCoverIfAny(id);
       setLastSavedAt(new Date());
+      showToast("saved");
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Couldn't save the draft.");
     } finally {
@@ -290,6 +304,7 @@ async function handleLocksChange(next: CreatorLocks) {
         await ChapterService.publish(params.bookId, id);
       }
       setLastSavedAt(new Date());
+      showToast("published");
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Couldn't publish the chapter.");
     } finally {
@@ -385,6 +400,20 @@ async function handleLocksChange(next: CreatorLocks) {
 
   return (
     <main className="mx-auto max-w-375 px-4 py-6 sm:px-6">
+      {/* Obvious success toast — top-of-viewport, fixed, auto-dismisses */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed left-1/2 top-6 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-top-2"
+        >
+          <div className="flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-lg shadow-emerald-600/30">
+            <CheckCircle2 size={18} />
+            {toast === "published" ? "Chapter published!" : "Chapter saved!"}
+          </div>
+        </div>
+      )}
+
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-sans text-xs font-medium uppercase tracking-wide text-accent">

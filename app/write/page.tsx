@@ -120,8 +120,8 @@ export default function NewBookPage() {
       });
 
       router.push(`/write/${book._id}/editor`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't create the book. Try again.");
+    } catch (err:any) {
+      setError(err.message || "Couldn't create the book.");
       setSubmitting(false);
     }
   }
@@ -178,7 +178,7 @@ export default function NewBookPage() {
                   <ImagePlus size={18} className="text-accent" />
                 </div>
                 <span className="font-sans text-xs font-medium text-ink-muted">
-                  Upload cover
+                  Upload cover - [8MB]
                   <br />
                   <span className="text-ink-muted/70">recommended 600×900</span>
                 </span>
@@ -283,7 +283,7 @@ export default function NewBookPage() {
             </select>
           </div>
 
-          <div>
+          {/* <div>
             <label className="font-sans text-sm font-semibold text-ink">Reading theme</label>
             <p className="mt-1 font-sans text-xs text-ink-muted">
               Sets the default colors readers see — they can still switch it themselves.
@@ -308,7 +308,7 @@ export default function NewBookPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

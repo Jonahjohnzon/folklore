@@ -39,13 +39,13 @@ export const POST = withAuth(async (req, ctx) => {
     const form = await req.formData();
     const file = form.get("cover");
     if (!(file instanceof File)) {
-      throw new ValidationError("No file provided", { cover: ["A cover image is required"] });
+      throw new ValidationError("No image provided", { cover: ["A cover image is required"] });
     }
     if (!ALLOWED_TYPES.includes(file.type)) {
-      throw new ValidationError("Unsupported file type", { cover: ["Use JPG, PNG, or WEBP"] });
+      throw new ValidationError("Unsupported image type", { cover: ["Use JPG, PNG, or WEBP"] });
     }
     if (file.size > MAX_BYTES) {
-      throw new ValidationError("File too large", { cover: ["Max size is 8MB"] });
+      throw new ValidationError("image too large", { cover: ["Max size is 8MB"] });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
