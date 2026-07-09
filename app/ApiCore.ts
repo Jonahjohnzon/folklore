@@ -18,25 +18,40 @@ api.interceptors.request.use((config: any) => {
   return config;
 });
 
+const AUTH_ACTION_PATHS = [
+  "/api/pages/auth/login",
+  "/api/pages/auth/register",
+  "/api/pages/auth/google",
+  "/api/pages/auth/apple",
+];
+
+
 // ── Response interceptor ──────────────────────────────────────────────────────
 api.interceptors.response.use(
   (response: any) => response,
   (error: any) => {
     if (!error.response) {
-      // Network error / no connection
       return Promise.reject("Network error. Check your connection.");
     }
 
     const { status } = error.response;
-    const message: string = error.response.data?.message ?? error.message;
+    const requestUrl: string = error.config?.url ?? "";
+    const message: string = error.response.data?.error.message ?? error.message;
 
     switch (status) {
-      case 401:
-        // Session expired / not authenticated — redirect to login
+      case 401: {
+        const isAuthAction = AUTH_ACTION_PATHS.some((path) => requestUrl.includes(path));
+        if (isAuthAction) {
+         
+          // Wrong credentials on login/register/social sign-in — let the form show the message
+          return Promise.reject(message);
+        }
+        // Any other 401 = an expired/invalid session on a protected route
         if (typeof window !== "undefined") {
           window.location.href = "/sign-in";
         }
         return Promise.reject("Session expired. Please log in again.");
+      }
 
       case 403:
         return Promise.reject("You do not have permission to do that.");
@@ -45,7 +60,6 @@ api.interceptors.response.use(
         return Promise.reject("Not found.");
 
       case 422:
-        // Validation errors — return field errors for forms
         return Promise.reject(error.response.data);
 
       case 429:
@@ -59,7 +73,6 @@ api.interceptors.response.use(
     }
   }
 );
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface RequestOptions extends AxiosRequestConfig {
   params?: Record<string, unknown>;

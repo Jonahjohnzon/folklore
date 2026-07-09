@@ -186,7 +186,13 @@ function CoinsPageContent() {
         <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Pay with</p>
         <div className="flex flex-wrap gap-2">
           <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Card / bank transfer / mobile money (₦)" />
-          <MethodButton active={method === "crypto"} onClick={() => setMethod("crypto")} icon={Bitcoin} label="Crypto ($)" />
+          <MethodButton
+  active={false}
+  disabled
+  onClick={() => {}}
+  icon={Bitcoin}
+  label="Crypto ($) — Coming soon"
+/>
         </div>
         {method === "crypto" && (
           <p className="mt-2.5 flex items-center gap-1.5 font-sans text-xs text-ink-muted">
@@ -282,9 +288,31 @@ function CoinsPageContent() {
   );
 }
 
-function MethodButton({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: React.ComponentType<{ size?: number }>; label: string }) {
+function MethodButton({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  disabled,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ComponentType<{ size?: number }>;
+  label: string;
+  disabled?: boolean;
+}) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs font-medium transition ${active ? "border-accent bg-accent/10 text-accent" : "border-hairline text-ink-muted hover:border-accent/50 hover:text-ink"}`}>
+    <button
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs font-medium transition ${
+        disabled
+          ? "cursor-not-allowed border-hairline text-ink-muted/50 opacity-60"
+          : active
+          ? "border-accent bg-accent/10 text-accent"
+          : "border-hairline text-ink-muted hover:border-accent/50 hover:text-ink"
+      }`}
+    >
       <Icon size={13} /> {label}
     </button>
   );

@@ -6,7 +6,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, User as UserIcon, Loader2, ArrowRight } from "lucide-react";
-
+import { hydrateStore } from "../store/StoreHydrator";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { TextField } from "@/components/auth/TextField";
 import { PasswordField } from "@/components/auth/PasswordField";
@@ -88,6 +88,7 @@ export default function SignUpPage() {
       marketingOptIn,
       agreedToTerms,
     });
+    await hydrateStore();
     router.push("/");
     } catch (err) {
         const fieldErrors = getFieldErrors(err);

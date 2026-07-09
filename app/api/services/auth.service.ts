@@ -48,6 +48,7 @@ export async function loginUser(input: LoginInput) {
     $or: [{ email: input.identifier.toLowerCase() }, { username: input.identifier }],
   });
 
+ 
   if (!user) {
     throw new UnauthorizedError("Invalid email/username or password");
   }
@@ -56,10 +57,13 @@ export async function loginUser(input: LoginInput) {
     throw new UnauthorizedError("This account is not active");
   }
 
+   
   const valid = await comparePassword(input.password, user.passwordHash);
+  console.log(valid)
   if (!valid) {
     throw new UnauthorizedError("Invalid email/username or password");
   }
+
 
   const token = await signAuthToken({   // ← add this
     sub: user._id.toString(),

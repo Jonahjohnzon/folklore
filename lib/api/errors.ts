@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/api/errors.ts
 export function getErrorMessage(err: unknown): string {
+   
   if (typeof err === "string") return err;
   if (err && typeof err === "object") {
     // 422 shape from your interceptor: error.response.data (e.g. { message, fieldErrors })

@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Loader2, ArrowRight } from "lucide-react";
-
+import { hydrateStore } from "../store/StoreHydrator";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { TextField } from "@/components/auth/TextField";
 import { PasswordField } from "@/components/auth/PasswordField";
@@ -44,8 +44,10 @@ export default function SignInPage() {
     setSubmitError(null);
     try { 
      await AuthService.login({ identifier, password });
-     router.push("/");
+     await hydrateStore();
+     router.replace("/");
     } catch (err) {
+    
       setSubmitError(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
