@@ -36,19 +36,19 @@ export function ChapterParagraph({
   const finalHtml = isFirst ? withDropCap(rendered) : rendered;
 
   return (
-    <div className="group relative -mx-4 mb-0 rounded-lg px-4 py-0.5 transition hover:bg-black/2.5 sm:-mx-6 sm:px-6 last:mb-0">
+    <div className="group/para relative -mx-4 mb-0 rounded-lg px-4 py-0.5 transition hover:bg-black/2.5 sm:-mx-6 sm:px-6 last:mb-0">
       <div
-        className={`prose-block ${isFirst ? "cr-first-block" : ""}`}
+        className={`prose-block px-8 ${isFirst ? "cr-first-block" : ""}`}
         dangerouslySetInnerHTML={{ __html: finalHtml }}
         style={{ fontFamily: fontStack }}
       />
       <button
         onClick={() => onOpenComments(index)}
         aria-label={commentCount > 0 ? `View ${commentCount} comments` : "Add a comment"}
-        className={`absolute -right-10 -top-5 flex items-center gap-1 rounded-full border px-1 py-0.5 font-sans text-[11px] transition sm:right-1 ${
+        className={`absolute right-6 cursor-pointer top-1 flex items-center gap-1 rounded-full border px-2.5 py-1 font-sans text-[11px] transition ${
           commentCount > 0
             ? "border-accent/40 bg-accent/10 text-accent opacity-100"
-            : "border-hairline text-ink-muted opacity-0 group-hover:opacity-100"
+            : "border-hairline text-ink-muted opacity-0 group-hover/para:opacity-100"
         }`}
       >
         <MessageCircle size={12} />
