@@ -4,7 +4,8 @@ import { ThemeProvider } from "@/context/theme-context";
 import "./globals.css";
 import { GOOGLE_FONTS_HREF } from "@/components/editor/Fonts";
 import StoreHydrator from "@/app/store/StoreHydrator";
-
+import { RouteProgressBar } from "@/components/route-progress-bar";
+import { Suspense } from "react";
 
 
 const SITE_NAME = "TipaTale";
@@ -118,6 +119,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="cryptomus" content="8bcee79e" />
       </head>
       <body>
+          <Suspense fallback={null}>
+          <RouteProgressBar />
+        </Suspense>
         <StoreHydrator />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
