@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
-import { ChevronLeft, ChevronRight, Loader2, BookX, SlidersHorizontal, Check } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Loader2, BookX, SlidersHorizontal, Check, Home } from "lucide-react";
 import { BookCard } from "@/components/book-card";
 import {
   BrowseService,
@@ -87,7 +88,17 @@ export default function BrowseByTagPage() {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="border-b border-hairline pb-6">
-        <p className="font-sans text-xs font-semibold uppercase tracking-wide text-accent">Browse</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-sans text-xs font-semibold uppercase tracking-wide text-accent">Browse</p>
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-1.5 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+            aria-label="Back to home"
+          >
+            <Home size={14} />
+            Home
+          </Link>
+        </div>
         <h1 className="mt-1 font-display text-4xl font-bold capitalize text-ink">
           {tagName ?? params.tag.replace(/-/g, " ")}
         </h1>
