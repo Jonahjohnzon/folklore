@@ -17,7 +17,6 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-    manifest: "/site.webmanifest",
 
   title: {
     default: `${SITE_NAME} — Read and Write Stories Online`,
