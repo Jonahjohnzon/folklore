@@ -2,7 +2,8 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {  useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import Link from "next/link";
 import { Loader2, BookOpen, Tag as TagIcon, User as UserIcon } from "lucide-react";
 import { SearchService, type FullSearchResults } from "@/app/services/SearchService";

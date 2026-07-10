@@ -3,7 +3,7 @@ import { AuthService } from "@/app/services/auth";
 import { getErrorMessage } from "@/lib/api/errors";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { Mail, Loader2, ArrowRight } from "lucide-react";
 import { hydrateStore } from "../store/StoreHydrator";
 import { AuthShell } from "@/components/auth/AuthShell";

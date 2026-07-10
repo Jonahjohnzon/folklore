@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { ChevronLeft, ChevronRight, Loader2, BookX, SlidersHorizontal, Check } from "lucide-react";
 import { BookCard } from "@/components/book-card";
 import {

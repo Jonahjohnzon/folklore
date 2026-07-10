@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useState, Suspense } from "react";
 import {
   Coins, CheckCircle2, XCircle, Loader2, ArrowRight, RefreshCcw, ReceiptText,

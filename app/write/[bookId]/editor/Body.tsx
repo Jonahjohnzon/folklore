@@ -1,5 +1,5 @@
 "use client";
-import { getSheetSurfaceStyle, SheetOpeningRule, SHEET_MAX_WIDTH, SHEET_PADDING, SHEET_RADIUS } from "@/lib/sheet-surface";
+import { getSheetSurfaceStyle, SheetOpeningRule } from "@/lib/sheet-surface";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Save, UploadCloud, FileUp, Loader2, CheckCircle2 } from "lucide-react";

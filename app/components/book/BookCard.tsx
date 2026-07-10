@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BookCover } from "@/app/components/ui/BookCover";
 import { StarRating } from "@/app/components/ui/StarRating";
 import type { Book } from "@/app/types";
 

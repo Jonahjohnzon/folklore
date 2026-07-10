@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { useSnapshot } from "valtio";
 import { Pencil, LayoutDashboard, Calendar, BadgeCheck, Link as LinkIcon } from "lucide-react";
 import { store } from "@/app/store/userStore";

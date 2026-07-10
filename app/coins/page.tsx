@@ -1,6 +1,7 @@
 "use client";
 import { CoinService, type CoinActivityItem } from "@/app/services/coinService";
-import { useRouter, useSearchParams } from "next/navigation";
+import {  useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import {
   Coins, Check, ShieldCheck, CreditCard, Bitcoin, Landmark,

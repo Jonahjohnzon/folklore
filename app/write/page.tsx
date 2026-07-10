@@ -2,7 +2,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { ImagePlus, ChevronRight, Check, ArrowLeft, Loader2 } from "lucide-react";
 import type { BookStatus } from "@/lib/types";
 import { BookService } from "@/app/services/BookService";

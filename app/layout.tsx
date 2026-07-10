@@ -6,6 +6,8 @@ import { GOOGLE_FONTS_HREF } from "@/components/editor/Fonts";
 import StoreHydrator from "@/app/store/StoreHydrator";
 import { RouteProgressBar } from "@/components/route-progress-bar";
 import { Suspense } from "react";
+import NextTopLoader from "nextjs-toploader";
+
 
 
 const SITE_NAME = "TipaTale";
@@ -122,7 +124,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>
-        <StoreHydrator />
+        <NextTopLoader
+          color="var(--accent)"
+          initialPosition={0.15}
+          crawlSpeed={200}
+          height={2.5}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={300}
+          shadow="0 0 10px var(--accent), 0 0 5px var(--accent)"
+          zIndex={9999}
+        />
+                <StoreHydrator />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
