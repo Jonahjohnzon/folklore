@@ -92,11 +92,10 @@ export default function BrowseByTagPage() {
           <p className="font-sans text-xs font-semibold uppercase tracking-wide text-accent">Browse</p>
           <Link
             href="/"
-            className="flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-1.5 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+            className="flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-3 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
             aria-label="Back to home"
           >
-            <Home size={14} />
-            Home
+            <Home size={20} />
           </Link>
         </div>
         <h1 className="mt-1 font-display text-4xl font-bold capitalize text-ink">
