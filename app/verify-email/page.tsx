@@ -1,13 +1,13 @@
 // app/verify-email/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { AuthService } from "@/app/services/auth";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const params = useSearchParams();
   const router = useRouter();
   const token = params.get("token");
@@ -46,5 +46,20 @@ export default function VerifyEmailPage() {
         Go home
       </button>
     </main>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
+          <Loader2 size={28} className="animate-spin text-accent" />
+          <p className="mt-4 font-sans text-sm text-ink">Verifying your email…</p>
+        </main>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
