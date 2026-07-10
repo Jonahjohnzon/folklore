@@ -51,7 +51,9 @@ export interface IUser {
   blockedUsers: Types.ObjectId[];
   googleId?: string;
   authProviders: string[];
-
+  emailVerificationTokenHash:string | null;
+  emailVerificationExpires:Date | null;
+  emailVerificationLastSentAt:Date
 }
 
 // ── Schema ────────────────────────────────────────────────────
@@ -86,6 +88,9 @@ const UserSchema = new Schema<IUser>(
       default: "active",
     },
     emailVerified: { type: Boolean, default: false },
+    emailVerificationTokenHash: { type: String, default: null, select: false },
+    emailVerificationExpires: { type: Date, default: null, select: false },
+    emailVerificationLastSentAt: { type: Date, default: null, select: false },
     matureContentEnabled: { type: Boolean, default: false },
     role: { type: String, enum: ["user", "moderator", "admin"], default: "user", index: true },
     dateOfBirth: { type: Date},

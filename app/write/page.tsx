@@ -114,7 +114,7 @@ export default function NewBookPage() {
         coverUrl,
         coverPublicId,
       });
-      router.push(`/write/${data.book._id}/editor`);
+      router.replace(`/write/${data.book._id}/editor`);
     } catch (err: any) {
       setError(err.message || "Couldn't create the book.");
       setSubmitting(false);

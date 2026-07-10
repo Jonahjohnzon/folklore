@@ -13,6 +13,7 @@ import { ContinueReadingBanner } from "@/components/continue-reading-banner";
 import { HomeSkeleton } from "@/components/home-skeleton";
 import { SignalService } from "@/app/services/SignalService"; // ← add this import
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { EmailVerificationBanner } from "@/components/email-verification-banner";
 const GENRES = [ "Mystery", "Horror", "Drama","Adventure", "Historical", "Slice of Life", "LitRPG", "Poetry"];
 
 export default function HomePage() {
@@ -34,7 +35,7 @@ export default function HomePage() {
     <main>
       <ScrollToTop />
       <Navbar />
-
+      <EmailVerificationBanner/>
       {feed?.continueReading && <ContinueReadingBanner item={feed.continueReading} />}
 
       {showOnboarding && (

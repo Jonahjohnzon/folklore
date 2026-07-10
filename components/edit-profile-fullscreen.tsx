@@ -7,7 +7,6 @@ import { ProfileTab } from "./edit-profile/ProfileTab";
 import { AccountTab } from "./edit-profile/AccountTab";
 import { PasswordTab } from "./edit-profile/PasswordTab";
 import { NotificationsTab } from "./edit-profile/NotificationsTab";
-import { PrivacyTab } from "./edit-profile/PrivacyTab";
 import { DangerZoneTab } from "./edit-profile/DangerZoneTab";
 
 type TabId = "profile" | "account" | "password" | "notifications" | "privacy" | "danger";
@@ -17,8 +16,7 @@ const TABS: { id: TabId; label: string; icon: typeof User }[] = [
   { id: "account", label: "Account", icon: AtSign },
   { id: "password", label: "Password", icon: KeyRound },
   { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "privacy", label: "Privacy", icon: ShieldCheck },
-  { id: "danger", label: "Deactivate & delete", icon: TriangleAlert },
+  // { id: "danger", label: "Deactivate & delete", icon: TriangleAlert },
 ];
 
 export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {

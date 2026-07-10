@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { useSnapshot } from "valtio";
-import { Pencil, LayoutDashboard, Calendar, BadgeCheck, Link as LinkIcon } from "lucide-react";
+import { Pencil, LayoutDashboard, Calendar, BadgeCheck, Link as LinkIcon, Home } from "lucide-react";
 import { store } from "@/app/store/userStore";
 import { UserService, type PublicUser } from "@/app/services/user.service";
 import { BookService, type BookDTO } from "@/app/services/BookService";
@@ -70,7 +70,14 @@ export default function ProfilePage() {
   if (notFound || !profile) {
     return (
       <div className="mx-auto max-w-md px-4 py-24 text-center">
-        <h1 className="font-display text-2xl font-semibold text-ink">Profile not found</h1>
+        <button
+          onClick={() => router.push("/")}
+          className="mx-auto flex items-center gap-1.5 cursor-pointer rounded-full border border-hairline bg-bg px-3 py-1.5 font-sans text-xs font-medium text-ink-muted shadow-sm transition hover:border-accent hover:text-accent"
+        >
+          <Home size={14} />
+          Home
+        </button>
+        <h1 className="mt-6 font-display text-2xl font-semibold text-ink">Profile not found</h1>
         <p className="mt-2 font-sans text-sm text-ink-muted">{"This reader doesn't exist, or the link is broken."}</p>
       </div>
     );
@@ -82,7 +89,15 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 ">
-      <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
+      <button
+        onClick={() => router.replace("/")}
+        className="flex items-center gap-1.5 cursor-pointer rounded-full border border-hairline bg-bg px-3 py-3 font-sans text-xs font-medium text-ink-muted shadow-sm transition hover:border-accent hover:text-accent"
+      >
+        <Home size={20} />
+        
+      </button>
+
+      <div className="mt-6 flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
         <Avatar avatarUrl={profile.avatarUrl || null} name={displayName} size={112} />
 
         <div className="mt-4 flex-1 sm:ml-6 sm:mt-0">

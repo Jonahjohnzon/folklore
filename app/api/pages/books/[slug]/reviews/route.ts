@@ -26,6 +26,7 @@ export const GET = optionalAuth(async (req, ctx) => {
 
     return ok({
       reviews: reviews.map((r) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const u = r.userId as any;
         return {
           id: String(r._id),

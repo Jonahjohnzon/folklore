@@ -56,5 +56,9 @@ requestEmailChange: (email: string) =>
   api.post<{ success: boolean }>("/api/pages/auth/request-email-change", { email }),
 googleSignIn: (idToken: string) =>
   api.post<AuthResponse>("/api/pages/auth/google", { idToken }),
+verifyEmail: (token: string) =>
+    api.post<{ success: boolean; data: { verified: boolean } }>("/api/pages/auth/verify-email", { token }),
+  resendVerification: () =>
+    api.post<{ success: boolean; data: { sent: boolean } }>("/api/pages/auth/resend-verification"),
 
 };

@@ -308,3 +308,19 @@ export function inactivityWinBackTemplate(opts: {
     text,
   };
 }
+
+// lib/email/templates.ts — add this export
+export function verifyEmailTemplate({ displayName, verifyUrl }: { displayName: string; verifyUrl: string }) {
+  const subject = "Verify your email";
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+      <h2 style="margin:0 0 12px;">Hi ${displayName},</h2>
+      <p style="margin:0 0 16px;color:#3f3f46;">Confirm your email address to finish setting up your account.</p>
+      <a href="${verifyUrl}" style="display:inline-block;background:#8B5CF6;color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;font-weight:600;">Verify email</a>
+      <p style="margin:16px 0 0;font-size:12px;color:#71717a;">This link expires in 24 hours. If you didn't create this account, you can ignore this email.</p>
+      {{UNSUBSCRIBE_HTML}}
+    </div>
+  `;
+  const text = `Hi ${displayName},\n\nConfirm your email address: ${verifyUrl}\n\nThis link expires in 24 hours.`;
+  return { subject, html, text };
+}

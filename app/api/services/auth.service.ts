@@ -1,12 +1,16 @@
 import { User, type IUser } from "@/app/api/lib/models/User";
 import { hashPassword, comparePassword } from "@/app/api/auth/password";
 import { signAuthToken } from "@/app/api/auth/jwt";
-import { ConflictError, UnauthorizedError } from "@/app/api/lib/db/errors";
+import { ConflictError, UnauthorizedError, NotFoundError, ValidationError } from "@/app/api/lib/db/errors";
 import type { RegisterInput, LoginInput } from "@/app/api/validation/auth.schema";
-
+import { Types } from "mongoose";
+import * as templates from "@/lib/email/templates";
+import { sendEmail } from "@/lib/email/send";
+import { generateVerificationToken, hashVerificationToken } from "@/lib/auth/email-verification";
 export type SafeUser = Omit<IUser, "passwordHash">;
 
 function toSafeUser(user: IUser): SafeUser {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...safe } = user;
   return safe;
 }
@@ -51,6 +55,9 @@ export async function registerUser(input: RegisterInput) {
     email: user.email,
     activeMode: user.activeMode,
   });
+  sendVerificationEmail(user).catch((err) =>
+    console.error("Failed to send verification email on register:", err)
+  );
 
   return { user: toSafeUser(user.toObject()), token };
 }
@@ -132,4 +139,67 @@ export async function loginOrRegisterWithGoogle(identity: {
   });
 
   return { user: toSafeUser(user.toObject()), token };
+}
+
+async function sendVerificationEmail(user: {
+  _id: Types.ObjectId;
+  email: string;
+  username: string;
+  displayName?: string;
+}) {
+  const { token, tokenHash, expiresAt } = generateVerificationToken();
+
+  await User.updateOne(
+    { _id: user._id },
+    {
+      emailVerificationTokenHash: tokenHash,
+      emailVerificationExpires: expiresAt,
+      emailVerificationLastSentAt: new Date(),
+    }
+  );
+
+  const verifyUrl = `${process.env.APP_URL ?? "https://tipatale.com"}/verify-email?token=${token}`;
+  const { subject, html, text } = templates.verifyEmailTemplate({
+    displayName: user.displayName || user.username,
+    verifyUrl,
+  });
+
+  await sendEmail({ to: user.email, subject, html, text });
+}
+
+const RESEND_COOLDOWN_MS = 60 * 1000;
+
+export async function resendVerificationEmail(userId: string) {
+  const user = await User.findById(userId)
+    .select("email username displayName emailVerified emailVerificationLastSentAt")
+    .lean();
+  if (!user) throw new NotFoundError("User not found");
+  if (user.emailVerified) throw new ValidationError("Email is already verified");
+  if (user.emailVerificationLastSentAt) {
+    const elapsed = Date.now() - new Date(user.emailVerificationLastSentAt).getTime();
+    if (elapsed < RESEND_COOLDOWN_MS) {
+      const wait = Math.ceil((RESEND_COOLDOWN_MS - elapsed) / 1000);
+      throw new ValidationError(`Please wait ${wait}s before requesting another email`);
+    }
+  }
+
+  await sendVerificationEmail(user);
+}
+
+export async function verifyEmailToken(token: string) {
+  const tokenHash = hashVerificationToken(token);
+
+  const user = await User.findOne({
+    emailVerificationTokenHash: tokenHash,
+    emailVerificationExpires: { $gt: new Date() },
+  }).select("_id emailVerified emailVerificationTokenHash emailVerificationExpires");
+
+  if (!user) throw new ValidationError("This verification link is invalid or has expired");
+
+  user.emailVerified = true;
+  user.emailVerificationTokenHash = null;
+  user.emailVerificationExpires = null;
+  await user.save();
+
+  return { verified: true };
 }
