@@ -10,8 +10,11 @@ export const createBookSchema = z.object({
    // Genre/tag labels (e.g. "Fantasy"). Resolved to Tag ObjectIds server-side
   // in POST /api/books via resolveTagIds() — see app/api/lib/tags.ts.
   tags: z.array(z.string()).max(10).optional(),
-  // Set after a signed client-side Cloudinary upload — see uploads/sign/route.ts.
+  // Set after uploading via POST /api/uploads/cover, before the book exists —
+  // see app/api/uploads/cover/route.ts. POST /api/books relocates the asset
+  // from staging into the book's own Cloudinary folder once created.
   coverUrl: z.string().url().optional(),
+  coverPublicId: z.string().max(300).optional(),
 });
 
 export const updateBookSchema = createBookSchema.partial();

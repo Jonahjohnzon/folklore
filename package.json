@@ -39,6 +39,7 @@
     "pdfjs-dist": "^6.1.200",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "recharts": "^3.9.2",
     "resend": "^4.0.1",
     "tailwind-merge": "^2.6.0",
     "valtio": "^2.1.2",

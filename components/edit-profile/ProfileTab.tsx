@@ -7,6 +7,7 @@ import { store } from "@/app/store/userStore";
 import { UserService } from "@/app/services/user.service";
 import { Avatar } from "@/components/avatar";
 import { FieldLabel, TextInput, TextArea, SaveBar, type SaveStatus } from "./shared";
+import { hydrateStore } from "@/app/store/StoreHydrator";
 
 const BIO_MAX = 200;
 
@@ -65,7 +66,7 @@ export function ProfileTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) 
       store.username = res.data.user.username;
       store.bio = res.data.user.bio;
       store.websiteUrl = res.data.user.websiteUrl;
-      
+      await hydrateStore()
       setAvatarFile(null);
       setStatus("saved");
       setTimeout(() => setStatus("idle"), 2000);

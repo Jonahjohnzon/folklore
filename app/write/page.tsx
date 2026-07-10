@@ -13,44 +13,6 @@ const GENRES = [
 ];
 
 // Presets map onto BookTheme's actual hex fields (bgColor/textColor/accentColor/linkColor).
-const THEME_PRESETS = [
-  {
-    id: "parchment",
-    label: "Parchment",
-    swatch: "#D8C7A0",
-    bgColor: "#D8C7A0",
-    textColor: "#2B2417",
-    accentColor: "#8B5CF6",
-    linkColor: "#6D28D9",
-  },
-  {
-    id: "midnight",
-    label: "Midnight",
-    swatch: "#15171C",
-    bgColor: "#15171C",
-    textColor: "#E7E5E4",
-    accentColor: "#A78BFA",
-    linkColor: "#C4B5FD",
-  },
-  {
-    id: "coppice",
-    label: "Coppice",
-    swatch: "#5B6B4F",
-    bgColor: "#5B6B4F",
-    textColor: "#F3F1E7",
-    accentColor: "#D9A441",
-    linkColor: "#E8C170",
-  },
-  {
-    id: "quartz",
-    label: "Quartz",
-    swatch: "#9FA8C7",
-    bgColor: "#9FA8C7",
-    textColor: "#1F2333",
-    accentColor: "#4C5FD5",
-    linkColor: "#6577E8",
-  },
-];
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -62,22 +24,37 @@ const LANGUAGES = [
   { code: "ja", label: "Japanese" },
 ];
 
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 export default function NewBookPage() {
   const router = useRouter();
   const coverInputRef = useRef<HTMLInputElement>(null);
-
+  const MAX_COVER_BYTES = 8 * 1024 * 1024;
+  const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [matureContent, setMatureContent] = useState(false);
   const [status, setStatus] = useState<BookStatus>("draft");
   const [language, setLanguage] = useState("en");
-  const [themeId, setThemeId] = useState("parchment");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
+  const [submitStage, setSubmitStage] = useState<"cover" | "book" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [coverWarning, setCoverWarning] = useState<string | null>(null);
 
   function toggleGenre(g: string) {
     setSelectedGenres((prev) =>
@@ -87,15 +64,45 @@ export default function NewBookPage() {
 
   function handleCoverSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
+      if (!ALLOWED_COVER_TYPES.includes(file.type)) {
+    setCoverWarning("Use a JPG, PNG, or WEBP image.");
+    return;
+      }
+      if (file.size > MAX_COVER_BYTES) {
+        setCoverWarning(`That image is ${(file.size / 1024 / 1024).toFixed(1)}MB — max is 8MB.`);
+        return;
+      }
+    setCoverWarning(null);
     setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
+    
   }
 
- async function handleContinue() {
+  async function handleContinue() {
     if (!canContinue || submitting) return;
     setSubmitting(true);
     setError(null);
+    setCoverWarning(null);
+
+    // Cover goes first: if it fails, we want to know before a book exists,
+    // and it never blocks creation — worst case we proceed without it.
+    let coverUrl: string | undefined;
+    let coverPublicId: string | undefined;
+
+    if (coverFile) {
+      setSubmitStage("cover");
+      try {
+        const { data } = await withRetry(() => BookService.uploadCoverStandalone(coverFile));
+        coverUrl = data.coverUrl;
+        coverPublicId = data.coverPublicId;
+      } catch {
+        setCoverWarning("Cover didn't upload — you can add it from the editor.");
+      }
+    }
+
+    setSubmitStage("book");
     try {
       const { data } = await BookService.create({
         title: title.trim(),
@@ -104,25 +111,14 @@ export default function NewBookPage() {
         status,
         matureContent,
         tags: selectedGenres,
+        coverUrl,
+        coverPublicId,
       });
-      const book = data.book;
-
-      if (coverFile) {
-        await BookService.uploadCover(book._id, coverFile);
-      }
-
-      const preset = THEME_PRESETS.find((t) => t.id === themeId) ?? THEME_PRESETS[0];
-      await BookService.updateTheme(book._id, {
-        bgColor: preset.bgColor,
-        textColor: preset.textColor,
-        accentColor: preset.accentColor,
-        linkColor: preset.linkColor,
-      });
-
-      router.push(`/write/${book._id}/editor`);
-    } catch (err:any) {
+      router.push(`/write/${data.book._id}/editor`);
+    } catch (err: any) {
       setError(err.message || "Couldn't create the book.");
       setSubmitting(false);
+      setSubmitStage(null);
     }
   }
 
@@ -153,6 +149,12 @@ export default function NewBookPage() {
       {error && (
         <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-3.5 py-2 font-sans text-sm text-red-700">
           {error}
+        </div>
+      )}
+
+      {coverWarning && (
+        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 font-sans text-sm text-amber-800">
+          {coverWarning}
         </div>
       )}
 
@@ -322,7 +324,11 @@ export default function NewBookPage() {
           className="flex items-center gap-1.5 rounded-full bg-accent px-5 py-2.5 font-sans text-sm font-semibold text-accent-ink shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 hover:opacity-90 hover:shadow-md"
         >
           {submitting ? <Loader2 size={15} className="animate-spin" /> : <ChevronRight size={15} />}
-          {submitting ? "Creating…" : "Continue to editor"}
+          {submitting
+            ? submitStage === "cover"
+              ? "Uploading cover…"
+              : "Creating…"
+            : "Continue to editor"}
         </button>
       </div>
     </main>

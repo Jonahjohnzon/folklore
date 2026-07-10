@@ -1,3 +1,4 @@
+// app/api/notifications/route.ts
 import { withAuth } from "@/app/api/auth/withAuth";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Notification } from "@/app/api/lib/models/Notification";
@@ -11,7 +12,7 @@ export const GET = optionalAuth(async (req) => {
       return ok({ notifications: [], unreadCount: 0, nextCursor: null });
     }
     const url = new URL(req.url);
-    const cursor = url.searchParams.get("cursor"); // ISO date string, for pagination
+    const cursor = url.searchParams.get("cursor");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filter: any = { userId: req.user.sub };
@@ -56,3 +57,23 @@ export const PATCH = withAuth(async (req) => {
   }
 });
 
+export const DELETE = withAuth(async (req) => {
+  try {
+    await connectToDatabase();
+    const url = new URL(req.url);
+    const notificationId = url.searchParams.get("notificationId");
+    const clearAll = url.searchParams.get("clearAll") === "true";
+
+    if (clearAll) {
+      await Notification.deleteMany({ userId: req.user.sub });
+    } else if (notificationId) {
+      await Notification.deleteOne({ _id: notificationId, userId: req.user.sub });
+    } else {
+      return fail(new Error("notificationId or clearAll is required"));
+    }
+
+    return ok({ deleted: true });
+  } catch (error) {
+    return fail(error);
+  }
+});

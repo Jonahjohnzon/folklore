@@ -50,6 +50,8 @@ export interface CreateBookBody {
   status?: BookStatus;
   matureContent?: boolean;
   tags?: string[];
+  coverUrl?: string;
+  coverPublicId?: string;
 }
 
 export interface PublicChapterSummary {
@@ -164,5 +166,13 @@ export const BookService = {
     ),
   getWorksForUser(username: string) {
     return api.get<{ data:{books: BookDTO[]} }>(`/api/pages/users/${username}/books`);
-},
+  },
+  uploadCoverStandalone: (file: File) => {
+    const formData = new FormData();
+    formData.append("cover", file);
+    return api.post<{ success: boolean; data: { coverUrl: string; coverPublicId: string } }>(
+      "/api/uploads/cover",
+      formData
+    );
+  },
 };

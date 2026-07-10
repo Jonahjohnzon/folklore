@@ -62,7 +62,7 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
+     {open && (
         <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-hairline bg-surface-raised shadow-xl">
           <div className="flex items-center justify-between border-b border-hairline px-3.5 py-2.5">
             <p className="font-sans text-sm font-semibold text-ink">Notifications</p>
@@ -94,6 +94,16 @@ export function NotificationBell() {
               </Link>
             ))}
           </div>
+
+          {items.length > 0 && (
+            <Link
+              href="/notifications"
+              onClick={() => setOpen(false)}
+              className="block rounded-b-xl border-t border-hairline px-3.5 py-2.5 text-center font-sans text-xs font-semibold text-accent hover:bg-bg"
+            >
+              See all notifications
+            </Link>
+          )}
         </div>
       )}
     </div>

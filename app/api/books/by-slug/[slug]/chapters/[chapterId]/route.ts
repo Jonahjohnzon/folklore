@@ -5,11 +5,16 @@ import { ChapterUnlock } from "@/app/api/lib/models/ChapterUnlock";
 import { BookTheme } from "@/app/api/lib/models/BookTheme";
 import { ReadingProgress } from "@/app/api/lib/models/ReadingProgress";
 import { LibraryEntry } from "@/app/api/lib/models/LibraryEntry";
+import { DailyStat } from "@/app/api/lib/models/DailyStat";
 import { BadgeAwardService } from "@/lib/badges/BadgeAwardService";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ForbiddenError } from "@/app/api/lib/db/errors";
 import { withAuth } from "@/app/api/auth/withAuth";
 const VISIBLE_STATUSES = ["ongoing", "completed", "hiatus"];
+
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export const GET = withAuth(async (req, ctx) => {
   try {
@@ -49,6 +54,17 @@ export const GET = withAuth(async (req, ctx) => {
     }
 
     await Book.updateOne({ _id: book._id }, { $inc: { totalReads: 1 } });
+
+    // Feeds the creator dashboard's daily-reads chart. Excludes the author's
+    // own reads/previews of their own book, same as the badge-crediting rule
+    // below — an author opening their own chapter shouldn't count as a read.
+    if (!isOwnBook) {
+      await DailyStat.updateOne(
+        { chapterId: chapter._id, date: todayKey() },
+        { $inc: { reads: 1 }, $setOnInsert: { bookId: book._id } },
+        { upsert: true }
+      );
+    }
 
     if (userId) {
       const now = new Date();

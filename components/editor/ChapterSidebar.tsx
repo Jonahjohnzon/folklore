@@ -40,7 +40,7 @@ export default function ChapterSidebar({
       <div className="rounded-xl border border-hairline bg-surface p-4 shadow-sm">
         <h2 className="font-sans text-sm font-semibold text-ink">Access</h2>
         <div className="mt-3 flex flex-col gap-2">
-          {(["free", "coins", "subscriber_only"] as ChapterAccess[]).map((a) => (
+          {(["free", "coins"] as ChapterAccess[]).map((a) => (
             <label
               key={a}
               className="flex cursor-pointer items-center justify-between rounded-lg border border-hairline bg-bg px-3 py-2 text-sm transition has-checked:border-accent has-checked:bg-accent/10"

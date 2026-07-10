@@ -52,6 +52,14 @@ export interface BookManageDTO {
   deletedAt: string | null; // null unless status === "removed"
 }
 
+export interface BookCompletionDTO {
+  bookId: string;
+  title: string;
+  readers: number;
+  finishers: number;
+  rate: number; // percent, 0–100
+}
+
 export interface ManageReviewDTO {
   id: string;
   username: string;
@@ -60,7 +68,18 @@ export interface ManageReviewDTO {
   body: string;
   createdAt: string;
 }
-
+export interface DashboardAnalytics {
+  range: number;
+  readsByDay: { date: string; reads: number }[];
+  earningsByDay: { date: string; coins: number }[];
+  followersByDay: { date: string; followers: number }[];
+  totalEarnings: number;
+  earningsTrendPct: number;
+  readsInstrumented: boolean;
+  overallCompletionRate: number;
+  bookCompletionRates: BookCompletionDTO[];
+  topChapters: { chapterId: string; title: string; bookTitle: string; coins: number; unlocks: number }[];
+}
 
 export const DashboardService = {
   getOverview: () =>
@@ -69,4 +88,7 @@ export const DashboardService = {
     api.get<{data:{ book: BookManageDTO; chapters: ChapterPerformanceDTO[]; reviews: ManageReviewDTO[]} }>(
       `/api/creator/books/${bookId}`
     ),
+     getAnalytics: (range: 7 | 30 | 90 = 30) =>
+    api.get<{ data: DashboardAnalytics }>("/api/creator/dashboard/analytics", { range: String(range) }),
+
 };

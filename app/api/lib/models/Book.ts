@@ -31,6 +31,7 @@ const BookSchema = new Schema<IBook>(
     slug: { type: String, required: true, unique: true },
     description: { type: String },
     coverUrl: { type: String },
+    coverPublicId: { type: String, default: null },
     language: { type: String, default: "en" },
     status: {
       type: String,
@@ -44,7 +45,6 @@ const BookSchema = new Schema<IBook>(
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0 },
     tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
-    coverPublicId: { type: String, default: null },
     publishedAt: { type: Date },
     deletedAt: { type: Date, default: null },
     statusBeforeDelete: { type: String, default: null },
