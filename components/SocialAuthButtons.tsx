@@ -88,7 +88,7 @@ export function SocialAuthButtons() {
           type="button"
           onClick={handleCustomGoogleClick}
           disabled={loading}
-          className="flex items-center justify-center gap-2 rounded-lg border border-hairline bg-bg py-2.5 font-sans text-sm font-medium text-ink transition hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex items-center justify-center cursor-pointer gap-2 rounded-lg border border-hairline bg-bg py-2.5 font-sans text-sm font-medium text-ink transition hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <GoogleIcon />
           {loading ? "Signing in…" : "Continue with Google"}
