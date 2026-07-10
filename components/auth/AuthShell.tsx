@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Quote } from "lucide-react";
-
+import Image from "next/image";
 interface Excerpt {
   text: string;
   source: string;
@@ -13,9 +13,9 @@ interface Excerpt {
 // Swap this for a real query (e.g. trending/featured chapters) once that
 // exists; the shape only needs { text, source }.
 const EXCERPTS: Excerpt[] = [
-  { text: "Every reader is one page away from their next obsession.", source: "— Lore" },
+  { text: "Every reader is one page away from their next obsession.", source: "— TipaTale" },
   { text: "The ember court remembers every promise made beneath it.", source: "The Last Ember Court · Ch. 12" },
-  { text: "Some stories don't wait to be finished. They wait to be found.", source: "Lore community" },
+  { text: "Some stories don't wait to be finished. They wait to be found.", source: "TipaTale community" },
 ];
 
 export function AuthShell({
@@ -47,8 +47,7 @@ export function AuthShell({
         <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
 
         <Link href="/" className="relative z-10 flex items-center gap-2 font-display text-xl font-semibold text-bg">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent font-display text-base text-accent-ink">L</span>
-          Lore
+          <Image src="/logo.png" alt="TipaTale" width={62} height={62} priority />
         </Link>
 
         <div key={index} className="relative z-10 max-w-md animate-[fadeIn_0.6s_ease]">
@@ -78,8 +77,7 @@ export function AuthShell({
             href="/"
             className="mb-8 flex items-center gap-2 font-display text-xl font-semibold text-ink lg:hidden"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent font-display text-base text-accent-ink">L</span>
-            Lore
+            <Image src="/logo.png" alt="TipaTale" width={62} height={62} priority />
           </Link>
 
           <p className="font-sans text-xs font-medium uppercase tracking-wide text-accent">{eyebrow}</p>

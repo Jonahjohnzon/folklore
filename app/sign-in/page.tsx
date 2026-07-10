@@ -116,7 +116,7 @@ export default function SignInPage() {
       <SocialAuthButtons />
 
       <p className="mt-8 text-center font-sans text-sm text-ink-muted">
-        New to Lore?{" "}
+        New to TipaTale?{" "}
         <Link href="/sign-up" className="font-medium text-accent hover:underline">Create an account</Link>
       </p>
     </AuthShell>
