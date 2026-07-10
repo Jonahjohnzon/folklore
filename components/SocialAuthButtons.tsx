@@ -29,6 +29,7 @@ export function SocialAuthButtons() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
   async function handleGoogleCredential(response: { credential: string }) {
@@ -51,13 +52,15 @@ export function SocialAuthButtons() {
       client_id: GOOGLE_CLIENT_ID,
       callback: handleGoogleCredential,
     });
-    // Rendered at a real, clickable size — GSI ignores clicks on 0x0 elements —
-    // but visually hidden so our own styled button can sit on top of it.
+    // Rendered at the SAME size as our visible custom button, then made
+    // transparent and stacked on top — so the click a user makes actually
+    // lands on Google's real iframe (a trusted event), not a synthetic one.
     window.google.accounts.id.renderButton(googleBtnRef.current, {
       theme: "outline",
       size: "large",
-      width: 240,
+      width: 320,
     });
+    setReady(true);
   }
 
   useEffect(() => {
@@ -65,34 +68,33 @@ export function SocialAuthButtons() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleCustomGoogleClick() {
-    // Forward the click to Google's real (hidden) button, since GSI doesn't
-    // allow restyling its own button to match custom designs.
-    const realBtn = googleBtnRef.current?.querySelector('div[role="button"]') as HTMLElement | null;
-    realBtn?.click();
-  }
-
   return (
     <>
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={initGoogle} />
 
-      {/* Real Google button — invisible but present in the DOM and clickable */}
-      <div
-        ref={googleBtnRef}
-        className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
-        aria-hidden
-      />
-
       <div className="grid grid-cols-1 gap-3">
-        <button
-          type="button"
-          onClick={handleCustomGoogleClick}
-          disabled={loading}
-          className="flex items-center justify-center cursor-pointer gap-2 rounded-lg border border-hairline bg-bg py-2.5 font-sans text-sm font-medium text-ink transition hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <GoogleIcon />
-          {loading ? "Signing in…" : "Continue with Google"}
-        </button>
+        {/* Custom visible button underneath — purely decorative, never receives the click */}
+        <div className="relative">
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-hairline bg-bg py-2.5 font-sans text-sm font-medium text-ink transition hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <GoogleIcon />
+            {loading ? "Signing in…" : "Continue with Google"}
+          </button>
+
+          {/* Real Google button — fully sized, transparent, on top. This is
+              what actually receives the click. */}
+          <div
+            ref={googleBtnRef}
+            className={`absolute inset-0 overflow-hidden opacity-0 [&>div]:w-full! [&_iframe]:w-full! ${
+              ready ? "" : "pointer-events-none"
+            }`}
+          />
+        </div>
       </div>
 
       {error && (
