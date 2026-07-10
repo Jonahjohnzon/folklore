@@ -1,21 +1,7 @@
 // lib/email/send.ts
 import nodemailer from "nodemailer";
 
-// ---------------------------------------------------------------------------
-// Transport
-// ---------------------------------------------------------------------------
-// Works with any SMTP provider (Gmail, SES SMTP, Mailgun, Postmark, your own
-// mail server, etc). Set these in your .env:
-//
-//   SMTP_HOST=smtp.yourprovider.com
-//   SMTP_PORT=587
-//   SMTP_SECURE=false          # true for port 465, false for 587/25
-//   SMTP_USER=your_smtp_username
-//   SMTP_PASS=your_smtp_password
-//   EMAIL_FROM="Novelly <no-reply@yourdomain.com>"
-//
-// Reuse a single transporter instance across requests instead of creating a
-// new one per send — nodemailer pools connections for you.
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT ?? 587),
@@ -51,8 +37,6 @@ export async function sendEmail({ to, subject, html, text, unsubscribeToken }: S
        </p>`
     : "";
 
-  // Templates render their footer with a {{UNSUBSCRIBE_HTML}} placeholder so
-  // layout markup stays in templates.ts and send.ts only fills it in.
   const finalHtml = html.includes("{{UNSUBSCRIBE_HTML}}")
     ? html.replace("{{UNSUBSCRIBE_HTML}}", unsubscribeHtml)
     : unsubscribeUrl
@@ -76,6 +60,7 @@ export async function sendEmail({ to, subject, html, text, unsubscribeToken }: S
         : undefined,
     });
   } catch (err) {
-    console.error("[email] send failed:", err);
+    console.log("[email] send failed:", { to, subject, err });
+    throw err; // let callers decide: fire-and-forget spots already .catch() this
   }
 }

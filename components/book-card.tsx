@@ -9,7 +9,6 @@ function formatReads(n: number) {
 }
 
 export function BookCard({ book, size = "default" }: { book: Book; size?: "default" | "compact" }) {
-  console.log(book)
   return (
     <Link
       href={`/book/${book.slug}`}

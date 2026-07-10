@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
@@ -28,6 +29,12 @@ const SORT_MAP: Record<(typeof SORT_OPTIONS)[number], Record<string, 1 | -1>> = 
   updated: { updatedAt: -1 },
 };
 
+// Virtual genres: slugs that don't correspond to a real Tag document, but map
+// to a canned query instead. "new" = latest published books, no tag filter.
+const VIRTUAL_TAGS: Record<string, { name: string; sort: (typeof SORT_OPTIONS)[number] }> = {
+  new: { name: "New Releases", sort: "newest" },
+};
+
 // Public route: browsing by genre doesn't require a signed-in user.
 export async function GET(
   req: NextRequest,
@@ -35,20 +42,30 @@ export async function GET(
 ) {
   try {
     await connectToDatabase();
-    const {tag} = await params;
+    const { tag } = await params;
+    const tagSlug = tag.toLowerCase();
+
     const parsed = querySchema.safeParse(Object.fromEntries(req.nextUrl.searchParams));
     if (!parsed.success) {
       throw new ValidationError("Invalid query params", parsed.error.flatten().fieldErrors);
     }
-    const { page, limit, sort, status, mature } = parsed.data;
+    const { page, limit, status, mature } = parsed.data;
 
-    const tagData = await Tag.findOne({ slug: tag.toLowerCase() }).lean();
-    if (!tagData) throw new NotFoundError("Genre not found");
+    const virtual = VIRTUAL_TAGS[tagSlug];
+    // Virtual tags force their own sort (e.g. "new" always sorts newest-first),
+    // ignoring whatever ?sort= was passed.
+    const sort = virtual ? virtual.sort : parsed.data.sort;
+
+    let tagData: { _id: unknown; name: string; slug: string } | null = null;
+    if (!virtual) {
+      tagData = await Tag.findOne({ slug: tagSlug }).lean();
+      if (!tagData) throw new NotFoundError("Genre not found");
+    }
 
     const filter: Record<string, unknown> = {
-      tags: tagData._id,
       status: status === "all" ? { $in: VISIBLE_STATUSES } : status,
     };
+    if (tagData) filter.tags = tagData._id;
     if (mature === "exclude") filter.matureContent = false;
 
     const [books, total] = await Promise.all([
@@ -74,7 +91,9 @@ export async function GET(
     }));
 
     return ok({
-      tag: { name: tagData.name, slug: tagData.slug },
+      tag: virtual
+        ? { name: virtual.name, slug: tagSlug }
+        : { name: tagData!.name, slug: tagData!.slug },
       books: items,
       pagination: {
         page,

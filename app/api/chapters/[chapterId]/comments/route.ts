@@ -127,7 +127,7 @@ export const POST = withAuth(async (req, ctx) => {
       // the thread is expanded.
       if (String(parent.userId) !== String(userId)) {
         const appLink = `/book/${book.slug}/chapter/${chapterId}?highlight=${comment._id}#comment-${parentId}`;
-        const fullLink = `https://yourdomain.com/book/${book.slug}/chapter/${chapterId}?highlight=${comment._id}#comment-${parentId}`;
+        const fullLink = `https://tipatale.com/book/${book.slug}/chapter/${chapterId}?highlight=${comment._id}#comment-${parentId}`;
 
         await dispatchNotification({
           userId: parent.userId,
@@ -153,7 +153,7 @@ export const POST = withAuth(async (req, ctx) => {
       // top-level comment — notify the book's author (unless commenting on your own book)
       if (String(book.authorId) !== String(userId)) {
         const appLink = `/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
-        const fullLink = `https://yourdomain.com/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
+        const fullLink = `https://tipatale.com/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
 
         await dispatchNotification({
           userId: book.authorId,
