@@ -30,7 +30,7 @@ export function BookRail({
         )}
       </div>
 
-      <div className="rail flex gap-4 overflow-x-auto pb-2">
+      <div className="rail flex gap-4 overflow-x-auto scrollbar-none pb-2">
         {books.map((b, i) => (
           <div key={b.id} className="relative shrink-0">
             {rank && (

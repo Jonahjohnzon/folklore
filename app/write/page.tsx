@@ -164,7 +164,7 @@ export default function NewBookPage() {
           <input
             ref={coverInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={handleCoverSelect}
           />

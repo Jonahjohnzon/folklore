@@ -13,7 +13,7 @@ import { ContinueReadingBanner } from "@/components/continue-reading-banner";
 import { HomeSkeleton } from "@/components/home-skeleton";
 import { SignalService } from "@/app/services/SignalService"; // ← add this import
 import { ScrollToTop } from "@/components/scroll-to-top";
-const GENRES = ["Fantasy", "Romance", "Sci-Fi", "Thriller", "Mystery", "Academy", "Adventure", "Cozy"];
+const GENRES = [ "Mystery", "Horror", "Drama","Adventure", "Historical", "Slice of Life", "LitRPG", "Poetry"];
 
 export default function HomePage() {
   const [feed, setFeed] = useState<HomeFeed | null>(null);
@@ -55,7 +55,7 @@ export default function HomePage() {
           <TrendingCarousel books={feed.trending} />
 
           <div className="border-b border-hairline">
-            <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-4 sm:px-6">
+            <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto scrollbar-none px-4 py-4 sm:px-6">
               {GENRES.map((g) => (
                 <Link
                   key={g}
