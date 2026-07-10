@@ -88,7 +88,7 @@ const UserSchema = new Schema<IUser>(
     emailVerified: { type: Boolean, default: false },
     matureContentEnabled: { type: Boolean, default: false },
     role: { type: String, enum: ["user", "moderator", "admin"], default: "user", index: true },
-    dateOfBirth: { type: Date, required: true },
+    dateOfBirth: { type: Date},
     marketingOptIn: { type: Boolean, default: false },
     termsAcceptedAt: { type: Date, required: true },
 
