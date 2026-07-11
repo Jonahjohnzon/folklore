@@ -1,7 +1,7 @@
 "use client";
 
 import ApiClient from "@/app/ApiCore";
-import type { SignedUploadParams } from "@/app/api/lib/cloudinary";
+import type { SignedUploadParams } from "@/lib/cloudinary";
 
 const api = new ApiClient();
 
