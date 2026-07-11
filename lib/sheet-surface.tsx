@@ -17,7 +17,7 @@ export interface SheetSurfaceTheme {
 // Custom tailwind scale (1 unit = 0.25rem) — matches the existing
 // min-h-275 / max-w-210 pattern already used on the editor canvas.
 export const SHEET_MAX_WIDTH = "max-w-225"; // ~940px
-export const SHEET_PADDING = "p-10 sm:p-16 lg:p-20";
+export const SHEET_PADDING = " sm:p-3 lg:p-8";
 export const SHEET_RADIUS = "rounded-sm";
 
 export function getSheetSurfaceStyle(theme: SheetSurfaceTheme): CSSProperties {

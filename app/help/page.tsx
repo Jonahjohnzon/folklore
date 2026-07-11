@@ -1,0 +1,295 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown, Send, Bot, User, LifeBuoy } from "lucide-react";
+
+interface FAQItem {
+  category: string;
+  question: string;
+  answer: string;
+}
+
+const FAQS: FAQItem[] = [
+  {
+    category: "Account",
+    question: "How do I create a TipaTale account?",
+    answer:
+      "Tap Sign Up in the top right, then register with your email or a supported third-party account. You'll need to verify your email before you can publish or comment.",
+  },
+  {
+    category: "Account",
+    question: "How do I reset my password?",
+    answer:
+      "Go to the login page and select 'Forgot password?'. We'll send a reset link to the email on your account. If you don't see it, check your spam folder.",
+  },
+  {
+    category: "Account",
+    question: "Can I change my username or pen name?",
+    answer:
+      "Yes, from Settings → Profile. Your pen name (shown on your published books) can be changed at any time; your account username has a cooldown between changes.",
+  },
+  {
+    category: "Coins & Payments",
+    question: "How do I buy Coins?",
+    answer:
+      "Go to your Coin balance in the top navigation and select 'Buy Coins'. Choose a package and complete checkout through our payment provider. Coins are added to your balance instantly.",
+  },
+  {
+    category: "Coins & Payments",
+    question: "Can I get a refund on Coins?",
+    answer:
+      "Coin purchases are final and non-refundable, including unused Coins, as described in our Terms of Service. Please double check your package before confirming a purchase.",
+  },
+  {
+    category: "Coins & Payments",
+    question: "How do Creator payouts work?",
+    answer:
+      "Creators earn a share of Coins spent unlocking or tipping their chapters. Earnings from a calendar month are calculated after it closes and paid out during the first week of the following month, once you're above the minimum payout threshold and have valid payout details on file.",
+  },
+  {
+    category: "Publishing",
+    question: "How do I publish a story?",
+    answer:
+      "From your Creator dashboard, select 'New Book', fill in the title, description, cover, and genre tags, then add your first chapter. You can save chapters as drafts or publish them right away.",
+  },
+  {
+    category: "Publishing",
+    question: "How do I mark a chapter as mature content?",
+    answer:
+      "When editing a chapter, toggle 'Mature Content' before publishing. This restricts visibility to readers 18+ and keeps your story compliant with our guidelines.",
+  },
+  {
+    category: "Publishing",
+    question: "Can I lock chapters behind Coins?",
+    answer:
+      "Yes. When publishing a chapter, you can set a Coin price to unlock it. Readers can also tip you directly from your book page even on free chapters.",
+  },
+  {
+    category: "Safety",
+    question: "How do I report a book, comment, or user?",
+    answer:
+      "Use the Report link on any book, chapter, comment, or profile page, or go directly to our Report a Problem page. Our team reviews every report.",
+  },
+  {
+    category: "Safety",
+    question: "How do I block another user?",
+    answer:
+      "From their profile, tap the menu icon and select 'Block'. Blocked users can't message you, comment on your work, or see your activity.",
+  },
+];
+
+const CATEGORIES = Array.from(new Set(FAQS.map((f) => f.category)));
+
+interface ChatMessage {
+  id: string;
+  role: "bot" | "user";
+  text: string;
+}
+
+const INITIAL_BOT_MESSAGE: ChatMessage = {
+  id: "welcome",
+  role: "bot",
+  text: "Hi! I'm the TipaTale help bot. Ask me about accounts, Coins, publishing, or reporting — or tell me what's going on and I'll point you in the right direction.",
+};
+
+// Lightweight keyword matching so the widget is useful before it's wired up
+// to a real backend. Swap `getBotReply` for a call to /api/support-chat
+// (or another AI-backed endpoint) once one exists.
+function getBotReply(input: string): string {
+  const q = input.toLowerCase();
+  if (q.includes("refund")) {
+    return "Coin purchases are final and non-refundable — you can see the full policy on our Terms of Service page under 'Coins & Payments'. If something went wrong with a charge itself (like a duplicate charge), email support@tipatale.com and we'll take a look.";
+  }
+  if (q.includes("payout") || q.includes("earnings") || q.includes("paid")) {
+    return "Creator payouts are calculated after each calendar month closes and sent out during the first week of the following month, as long as you're above the minimum threshold with valid payout details on file.";
+  }
+  if (q.includes("password") || q.includes("login") || q.includes("log in")) {
+    return "You can reset your password from the login page using 'Forgot password?'. If the email doesn't arrive within a few minutes, check spam or contact support@tipatale.com.";
+  }
+  if (q.includes("publish") || q.includes("write") || q.includes("upload") || q.includes("novel") || q.includes("book")) {
+    return "To publish, go to your Creator dashboard → New Book, then add chapters from there. You can mark chapters mature, price them in Coins, or leave them free.";
+  }
+  if (q.includes("report") || q.includes("abuse") || q.includes("harass")) {
+    return "You can report any book, chapter, comment, or user using the Report link on their page, or through our Report a Problem page. Our team reviews every submission.";
+  }
+  if (q.includes("coin")) {
+    return "Coins are TipaTale's currency for unlocking chapters and tipping writers. Buy them from your Coin balance in the top nav — purchases are final and non-refundable.";
+  }
+  return "Thanks for the details! I couldn't find an exact match in what I know, but our support team can help directly — email support@tipatale.com, or check the FAQ below in the meantime.";
+}
+
+export default function HelpPage() {
+  const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0]);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_BOT_MESSAGE]);
+  const [input, setInput] = useState("");
+  const [botTyping, setBotTyping] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, botTyping]);
+
+  function sendMessage(e: React.FormEvent) {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text) return;
+
+    const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: "user", text };
+    setMessages((m) => [...m, userMsg]);
+    setInput("");
+    setBotTyping(true);
+
+    // Simulated latency for the canned reply. Replace this block with a
+    // real fetch("/api/support-chat", { ... }) call when a bot backend exists.
+    setTimeout(() => {
+      const reply: ChatMessage = { id: `b-${Date.now()}`, role: "bot", text: getBotReply(text) };
+      setMessages((m) => [...m, reply]);
+      setBotTyping(false);
+    }, 700);
+  }
+
+  const visibleFaqs = FAQS.filter((f) => f.category === activeCategory);
+
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+      <div className="border-b border-hairline pb-8">
+        <div className="flex items-center gap-2">
+          <LifeBuoy size={16} className="text-accent" />
+          <p className="font-sans text-xs font-semibold uppercase tracking-wide text-accent">Help Center</p>
+        </div>
+        <h1 className="mt-1 font-display text-4xl font-bold text-ink sm:text-5xl">How can we help?</h1>
+        <p className="mt-3 max-w-2xl font-sans text-sm leading-relaxed text-ink-muted">
+          Search the common questions below, or chat with our help bot for a quick pointer. For
+          content or safety issues, use{" "}
+          <a href="/report" className="text-accent hover:underline">Report a Problem</a> instead.
+        </p>
+      </div>
+
+      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_380px]">
+        {/* FAQ */}
+        <section>
+          <div className="flex flex-wrap gap-1.5">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setOpenIndex(null);
+                }}
+                className={`rounded-full border px-3.5 py-1.5 font-sans text-xs font-medium transition ${
+                  activeCategory === cat
+                    ? "border-accent bg-accent text-accent-ink shadow-sm"
+                    : "border-hairline bg-bg text-ink hover:border-accent"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-5 divide-y divide-hairline overflow-hidden rounded-xl border border-hairline bg-surface">
+            {visibleFaqs.map((faq, i) => {
+              const isOpen = openIndex === i;
+              return (
+                <div key={faq.question}>
+                  <button
+                    onClick={() => setOpenIndex(isOpen ? null : i)}
+                    className="flex w-full items-center justify-between gap-4 p-4 text-left transition hover:bg-bg"
+                  >
+                    <span className="font-sans text-sm font-semibold text-ink">{faq.question}</span>
+                    <ChevronDown
+                      size={16}
+                      className={`shrink-0 text-ink-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="px-4 pb-4">
+                      <p className="font-sans text-sm leading-relaxed text-ink-muted">{faq.answer}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-6 font-sans text-sm text-ink-muted">
+            Still stuck? Email us at{" "}
+            <a href="mailto:support@tipatale.com" className="text-accent hover:underline">support@tipatale.com</a>{" "}
+            or use the{" "}
+            <a href="/contact" className="text-accent hover:underline">Contact page</a>.
+          </p>
+        </section>
+
+        {/* Chat widget */}
+        <section className="flex h-[560px] flex-col overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
+          <div className="flex items-center gap-2 border-b border-hairline bg-bg px-4 py-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Bot size={16} />
+            </div>
+            <div>
+              <p className="font-sans text-sm font-semibold text-ink">TipaTale Help Bot</p>
+              <p className="font-sans text-[11px] text-ink-muted">Usually replies instantly</p>
+            </div>
+          </div>
+
+          <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+            {messages.map((m) => (
+              <div key={m.id} className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                {m.role === "bot" && (
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                    <Bot size={12} />
+                  </div>
+                )}
+                <div
+                  className={`max-w-[80%] rounded-2xl px-3.5 py-2 font-sans text-sm leading-relaxed ${
+                    m.role === "user"
+                      ? "rounded-br-sm bg-accent text-accent-ink"
+                      : "rounded-bl-sm border border-hairline bg-bg text-ink"
+                  }`}
+                >
+                  {m.text}
+                </div>
+                {m.role === "user" && (
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-hairline text-ink-muted">
+                    <User size={12} />
+                  </div>
+                )}
+              </div>
+            ))}
+            {botTyping && (
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                  <Bot size={12} />
+                </div>
+                <div className="flex gap-1 rounded-2xl rounded-bl-sm border border-hairline bg-bg px-3.5 py-2.5">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink-muted [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink-muted [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink-muted" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={sendMessage} className="flex items-center gap-2 border-t border-hairline p-3">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask a question…"
+              className="flex-1 rounded-full border border-hairline bg-bg px-4 py-2 font-sans text-sm text-ink outline-none transition placeholder:text-ink-muted/60 focus:border-accent"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim()}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Send message"
+            >
+              <Send size={14} />
+            </button>
+          </form>
+        </section>
+      </div>
+    </main>
+  );
+}

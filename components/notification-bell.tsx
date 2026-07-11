@@ -54,7 +54,7 @@ export function NotificationBell() {
   return (
     <div className="relative" ref={containerRef}>
       <button onClick={handleOpen} className="relative flex h-9 w-9 items-center justify-center rounded-full text-ink-muted hover:bg-bg" aria-label="Notifications">
-        <Bell size={17} />
+        <Bell size={20} />
         {unreadCount > 0 && (
           <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-sans text-[10px] font-semibold text-accent-ink">
             {unreadCount > 9 ? "9+" : unreadCount}

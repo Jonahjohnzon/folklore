@@ -147,7 +147,7 @@ export default function ProfilePage() {
               <BadgeShelf badges={profile.badges} role="chip" />
             </div>
           )}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 font-sans text-xs text-ink-muted sm:justify-start">
+          <div className="mt-3 flex flex-wrap  border-b pb-4 border-hairline items-center justify-center gap-x-4 gap-y-1.5 font-sans text-xs text-ink-muted sm:justify-start">
             <span className="flex items-center gap-1.5">
               <Calendar size={13} />
               Joined {new Date(profile.createdAt).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
@@ -166,7 +166,7 @@ export default function ProfilePage() {
           </div>
 
           {isCreator && (
-            <div className="mt-4 flex justify-center gap-6 border-t border-hairline pt-4 sm:justify-start">
+            <div className="mt-4 flex justify-center gap-6 sm:justify-start">
               <div>
                 <p className="font-display text-base font-semibold text-ink">{works.length}</p>
                 <p className="font-sans text-xs text-ink-muted">Works</p>
