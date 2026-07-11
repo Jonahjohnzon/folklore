@@ -7,6 +7,9 @@ import {  Recommendation } from "@/app/api/lib/models/Algo";
 import { ok, fail } from "@/app/api/response";
 import { optionalAuth } from "@/app/api/auth/optionalAuth";
 import { User } from "../lib/models/User";
+// app/api/home/route.ts
+import { ReadingProgress } from "@/app/api/lib/models/ReadingProgress";
+import { Types } from "mongoose";
 
 const VISIBLE = ["ongoing", "completed", "hiatus"];
 const RAIL_SIZE = 15;
@@ -25,9 +28,7 @@ function serializeBook(b: any) {
   };
 }
 
-// app/api/home/route.ts
-import { ReadingProgress } from "@/app/api/lib/models/ReadingProgress";
-import { Types } from "mongoose";
+
 
 // app/api/home/route.ts
 
