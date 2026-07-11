@@ -27,7 +27,7 @@ export async function sendReadingReminders() {
         templateArgs: {
           bookTitle: entry.bookTitle,
           chapterTitle: entry.chapterTitle,
-          link: `https://yourdomain.com/book/${entry.bookSlug}/chapter/${entry.chapterId}`,
+          link: `https://tipatale.com/book/${entry.bookSlug}/chapter/${entry.chapterId}`,
         },
       },
     });

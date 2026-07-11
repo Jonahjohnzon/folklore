@@ -7,7 +7,7 @@ import { Chapter } from "@/app/api/lib/models/Chapter";
 import { Book } from "@/app/api/lib/models/Book";
 import { withAuth } from "@/app/api/auth/withAuth";
 import { ok, fail } from "@/app/api/response";
-import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { dispatchNotification } from "@/app/api/lib/notifications/dispatch";
 import { PopulatedCommentDoc } from "@/app/api/lib/serialize-comment";
 
 const DEFAULT_PAGE_SIZE = 10;

@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Transaction } from "@/app/api/lib/models/Transaction";
 import { ProcessedWebhookEvent } from "@/app/api/lib/models/ProcessedWebhookEvent";
 import { User } from "@/app/api/lib/models/User";
-import { verifyCryptomusWebhook } from "@/lib/payments/cryptomus";
+import { verifyCryptomusWebhook } from "@/app/api/lib/payments/cryptomus";
 
 export async function POST(req: NextRequest) {
   await connectToDatabase();

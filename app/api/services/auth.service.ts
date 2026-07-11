@@ -4,9 +4,9 @@ import { signAuthToken } from "@/app/api/auth/jwt";
 import { ConflictError, UnauthorizedError, NotFoundError, ValidationError } from "@/app/api/lib/db/errors";
 import type { RegisterInput, LoginInput } from "@/app/api/validation/auth.schema";
 import { Types } from "mongoose";
-import * as templates from "@/lib/email/templates";
-import { sendEmail } from "@/lib/email/send";
-import { generateVerificationToken, hashVerificationToken } from "@/lib/auth/email-verification";
+import * as templates from "@/app/api/lib/email/templates";
+import { sendEmail } from "@/app/api/lib/email/send";
+import { generateVerificationToken, hashVerificationToken } from "@/app/api/lib/auth/email-verification";
 export type SafeUser = Omit<IUser, "passwordHash">;
 
 function toSafeUser(user: IUser): SafeUser {

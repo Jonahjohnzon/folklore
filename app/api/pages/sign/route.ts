@@ -4,7 +4,7 @@ import { Book } from "@/app/api/lib/models/Book";
 import { Chapter } from "@/app/api/lib/models/Chapter";
 import { ok, fail } from "@/app/api/response";
 import { ValidationError, NotFoundError, ForbiddenError } from "@/app/api/lib/db/errors";
-import { signUpload } from "@/lib/cloudinary";
+import { signUpload } from "@/app/api/lib/cloudinary";
 
 /**
  * Only hands out signatures for folders we recognise, and only for

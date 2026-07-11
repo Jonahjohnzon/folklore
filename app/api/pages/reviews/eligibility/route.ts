@@ -1,7 +1,6 @@
 // app/api/pages/reviews/eligibility/route.ts — lets the UI show/hide the composer before submit
-import { withAuth } from "@/app/api/auth/withAuth";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
-import { hasEliteBadge } from "@/lib/reviews/badge-gate";
+import { hasEliteBadge } from "@/app/api/lib/reviews/badge-gate";
 import { ok, fail } from "@/app/api/response";
 import { optionalAuth } from "@/app/api/auth/optionalAuth";
 

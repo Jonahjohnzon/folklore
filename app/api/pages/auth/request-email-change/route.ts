@@ -3,7 +3,7 @@ import { User } from "@/app/api/lib/models/User";
 import { withAuth } from "@/app/api/auth/withAuth";
 import { ok, fail } from "@/app/api/response";
 import { ConflictError, ValidationError } from "@/app/api/lib/db/errors";
-import { sendEmail } from "@/lib/email/send";
+import { sendEmail } from "@/app/api/lib/email/send";
 import { SignJWT } from "jose";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);

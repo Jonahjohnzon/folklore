@@ -1,5 +1,5 @@
 import { Transaction } from "@/app/api/lib/models/Transaction";
-import { createCryptomusInvoice } from "@/lib/payments/cryptomus";
+import { createCryptomusInvoice } from "@/app/api/lib/payments/cryptomus";
 
 interface StartCheckoutInput {
   userId: string;

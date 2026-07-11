@@ -6,7 +6,7 @@ import { BookTheme } from "@/app/api/lib/models/BookTheme";
 import { ReadingProgress } from "@/app/api/lib/models/ReadingProgress";
 import { LibraryEntry } from "@/app/api/lib/models/LibraryEntry";
 import { DailyStat } from "@/app/api/lib/models/DailyStat";
-import { BadgeAwardService } from "@/lib/badges/BadgeAwardService";
+import { BadgeAwardService } from "@/app/api/lib/badges/BadgeAwardService";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ForbiddenError } from "@/app/api/lib/db/errors";
 import { withAuth } from "@/app/api/auth/withAuth";

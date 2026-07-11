@@ -1,7 +1,7 @@
 // lib/cron/scheduler.ts
 import cron from "node-cron";
-import { generateAllRecommendations } from "@/lib/algo/generateRecommendations";
-import { sendReadingReminders } from "@/lib/notifications/sendReadingReminders";
+import { generateAllRecommendations } from "@/app/api/lib/algo/generateRecommendations";
+import { sendReadingReminders } from "@/app/api/lib/notifications/sendReadingReminders";
 
 let started = false;
 
@@ -11,10 +11,8 @@ export function startRecommendationCron() {
 
   // every 30 min while developing — tighten/loosen as you like
   cron.schedule("*/30 * * * *", async () => {
-    console.log("[cron] generating recommendations...");
     try {
-      const result = await generateAllRecommendations();
-      console.log("[cron] done:", result);
+      await generateAllRecommendations();
     } catch (err) {
       console.error("[cron] failed:", err);
     }

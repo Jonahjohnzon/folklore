@@ -2,7 +2,7 @@
 import { withAuth } from "@/app/api/auth/withAuth";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Review, ReviewVote } from "@/app/api/lib/models/Reviews";
-import { hasEliteBadge } from "@/lib/reviews/badge-gate";
+import { hasEliteBadge } from "@/app/api/lib/reviews/badge-gate";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ForbiddenError, ValidationError } from "@/app/api/lib/db/errors";
 

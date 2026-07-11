@@ -2,9 +2,9 @@ import { Types } from "mongoose";
 import { Notification } from "@/app/api/lib/models/Notification";
 import { NotificationPreference } from "@/app/api/lib/models/NotificationPreference";
 import { User } from "@/app/api/lib/models/User";
-import { sendEmail } from "@/lib/email/send";
+import { sendEmail } from "@/app/api/lib/email/send";
 import type { NotificationType } from "@/app/api/lib/types";
-import * as templates from "@/lib/email/templates";
+import * as templates from "@/app/api/lib/email/templates";
 import type { INotificationPreference } from "@/app/api/lib/models/NotificationPreference";
 
 interface DispatchInput {

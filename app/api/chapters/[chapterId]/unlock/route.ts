@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Types } from "mongoose";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Chapter } from "@/app/api/lib/models/Chapter";
@@ -8,7 +9,7 @@ import { withAuth } from "@/app/api/auth/withAuth";
 import { ok, fail } from "@/app/api/response";
 import { optionalAuth } from "@/app/api/auth/optionalAuth";
 import { Book } from "@/app/api/lib/models/Book";
-import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { dispatchNotification } from "@/app/api/lib/notifications/dispatch";
 
 interface UnlockResult {
   newBalance: number;

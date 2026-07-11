@@ -5,11 +5,11 @@ import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Book } from "@/app/api/lib/models/Book";
 import { Review } from "@/app/api/lib/models/Reviews";
 import { ReadingProgress } from "@/app/api/lib/models/ReadingProgress";
-import { hasEliteBadge } from "@/lib/reviews/badge-gate";
-import { recalculateBookRating } from "@/lib/reviews/recalculate-rating";
+import { hasEliteBadge } from "@/app/api/lib/reviews/badge-gate";
+import { recalculateBookRating } from "@/app/api/lib/reviews/recalculate-rating";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ForbiddenError, ValidationError } from "@/app/api/lib/db/errors";
-import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { dispatchNotification } from "@/app/api/lib/notifications/dispatch";
 import { User } from "@/app/api/lib/models/User";
 
 export const GET = optionalAuth(async (req, ctx) => {

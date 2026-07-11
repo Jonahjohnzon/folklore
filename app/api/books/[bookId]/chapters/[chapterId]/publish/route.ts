@@ -8,7 +8,7 @@ import { User } from "@/app/api/lib/models/User";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ForbiddenError, ValidationError } from "@/app/api/lib/db/errors";
 import { Types } from "mongoose";
-import { dispatchBulkNotifications } from "@/lib/notifications/dispatch";
+import { dispatchBulkNotifications } from "@/app/api/lib/notifications/dispatch";
 
 
 export const POST = withAuth(async (req, ctx) => {
