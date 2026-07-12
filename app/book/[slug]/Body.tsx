@@ -79,7 +79,10 @@ export default function BookDetailPage() {
 
   useEffect(() => {
   CoinService.getBalance()
-    .then((res) => setCoinBalance(res.data.coinBalance))
+    .then((res) => {
+      if(res?.data?.coinBalance)
+      {
+      setCoinBalance(res.data.coinBalance)}})
     .catch(() => setCoinBalance(0));
 }, []);
 
@@ -106,6 +109,7 @@ export default function BookDetailPage() {
         const { data } = await ReviewService.submit(book.slug, myRating, myBody);
         setReviews((prev) => {
           const withoutMine = prev.filter((r) => r.id !== data.review._id);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return [{ ...data.review, id: String(data.review._id) } as any, ...withoutMine];
         });
         setMyBody("");

@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     const { user, token } = await loginUser(parsed.data);
     await setAuthCookie(token);
-    return ok({ user });
+    return ok({ user, token });
   } catch (error) {
     return fail(error);
   }

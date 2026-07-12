@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const { user, token } = await registerUser(parsed.data);
 
     await setAuthCookie(token);
-    return created({ user });
+    return created({ user,token });
   } catch (error) {
     return fail(error);
   }
