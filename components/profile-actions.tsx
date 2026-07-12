@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Mail, Bell, BellOff, MoreHorizontal, ShieldOff, Flag } from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
+import {  MoreHorizontal, Flag } from "lucide-react";
 import { UserService } from "@/app/services/user.service";
 import { FollowButton } from "./follow-button";
 import { PublicUser } from "@/app/services/user.service";
@@ -81,7 +81,9 @@ export function ProfileActions({ username, initialFollowing, initialBlocked , pr
               {blocked ? "Unblock" : "Block"} @{username}
             </button> */}
             <button
-              onClick={() => setMenuOpen(false)}
+              onClick={() => {
+                router.push('/report')
+                setMenuOpen(false)}}
               className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2.5 font-sans text-sm font-medium text-ink transition hover:bg-bg"
             >
               <Flag size={15} />

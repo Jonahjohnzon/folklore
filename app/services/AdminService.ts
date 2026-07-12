@@ -12,6 +12,18 @@ export interface AdminStats {
 
 export type AdminUserStatus = "active" | "suspended" | "deleted";
 export type AdminUserRole = "user" | "moderator" | "admin";
+export interface AdminPayoutAccountRow {
+  _id: string;
+  user: { _id: string; username: string; displayName: string; email: string };
+  method: "bank" | "crypto";
+  bankName: string | null;
+  accountName: string | null;
+  accountNumberMasked: string | null;
+  cryptoNetwork: string | null;
+  walletAddressMasked: string | null;
+  verified: boolean;
+  updatedAt: string;
+}
 
 export interface AdminUserRow {
   _id: string;
@@ -59,6 +71,19 @@ export interface AdminSoundRow {
   active: boolean;
   createdAt: string;
 }
+
+export interface AdminPayoutRequestRow {
+  _id: string;
+  user: { username: string; displayName: string; email: string };
+  amountCoins: number;
+  method: "bank" | "crypto";
+  destinationSnapshot: Record<string, string | undefined>;
+  status: "pending" | "approved" | "paid" | "rejected";
+  adminNote: string | null;
+  createdAt: string;
+  processedAt: string | null;
+}
+
 
 export interface CreateSoundBody {
   label: string;
@@ -113,4 +138,20 @@ export const AdminService = {
 
   deleteSound: (soundId: string) =>
   api.delete<Envelope<{ deleted: boolean }>>(`/api/admin/sounds/${soundId}`),
+  getPayoutAccounts: (page = 1, opts?: { method?: "bank" | "crypto"; q?: string }) =>
+  api.get<Envelope<{ accounts: AdminPayoutAccountRow[]; total: number; page: number; hasMore: boolean }>>(
+    "/api/admin/payout-accounts",
+    { page, ...(opts?.method ? { method: opts.method } : {}), ...(opts?.q ? { q: opts.q } : {}) }
+  ),
+  revealPayoutAccount: (id: string) =>
+  api.get<Envelope<{ accountNumber: string | null; walletAddress: string | null }>>(`/api/admin/payout-accounts/${id}/reveal`),
+  setPayoutVerified: (id: string, verified: boolean) =>
+  api.patch<Envelope<{ verified: boolean }>>(`/api/admin/payout-accounts/${id}/verify`, { verified }),
+  getPayoutRequests: (page = 1, status?: string) =>
+  api.get<Envelope<{ requests: AdminPayoutRequestRow[]; total: number; page: number; hasMore: boolean }>>(
+    "/api/admin/payout-requests",
+    status && status !== "all" ? { page, status } : { page }
+  ),
+  updatePayoutRequest: (id: string, body: { status: "approved" | "paid" | "rejected"; adminNote?: string }) =>
+  api.patch<Envelope<{ status: string }>>(`/api/admin/payout-requests/${id}`, body),
 };

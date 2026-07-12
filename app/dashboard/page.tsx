@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Home, BookOpen, Star, Layers,Target, TrendingUp, TrendingDown, Loader2, Coins, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, BookOpen, Star, Layers,Target, TrendingUp, TrendingDown, Loader2, Coins, ChevronLeft, ChevronRight, Wallet  } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -16,6 +16,7 @@ import {
   type DashboardAnalytics,
 } from "@/app/services/DashboardService";
 import { formatCompactNumber } from "@/lib/format";
+import { PayoutBalanceCard } from "@/components/payout-balance-card";
 
 const BOOKS_PER_PAGE =5;
 
@@ -167,19 +168,30 @@ export default function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6">
-      <div className="mb-6 flex items-center gap-3">
-        <Link
-          href="/"
-          aria-label="Home"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-muted transition hover:border-accent hover:text-accent"
-        >
-          <Home size={16} />
-        </Link>
-        <div>
-          <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Creator dashboard</p>
-          <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Your books at a glance</h1>
+      <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              aria-label="Home"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-muted transition hover:border-accent hover:text-accent"
+            >
+              <Home size={16} />
+            </Link>
+            <div>
+              <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Creator dashboard</p>
+              <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Your books at a glance</h1>
+            </div>
+          </div>
+
+          <Link
+            href="/settings/payout"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-hairline bg-surface px-3.5 py-2 font-sans text-sm font-medium text-ink transition hover:border-accent hover:text-accent"
+          >
+            <Wallet size={15} />
+            <span className="hidden sm:inline">Payout details</span>
+          </Link>
         </div>
-      </div>
+
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-3.5 py-2 font-sans text-sm text-red-700">
@@ -389,6 +401,8 @@ export default function DashboardPage() {
             </p>
             <p className="mt-1 font-sans text-xs text-ink-muted">People following you as an author</p>
           </div>
+          <PayoutBalanceCard />
+          
         </aside>
       </div>
     </main>

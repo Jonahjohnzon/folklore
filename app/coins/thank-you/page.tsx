@@ -132,7 +132,7 @@ function PaymentThankYouContent() {
 
           <div className="mt-6 flex w-full flex-col gap-2.5 sm:flex-row">
             <button
-              onClick={() => router.push("/coins")}
+              onClick={() => router.replace("/coins")}
               className="flex flex-1 items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 font-sans text-sm font-semibold text-accent-ink shadow-sm hover:opacity-90"
             >
               View wallet <ArrowRight size={15} />
@@ -180,7 +180,7 @@ function PaymentThankYouContent() {
           </p>
           <div className="mt-6 flex w-full flex-col gap-2.5 sm:flex-row">
             <button
-              onClick={() => router.push("/coins")}
+              onClick={() => router.replace("/coins")}
               className="flex flex-1 items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 font-sans text-sm font-semibold text-accent-ink shadow-sm hover:opacity-90"
             >
               Back to wallet <ArrowRight size={15} />

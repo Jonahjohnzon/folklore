@@ -33,11 +33,10 @@ api.interceptors.response.use(
     if (!error.response) {
       return Promise.reject("Network error. Check your connection.");
     }
-
+    
     const { status } = error.response;
     const requestUrl: string = error.config?.url ?? "";
     const message: string = error.response.data?.error.message ?? error.message;
-
 
     switch (status) {
       case 401: {
@@ -58,7 +57,7 @@ api.interceptors.response.use(
         return Promise.reject("You do not have permission to do that.");
 
       case 404:
-        return Promise.reject("Not found.");
+        return Promise.reject(error.response.data?.error || 'Not Found');
 
       case 422:
         return Promise.reject(error.response.data?.error);
