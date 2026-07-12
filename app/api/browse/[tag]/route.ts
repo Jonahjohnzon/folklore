@@ -7,7 +7,7 @@ import { Tag } from "@/app/api/lib/models/Tag";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ValidationError } from "@/app/api/lib/db/errors";
 
-const SORT_OPTIONS = ["popular", "newest", "rating", "updated"] as const;
+const SORT_OPTIONS = ["popular", "newest", "rating", "updated", "trending"] as const;
 const STATUS_FILTERS = ["all", "ongoing", "completed", "hiatus"] as const;
 
 const querySchema = z.object({
@@ -27,12 +27,18 @@ const SORT_MAP: Record<(typeof SORT_OPTIONS)[number], Record<string, 1 | -1>> = 
   newest: { publishedAt: -1, createdAt: -1 },
   rating: { averageRating: -1, reviewCount: -1 },
   updated: { updatedAt: -1 },
+  // Pure totalReads ranking — no tiebreaker on updatedAt like "popular" has,
+  // so this is strictly "most-read right now" rather than "popular AND fresh."
+  trending: { totalReads: -1 },
 };
 
 // Virtual genres: slugs that don't correspond to a real Tag document, but map
-// to a canned query instead. "new" = latest published books, no tag filter.
+// to a canned query instead.
+// "new"      = latest published books, no tag filter.
+// "trending" = top books by totalReads, no tag filter.
 const VIRTUAL_TAGS: Record<string, { name: string; sort: (typeof SORT_OPTIONS)[number] }> = {
   new: { name: "New Releases", sort: "newest" },
+  trending: { name: "Trending", sort: "trending" },
 };
 
 // Public route: browsing by genre doesn't require a signed-in user.
@@ -52,8 +58,8 @@ export async function GET(
     const { page, limit, status, mature } = parsed.data;
 
     const virtual = VIRTUAL_TAGS[tagSlug];
-    // Virtual tags force their own sort (e.g. "new" always sorts newest-first),
-    // ignoring whatever ?sort= was passed.
+    // Virtual tags force their own sort (e.g. "new" always sorts newest-first,
+    // "trending" always sorts by totalReads), ignoring whatever ?sort= was passed.
     const sort = virtual ? virtual.sort : parsed.data.sort;
 
     let tagData: { _id: unknown; name: string; slug: string } | null = null;
