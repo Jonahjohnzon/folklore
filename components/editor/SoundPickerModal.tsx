@@ -1,8 +1,10 @@
+// components/editor/SoundPickerModal.tsx
 "use client";
 
-import { useRef, useState } from "react";
-import { Play, Pause, X } from "lucide-react";
-import { PLATFORM_SOUNDS, SOUND_CATEGORIES, type PlatformSound } from "@/lib/sounds";
+import { useEffect, useRef, useState } from "react";
+import { Play, Pause, X, Loader2 } from "lucide-react";
+import { SOUND_CATEGORIES, type PlatformSound } from "@/lib/sounds";
+import { SoundService } from "@/app/services/SoundService";
 
 interface SoundPickerModalProps {
   open: boolean;
@@ -12,8 +14,21 @@ interface SoundPickerModalProps {
 }
 
 export default function SoundPickerModal({ open, selectedSoundId, onSelect, onClose }: SoundPickerModalProps) {
+  const [sounds, setSounds] = useState<PlatformSound[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    setError(null);
+    SoundService.list()
+      .then((res) => setSounds(res.data.sounds))
+      .catch((err) => setError(err instanceof Error ? err.message : "Couldn't load sounds."))
+      .finally(() => setLoading(false));
+  }, [open]);
 
   if (!open) return null;
 
@@ -41,41 +56,61 @@ export default function SoundPickerModal({ open, selectedSoundId, onSelect, onCl
           </button>
         </div>
 
-        {SOUND_CATEGORIES.map((cat) => (
-          <div key={cat.id} className="mb-4">
-            <h4 className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">{cat.label}</h4>
-            <div className="mt-2 flex flex-col gap-1.5">
-              {PLATFORM_SOUNDS.filter((s) => s.category === cat.id).map((s) => (
-                <div
-                  key={s.id}
-                  className={`flex items-center justify-between rounded-lg border bg-bg px-3 py-2 ${
-                    selectedSoundId === s.id ? "border-accent" : "border-hairline"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => toggleSoundPreview(s)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-muted hover:text-ink"
-                      aria-label={previewingId === s.id ? "Pause preview" : "Play preview"}
-                    >
-                      {previewingId === s.id ? <Pause size={12} /> : <Play size={12} />}
-                    </button>
-                    <span className="font-sans text-sm text-ink">{s.label}</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      onSelect(s.id);
-                      onClose();
-                    }}
-                    className="rounded-full border border-hairline bg-surface px-3 py-1 font-sans text-xs font-medium text-ink hover:border-accent"
-                  >
-                    {selectedSoundId === s.id ? "Selected" : "Select"}
-                  </button>
-                </div>
-              ))}
-            </div>
+        {loading && (
+          <div className="flex items-center gap-2 py-6 font-sans text-sm text-ink-muted">
+            <Loader2 size={14} className="animate-spin" /> Loading sounds…
           </div>
-        ))}
+        )}
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-3.5 py-2 font-sans text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        {!loading &&
+          !error &&
+          SOUND_CATEGORIES.map((cat) => {
+            const inCategory = sounds.filter((s) => s.category === cat.id);
+            if (!inCategory.length) return null;
+            return (
+              <div key={cat.id} className="mb-4">
+                <h4 className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {cat.label}
+                </h4>
+                <div className="mt-2 flex flex-col gap-1.5">
+                  {inCategory.map((s) => (
+                    <div
+                      key={s.id}
+                      className={`flex items-center justify-between rounded-lg border bg-bg px-3 py-2 ${
+                        selectedSoundId === s.id ? "border-accent" : "border-hairline"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleSoundPreview(s)}
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-muted hover:text-ink"
+                          aria-label={previewingId === s.id ? "Pause preview" : "Play preview"}
+                        >
+                          {previewingId === s.id ? <Pause size={12} /> : <Play size={12} />}
+                        </button>
+                        <span className="font-sans text-sm text-ink">{s.label}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          onSelect(s.id);
+                          onClose();
+                        }}
+                        className="rounded-full border border-hairline bg-surface px-3 py-1 font-sans text-xs font-medium text-ink hover:border-accent"
+                      >
+                        {selectedSoundId === s.id ? "Selected" : "Select"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
       </div>
     </div>
   );

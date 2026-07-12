@@ -15,8 +15,9 @@ import { ChapterLikeButton } from "@/components/chapter-like-button";
 import { CommentSection } from "@/components/comment-section";
 import type { PublicChapterDetail, PublicChapterTheme } from "@/app/services/ChapterService";
 import { CommentService, type ParagraphCommentDTO } from "@/app/services/CommentService";
+import { SoundService } from "@/app/services/SoundService";
 import { getChapterPresentation } from "@/lib/chapter-presentation";
-import { PLATFORM_SOUNDS, PAGE_SOUNDS } from "@/lib/sounds";
+import { PAGE_SOUNDS, type PlatformSound } from "@/lib/sounds";
 import { loadReaderPrefs, saveReaderPrefs, type ReaderPrefs } from "@/lib/reader-prefs";
 import { splitIntoBlocks } from "@/lib/reader-blocks";
 import { useSnapshot } from "valtio";
@@ -49,7 +50,29 @@ export function ChapterReader({
   const presentation = useMemo(() => getChapterPresentation(theme), [theme]);
   const [ambientAttention, setAmbientAttention] = useState(false);
 
-  const authorAmbientSound = PLATFORM_SOUNDS.find((s) => s.id === chapter?.audioId) ?? null;
+  // Sound library — fetched once from the DB-backed catalog rather than a
+  // static import, so newly-added admin sounds show up without a redeploy.
+  const [sounds, setSounds] = useState<PlatformSound[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    SoundService.list()
+      .then(({ data }) => {
+        if (!cancelled) setSounds(data.sounds);
+      })
+      .catch(() => {
+        // Reader still works without ambient/author sound if this fails —
+        // just falls back to no ambient option being shown.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const authorAmbientSound = useMemo(
+    () => sounds.find((s) => s.id === chapter?.audioId) ?? null,
+    [sounds, chapter?.audioId]
+  );
 
   const [mounted, setMounted] = useState(false);
   const [prefs, setPrefs] = useState<ReaderPrefs | null>(null);
@@ -82,10 +105,10 @@ export function ChapterReader({
   const ambientSound = useMemo(() => {
     const wantsOverride = mode === "custom" && !presentation.locks.sound && prefs?.ambientSoundId;
     if (wantsOverride) {
-      return PLATFORM_SOUNDS.find((s) => s.id === prefs!.ambientSoundId) ?? authorAmbientSound;
+      return sounds.find((s) => s.id === prefs!.ambientSoundId) ?? authorAmbientSound;
     }
     return authorAmbientSound;
-  }, [mode, presentation.locks.sound, prefs?.ambientSoundId, authorAmbientSound]);
+  }, [mode, presentation.locks.sound, prefs?.ambientSoundId, authorAmbientSound, sounds]);
 
   function toggleAmbientSound() {
     const audio = ambientAudioRef.current;
@@ -431,6 +454,7 @@ export function ChapterReader({
           presentation={presentation}
           authorSoundLabel={authorAmbientSound?.label ?? null}
           currentPrefs={prefs}
+          sounds={sounds}
           onSave={handleSettingsSave}
           onClose={() => setSettingsOpen(false)}
         />

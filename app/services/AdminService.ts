@@ -49,6 +49,25 @@ export interface CreateBadgeBody {
   threshold: number;
 }
 
+export type SoundCategory = "ambience" | "impact" | "nature" | "music_sting";
+
+export interface AdminSoundRow {
+  _id: string;
+  label: string;
+  category: SoundCategory;
+  url: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CreateSoundBody {
+  label: string;
+  category: SoundCategory;
+  url: string;
+}
+export type UpdateSoundBody = Partial<CreateSoundBody> & { active?: boolean };
+
+
 export const AdminService = {
   getStats: () => api.get<Envelope<{ stats: AdminStats }>>("/api/admin/stats"),
 
@@ -77,11 +96,21 @@ export const AdminService = {
   createBadge: (body: CreateBadgeBody) =>
   api.post<Envelope<{ badge: AdminBadgeRow }>>("/api/admin/badges", body),
 
-updateBadge: (badgeId: string, body: Partial<Pick<AdminBadgeRow, "name" | "threshold">>) =>
+  updateBadge: (badgeId: string, body: Partial<Pick<AdminBadgeRow, "name" | "threshold">>) =>
   api.patch<Envelope<{ badge: AdminBadgeRow }>>(`/api/admin/badges/${badgeId}`, body),
-updateVerifiedAuthor: (userId: string, verified: boolean) =>
+  updateVerifiedAuthor: (userId: string, verified: boolean) =>
   api.patch<Envelope<{ user: { username: string; verifiedAuthor: boolean } }>>(
     `/api/admin/users/${userId}/verify`,
     { verified }
   ),
+  getSounds: () => api.get<Envelope<{ sounds: AdminSoundRow[] }>>("/api/admin/sounds"),
+
+  createSound: (body: CreateSoundBody) =>
+  api.post<Envelope<{ sound: AdminSoundRow }>>("/api/admin/sounds", body),
+
+  updateSound: (soundId: string, body: UpdateSoundBody) =>
+  api.patch<Envelope<{ sound: AdminSoundRow }>>(`/api/admin/sounds/${soundId}`, body),
+
+  deleteSound: (soundId: string) =>
+  api.delete<Envelope<{ deleted: boolean }>>(`/api/admin/sounds/${soundId}`),
 };

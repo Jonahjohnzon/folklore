@@ -5,7 +5,7 @@ import { X, Check, Lock, Volume2, VolumeX } from "lucide-react";
 import type { ChapterPresentation } from "@/lib/chapter-presentation";
 import type { ReaderPrefs } from "@/lib/reader-prefs";
 import { SHEET_THEMES } from "@/lib/sheet-themes";
-import { PLATFORM_SOUNDS, SOUND_CATEGORIES, DEFAULT_PAGE_TURN_SOUND_ID } from "@/lib/sounds";
+import { SOUND_CATEGORIES, DEFAULT_PAGE_TURN_SOUND_ID, type PlatformSound } from "@/lib/sounds";
 
 const FONT_OPTIONS = [
   { id: "serif", label: "Source Serif" },
@@ -19,12 +19,13 @@ interface ReaderSettingsModalProps {
   presentation: ChapterPresentation;
   authorSoundLabel: string | null;
   currentPrefs: ReaderPrefs | null;
+  sounds: PlatformSound[];
   onSave: (prefs: ReaderPrefs) => void;
   onClose: () => void;
 }
 
 export function ReaderSettingsModal({
-  open, presentation, authorSoundLabel, currentPrefs, onSave, onClose,
+  open, presentation, authorSoundLabel, currentPrefs, sounds, onSave, onClose,
 }: ReaderSettingsModalProps) {
   const [mode, setMode] = useState<"author" | "custom">(currentPrefs?.mode ?? "author");
   const [fontId, setFontId] = useState(currentPrefs?.fontId ?? presentation.fontId);
@@ -179,7 +180,7 @@ export function ReaderSettingsModal({
                     <span className="flex items-center gap-2 font-sans text-sm text-ink">
                       {soundOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
                       {ambientSoundId
-                        ? PLATFORM_SOUNDS.find((s) => s.id === ambientSoundId)?.label ?? "Ambient sound"
+                        ? sounds.find((s) => s.id === ambientSoundId)?.label ?? "Ambient sound"
                         : authorSoundLabel ?? "Ambient sound"}
                     </span>
                     <span className={`rounded-full px-2.5 py-1 font-sans text-xs font-medium ${soundOn ? "bg-accent/10 text-accent" : "bg-hairline/40 text-ink-muted"}`}>
@@ -189,30 +190,36 @@ export function ReaderSettingsModal({
 
                   {soundOn && (
                     <div className="mt-2 max-h-48 overflow-y-auto scrollbar-thin rounded-lg border border-hairline bg-bg">
-                      <SoundOption
-                        label={authorSoundLabel ? `${authorSoundLabel} (author's pick)` : "Author's pick"}
-                        selected={ambientSoundId === null}
-                        onClick={() => setAmbientSoundId(null)}
-                      />
-                      {SOUND_CATEGORIES.map((cat) => {
-                        const items = PLATFORM_SOUNDS.filter((s) => s.category === cat.id);
-                        if (items.length === 0) return null;
-                        return (
-                          <div key={cat.id}>
-                            <p className="border-b border-t border-hairline bg-hairline/10 px-3 py-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
-                              {cat.label}
-                            </p>
-                            {items.map((s) => (
-                              <SoundOption
-                                key={s.id}
-                                label={s.label}
-                                selected={ambientSoundId === s.id}
-                                onClick={() => setAmbientSoundId(s.id)}
-                              />
-                            ))}
-                          </div>
-                        );
-                      })}
+                      {sounds.length === 0 ? (
+                        <p className="px-3 py-3 font-sans text-xs text-ink-muted">Loading sounds…</p>
+                      ) : (
+                        <>
+                          <SoundOption
+                            label={authorSoundLabel ? `${authorSoundLabel} (author's pick)` : "Author's pick"}
+                            selected={ambientSoundId === null}
+                            onClick={() => setAmbientSoundId(null)}
+                          />
+                          {SOUND_CATEGORIES.map((cat) => {
+                            const items = sounds.filter((s) => s.category === cat.id);
+                            if (items.length === 0) return null;
+                            return (
+                              <div key={cat.id}>
+                                <p className="border-b border-t border-hairline bg-hairline/10 px-3 py-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+                                  {cat.label}
+                                </p>
+                                {items.map((s) => (
+                                  <SoundOption
+                                    key={s.id}
+                                    label={s.label}
+                                    selected={ambientSoundId === s.id}
+                                    onClick={() => setAmbientSoundId(s.id)}
+                                  />
+                                ))}
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
                     </div>
                   )}
                 </>

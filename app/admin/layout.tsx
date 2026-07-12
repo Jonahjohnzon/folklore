@@ -1,11 +1,11 @@
 // app/admin/layout.tsx
 import Link from "next/link";
-import { LayoutDashboard, Users, BookOpen, Award, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Users, Music, Award, ShieldAlert } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/content", label: "Content", icon: BookOpen },
+  { href: "/admin/sounds", label: "Sounds", icon: Music },
   { href: "/admin/badges", label: "Badges", icon: Award },
   { href: "/admin/moderation", label: "Moderation", icon: ShieldAlert },
 ];
