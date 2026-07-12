@@ -26,7 +26,6 @@ import { FontSize } from "@/components/editor/FontSize";
 import type {CreatorLocks} from "@/lib/chapter-presentation";
 import { BookService, type Book } from "@/app/services/BookService";
 import { ChapterService } from "@/app/services/ChapterService";
-import {  soundIdForUrl } from "@/lib/sound-effects";
 
 // How long the "Chapter saved!" / "Chapter published!" toast stays on screen.
 const TOAST_DURATION_MS = 3500;
@@ -162,7 +161,7 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
         setTitle(chapter.title);
         setAccess(chapter.accessType);
         setCoins(chapter.coinsRequired || 20);
-        setSelectedSoundId(soundIdForUrl(chapter.audioId));
+        setSelectedSoundId(chapter.audioId ?? null);
         setChapterCoverPreview(chapter.coverUrl ?? null);
         editor.commands.setContent(chapter.content || "<p></p>");
         updateWordCount(editor.getText());

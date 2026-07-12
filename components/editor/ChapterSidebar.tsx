@@ -1,12 +1,12 @@
 "use client";
 
-
-import { Coins, Music, X, Lock, Unlock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Coins, Music, X, Loader2 } from "lucide-react";
 import type { ChapterAccess } from "@/lib/types";
-import { PLATFORM_SOUNDS } from "@/lib/sounds";
+import { SoundService } from "@/app/services/SoundService";
+import type { PlatformSound } from "@/lib/sounds";
 import { SHEET_THEMES } from "@/lib/sheet-themes";
-import type {CreatorLocks} from "@/lib/chapter-presentation";
-
+import type { CreatorLocks } from "@/lib/chapter-presentation";
 
 interface ChapterSidebarProps {
   access: ChapterAccess;
@@ -23,7 +23,6 @@ interface ChapterSidebarProps {
   onCoverSelect: (file: File) => void;
   onRemoveCover: () => void;
   onSheetThemeChange: (id: string) => void;
-
 }
 
 export default function ChapterSidebar({
@@ -31,9 +30,30 @@ export default function ChapterSidebar({
   selectedSoundId, onClearSound, onOpenSoundPicker,
   sheetThemeId, onSheetThemeChange, locks, onLocksChange,
 }: ChapterSidebarProps) {
-  const selectedSound = PLATFORM_SOUNDS.find((s) => s.id === selectedSoundId) ?? null;
+  // Sound library — fetched from the DB-backed catalog rather than a static
+  // import, since the label lookup below needs to resolve admin-added sounds too.
+  const [sounds, setSounds] = useState<PlatformSound[]>([]);
+  const [soundsLoading, setSoundsLoading] = useState(true);
 
-  
+  useEffect(() => {
+    let cancelled = false;
+    SoundService.list()
+      .then(({ data }) => {
+        if (!cancelled) setSounds(data.sounds);
+      })
+      .catch(() => {
+        // Sidebar still works without labels resolved — the picker modal
+        // itself handles its own load/error state independently.
+      })
+      .finally(() => {
+        if (!cancelled) setSoundsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedSound = sounds.find((s) => s.id === selectedSoundId) ?? null;
 
   return (
     <aside className="flex flex-col gap-4">
@@ -88,8 +108,14 @@ export default function ChapterSidebar({
           </button> */}
         </div>
         <p className="mt-1 font-sans text-xs text-ink-muted">
-          Plays as chapter background sound. Choose from our licensed library.
+          Plays as chapter background sound, looping until the reader pauses it. Choose from our licensed library.
         </p>
+
+        {selectedSoundId && soundsLoading && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg border border-hairline bg-bg px-3 py-2 font-sans text-xs text-ink-muted">
+            <Loader2 size={12} className="animate-spin" /> Loading sound…
+          </div>
+        )}
 
         {selectedSound && (
           <div className="mt-3 flex items-center justify-between rounded-lg border border-hairline bg-bg px-3 py-2">
@@ -126,8 +152,6 @@ export default function ChapterSidebar({
           ))}
         </div>
       </div>
-
-      
     </aside>
   );
 }

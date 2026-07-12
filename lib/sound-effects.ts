@@ -1,32 +1,56 @@
-import { PLATFORM_SOUNDS } from "./sounds";
-export interface SoundOption {
-  id: string;
-  label: string;
-  /** Path under /public. */
-  url: string;
-}
+// lib/sound-effects.ts
+import { SoundService } from "@/app/services/SoundService";
+import type { PlatformSound } from "./sounds";
 
-export interface PlatformSound {
-  id: string;
-  label: string;
-  category: "ambience" | "impact" | "nature" | "music_sting";
-  url: string; // hosted asset, e.g. CDN path
-  previewDurationSec: number;
-}
 /**
- * These are curated sounds shipped by us, not user uploads — files live in
- * /public/sounds/*. Update the id/label/url below to match whatever's
- * actually in that folder; SoundPickerModal should read from this same
- * list so its option ids line up with what gets saved on the chapter.
+ * The sound library now lives in the DB (managed from /admin/sounds), not
+ * as a static array here. These helpers fetch it once and cache the result
+ * in memory for the life of the page — a chapter's audioId is the Sound
+ * document's _id, and the API response already includes its url alongside
+ * it, so resolving id -> url/label is just a lookup once the list is loaded.
  */
 
+let cache: PlatformSound[] | null = null;
+let inFlight: Promise<PlatformSound[]> | null = null;
 
-export function soundUrlForId(id: string | null): string | null {
-  if (!id) return null;
-  return PLATFORM_SOUNDS.find((s) => s.id === id)?.url ?? null;
+async function getSounds(): Promise<PlatformSound[]> {
+  if (cache) return cache;
+  if (!inFlight) {
+    inFlight = SoundService.list()
+      .then(({ data }) => {
+        cache = data.sounds;
+        return cache;
+      })
+      .catch(() => {
+        // Don't cache failures — next call gets to retry.
+        inFlight = null;
+        return [];
+      });
+  }
+  return inFlight;
 }
 
-export function soundIdForUrl(url: string | null | undefined): string | null {
+/** Clears the cache — call after an admin edits/adds/removes a sound if the
+ *  same session needs to see the change without a full reload. */
+export function invalidateSoundCache() {
+  cache = null;
+  inFlight = null;
+}
+
+export async function soundUrlForId(id: string | null): Promise<string | null> {
+  if (!id) return null;
+  const sounds = await getSounds();
+  return sounds.find((s) => s.id === id)?.url ?? null;
+}
+
+export async function soundIdForUrl(url: string | null | undefined): Promise<string | null> {
   if (!url) return null;
-  return PLATFORM_SOUNDS.find((s) => s.url === url)?.id ?? null;
+  const sounds = await getSounds();
+  return sounds.find((s) => s.url === url)?.id ?? null;
+}
+
+export async function soundLabelForId(id: string | null): Promise<string | null> {
+  if (!id) return null;
+  const sounds = await getSounds();
+  return sounds.find((s) => s.id === id)?.label ?? null;
 }

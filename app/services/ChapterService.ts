@@ -1,6 +1,5 @@
 import ApiClient from "@/app/ApiCore";
 import type { ChapterAccess } from "@/lib/types";
-import {SoundOption} from "@/lib/sound-effects";
 import { uploadImageToCloudinary } from "@/lib/cloudinary-client";
 
 const api = new ApiClient();
@@ -16,7 +15,6 @@ export interface Chapter {
   accessType: ChapterAccess;
   coinsRequired: number;
   audioId?: string;
-  soundEffects: SoundOption[];
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -36,7 +34,6 @@ export interface UpdateChapterBody {
   accessType?: ChapterAccess;
   coinsRequired?: number;
   audioIntroUrl?: string | null;
-  soundEffects?: SoundOption[];
   coverUrl?: string | null;
   orderIndex?: number;
 }
