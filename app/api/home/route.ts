@@ -101,11 +101,12 @@ export const GET = optionalAuth(async (req) => {
   try {
     await connectToDatabase();
 
-    const [trending, newReleases, fantasy, romance] = await Promise.all([
+    const [trending, newReleases, fantasy, romance, thriller] = await Promise.all([
       getTrending(),
       getNewReleases(),
       getGenrePicks("fantasy"),
       getGenrePicks("romance"),
+      getGenrePicks("thriller"),
     ]);
 
      let continueReading: Awaited<ReturnType<typeof getContinueReading>> = null;
@@ -139,6 +140,7 @@ export const GET = optionalAuth(async (req) => {
       newReleases,
       fantasy,
       romance,
+      thriller
     });
   } catch (error) {
     return fail(error);

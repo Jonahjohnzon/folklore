@@ -19,6 +19,7 @@ export interface HomeFeed {
   newReleases: Book[];
   fantasy: Book[];
   romance: Book[];
+  thriller: Book[];
 }
 
 

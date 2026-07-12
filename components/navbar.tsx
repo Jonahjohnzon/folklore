@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSnapshot } from "valtio";
 import { SearchBox } from "./search-dropdown";
 import { NotificationBell } from "./notification-bell";
+import { useRouter } from "nextjs-toploader/app";
 import {
   Search,
   Menu,
@@ -42,6 +43,18 @@ const WRITE_TABS = [
   { id: "tools", label: "Helpful tools", icon: Wrench },
   { id: "tutorial", label: "Tutorial", icon: GraduationCap },
 ] as const;
+
+const TOOLS = [
+  { label: "Outline builder", href: "https://www.writinglab.io/outline-generator" },
+  { label: "Name generator", href: "https://sudowrite.com/brainstorm/book-title-generators" },
+  { label: "Grammar check", href: "https://www.grammarly.com/" },
+];
+
+const GUIDES = [
+  { label: "Getting started guide", href: "/help/getting-started" },
+  { label: "Growing your readership", href: "/help/growing-readership" },
+];
+
 
 type WriteTabId = (typeof WRITE_TABS)[number]["id"];
 
@@ -206,7 +219,7 @@ function AccountMenu() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Account"
-        className="hidden h-9 w-9 items-center justify-center rounded-full lg:flex"
+        className="hidden cursor-pointer h-9 w-9 items-center justify-center rounded-full lg:flex"
       >
         {isLoggedIn ? (
           <Avatar avatarUrl={snap.avatarUrl} name={snap.displayName || snap.username} size={32} />
@@ -282,7 +295,7 @@ function WriteMenu() {
   const { open, setOpen, ref } = useDropdown<HTMLDivElement>();
   const [activeTab, setActiveTab] = useState<WriteTabId>("new-story");
   const snap = useSnapshot(store);
-
+  const router = useRouter()
   const isLoading = !snap.authChecked;
   const isLoggedIn = snap.hydrated && !!snap._id;
   const isCreator = snap.creatorStatus === "active";
@@ -306,13 +319,13 @@ function WriteMenu() {
       </Link>
     );
   }
-
+  
 
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="hidden items-center gap-1.5 rounded-full bg-accent px-3.5 py-2 font-sans text-sm font-semibold text-accent-ink transition hover:opacity-90 lg:flex"
+        className="hidden items-center gap-1.5 cursor-pointer rounded-full bg-accent px-3.5 py-2 font-sans text-sm font-semibold text-accent-ink transition hover:opacity-90 lg:flex"
       >
         <PenSquare size={14} />
         Write
@@ -327,7 +340,7 @@ function WriteMenu() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm font-medium transition ${
+                  className={`flex w-full items-center cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm font-medium transition ${
                     active ? "bg-accent/10 text-accent" : "text-ink-muted hover:bg-bg hover:text-ink"
                   }`}
                 >
@@ -340,7 +353,7 @@ function WriteMenu() {
 
           <DropdownDivider />
 
-          <div className="flex max-h-72 flex-col gap-1.5 overflow-y-auto px-1 pb-1">
+          <div className="flex max-h-72 flex-col gap-1.5 cursor-pointer overflow-y-auto px-1 pb-1">
             {activeTab === "new-story" && (
               <div className="flex flex-col gap-3 px-1.5 py-1">
                 <p className="font-sans text-sm text-ink-muted">Start a brand new story from scratch.</p>
@@ -351,7 +364,7 @@ function WriteMenu() {
             )}
 
             {activeTab === "my-stories" && (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 cursor-pointer">
                 <p className="px-1.5 py-1 font-sans text-sm text-ink-muted">Your in-progress and published works.</p>
                 <DropdownItem href="/dashboard" onClick={() => setOpen(false)}>
                   View all stories →
@@ -362,24 +375,30 @@ function WriteMenu() {
             {activeTab === "tools" && (
               <div className="flex flex-col gap-1.5">
                 <p className="px-1.5 py-1 font-sans text-sm text-ink-muted">Tools to help you plan and polish your writing.</p>
-                {["Outline builder", "Name generator", "Grammar check", "Word count goals"].map((tool) => (
-                  <DropdownItem key={tool} icon={Wrench}>
-                    {tool}
-                  </DropdownItem>
-                ))}
+                {TOOLS.map((tool) => (
+                      <DropdownItem
+                        key={tool.label}
+                        icon={Wrench}
+                        onClick={() => router.push(tool.href)}
+                      >
+                        {tool.label}
+                      </DropdownItem>
+                    ))}
               </div>
             )}
 
             {activeTab === "tutorial" && (
               <div className="flex flex-col gap-1.5">
                 <p className="px-1.5 py-1 font-sans text-sm text-ink-muted">New to writing on Lore? Start here.</p>
-                {["Getting started guide", "Formatting your chapters", "Setting up paid chapters", "Growing your readership"].map(
-                  (item) => (
-                    <DropdownItem key={item} icon={GraduationCap}>
-                      {item}
-                    </DropdownItem>
-                  )
-                )}
+                {GUIDES.map((guide) => (
+                  <DropdownItem
+                    key={guide.label}
+                    icon={Wrench}
+                    onClick={() => router.push(guide.href)}
+                  >
+                    {guide.label}
+                  </DropdownItem>
+                ))}
               </div>
             )}
           </div>
