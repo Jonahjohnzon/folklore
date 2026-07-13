@@ -138,7 +138,7 @@ export const BookService = {
     uploadCover: (bookId: string, file: File) => {
       const formData = new FormData();
       formData.append("cover", file);
-      return api.patch<{ success: boolean; data: { coverUrl: string; coverPublicId: string } }>(
+      return api.post<{ success: boolean; data: { coverUrl: string; coverPublicId: string } }>(
         `/api/books/${bookId}/cover`,
         formData
       );
