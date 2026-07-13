@@ -25,7 +25,7 @@ function uploadBuffer(buffer: Buffer, folder: string): Promise<{ secure_url: str
   });
 }
 
-export const POST = withAuth(async (req, ctx) => {
+export const PATCH = withAuth(async (req, ctx) => {
   try {
     await connectToDatabase();
 

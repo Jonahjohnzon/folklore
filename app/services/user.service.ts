@@ -67,9 +67,10 @@ export const UserService = {
   block: (username: string) => api.post<{ success: boolean }>(`/api/pages/users/${username}/block`),
   unblock: (username: string) => api.delete<{ success: boolean }>(`/api/pages/users/${username}/block`),
     uploadAvatar: async (username: string, file: File) => {
-      const { url } = await uploadImageToCloudinary(file, "avatars");
+      const { url,publicId } = await uploadImageToCloudinary(file, "avatars");
       return api.patch<{ success: boolean; data: { user: AuthUser } }>("/api/pages/users/me", {
         avatarUrl: url,
+        avatarPublicId:publicId
       });
 },
 getBlockedUsers: () =>

@@ -39,7 +39,7 @@ export interface IUser {
   // personalisation blob
   preferences: Record<string, unknown>;
   coinBalance:number;
-
+  avatarPublicId:string
   createdAt: Date;
   updatedAt: Date;
   onboardingCompletedAt?: Date;
@@ -65,9 +65,9 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String},
     passwordResetTokenHash: { type: String, default: null, select: false },
-passwordResetExpires: { type: Date, default: null, select: false },
-passwordResetLastSentAt: { type: Date, default: null, select: false },
-
+    passwordResetExpires: { type: Date, default: null, select: false },
+    passwordResetLastSentAt: { type: Date, default: null, select: false },
+    avatarPublicId:{ type: String},
     username: { type: String, required: true, unique: true, trim: true },
     displayName: { type: String },
     avatarUrl: { type: String },

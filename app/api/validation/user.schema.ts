@@ -6,7 +6,9 @@ export const creatorApplySchema = z.object({
     .trim()
     .min(2, "Pen name must be at least 2 characters")
     .max(40, "Pen name must be under 40 characters"),
-  bio: z.string().trim().max(280, "Bio must be under 280 characters").optional(),
+    bio: z.string().trim().max(280, "Bio must be under 280 characters").optional(),
+        
+
 });
 export type CreatorApplyInput = z.infer<typeof creatorApplySchema>;
 
@@ -16,5 +18,8 @@ export const updateUserSchema = z.object({
   avatarUrl: z.string().url().nullable().optional(),
   matureContentEnabled: z.boolean().optional(),
   preferences: z.record(z.string(), z.unknown()).optional(),
+  avatarPublicId:z.string().nullable().optional(),
 });
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+
+

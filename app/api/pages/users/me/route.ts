@@ -4,6 +4,7 @@ import { User } from "@/app/api/lib/models/User";
 import { updateUserSchema } from "@/app/api/validation/user.schema";
 import { ok, fail } from "@/app/api/response";
 import { ValidationError, NotFoundError } from "@/app/api/lib/db/errors";
+import { cloudinary } from "@/app/api/lib/cloudinary";
 
 export const PATCH = withAuth(async (req) => {
   try {
@@ -14,6 +15,19 @@ export const PATCH = withAuth(async (req) => {
     if (!parsed.success) {
       throw new ValidationError("Invalid input", parsed.error.flatten().fieldErrors);
     }
+    const {avatarPublicId} = parsed.data
+    if(avatarPublicId)
+      {
+         const userinfo = await User.findById(req.user.sub).select("avatarPublicId");
+         const oldPublicId = userinfo?.avatarPublicId;
+         if(oldPublicId && oldPublicId !== avatarPublicId)
+          {
+            cloudinary.uploader.destroy(oldPublicId).catch((err) => {
+            console.error("Failed to delete old avatar from Cloudinary:", err);
+          });
+          }
+
+      }
 
     const user = await User.findByIdAndUpdate(
       req.user.sub,

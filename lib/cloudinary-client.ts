@@ -2,7 +2,7 @@
 
 import ApiClient from "@/app/ApiCore";
 import type { SignedUploadParams } from "@/lib/cloudinary";
-
+import { compressImage } from "./image-compress";
 const api = new ApiClient();
 
 export interface CloudinaryUploadResult {
@@ -18,17 +18,21 @@ export interface CloudinaryUploadResult {
  * unsigned upload_preset is involved, so a folder can't be uploaded to
  * by anyone who just reads the preset name out of devtools.
  */
+// updated uploadImageToCloudinary
 export async function uploadImageToCloudinary(
   file: File,
   folder: string
 ): Promise<CloudinaryUploadResult> {
+
+  const compressed = await compressImage(file);
+
   const { data } = await api.post<{ success: boolean; data: SignedUploadParams }>(
     "/api/pages/sign",
     { folder }
   );
 
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", compressed);
   formData.append("api_key", data.apiKey);
   formData.append("timestamp", String(data.timestamp));
   formData.append("signature", data.signature);
