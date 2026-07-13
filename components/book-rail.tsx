@@ -108,7 +108,7 @@ export function BookRail({
                       {i + 1}
                     </span>
                   )}
-                  <BookCard book={b} />
+                  <BookCard book={b} big/>
                 </div>
               ))}
         </div>

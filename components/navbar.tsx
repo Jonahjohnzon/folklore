@@ -280,9 +280,9 @@ function AccountMenu() {
 
               <DropdownDivider />
 
-              <DropdownItem href="/premium" onClick={() => setOpen(false)} icon={Sparkles} variant="gold">
+              {/* <DropdownItem href="/premium" onClick={() => setOpen(false)} icon={Sparkles} variant="gold">
                 Try Premium
-              </DropdownItem>
+              </DropdownItem> */}
             </>
           )}
         </DropdownPanel>

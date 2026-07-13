@@ -1,7 +1,9 @@
 // app/admin/layout.tsx
 import Link from "next/link";
-import { LayoutDashboard, Users,  Award,  Music, Wallet, Megaphone, Flag } from "lucide-react";
-
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { LayoutDashboard, Users, Award, Music, Wallet, Megaphone, Flag } from "lucide-react";
+import { AuthService } from "@/app/services/auth";
 
 const NAV = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -13,7 +15,24 @@ const NAV = [
   { href: "/admin/reports", label: "Reports", icon: Flag },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+async function requireAdmin() {
+  const cookieStore = await cookies();
+
+  try {
+    const res = await AuthService.me({ headers: { cookie: cookieStore.toString() } });
+    const role = res.data.user?.role;
+    if (!role || !["admin", "moderator"].includes(role)) {
+      redirect("/sign-in");
+    }
+  } catch {
+    // 401 / network error from AuthService.me — not signed in, or session expired
+    redirect("/sign-in");
+  }
+}
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  await requireAdmin();
+
   return (
     <div className="mx-auto flex max-w-6xl gap-8 px-4 py-8 sm:px-6">
       <aside className="w-48 shrink-0">

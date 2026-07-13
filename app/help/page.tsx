@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Send, Bot, User, LifeBuoy } from "lucide-react";
-
+import { ChevronDown, Send, Bot, User, LifeBuoy, Home } from "lucide-react";
+import Link from "next/link";
 interface FAQItem {
   category: string;
   question: string;
@@ -190,7 +190,15 @@ export default function HelpPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-      <div className="border-b border-hairline pb-8">
+      <div className="border-b flex flex-col items-start border-hairline pb-8">
+                      <Link
+                        href="/"
+                        replace
+                        className="flex mb-5 items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-3 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+                        aria-label="Back to home"
+                      >
+                        <Home size={20} />
+                      </Link>
         <div className="flex items-center gap-2">
           <LifeBuoy size={16} className="text-accent" />
           <p className="font-sans text-xs font-semibold uppercase tracking-wide text-accent">Help Center</p>

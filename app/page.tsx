@@ -86,7 +86,7 @@ export default function HomePage() {
           <BookRail title="Swoon-worthy romance" books={feed.romance} href="/browse/romance" />
           <PromoBanner/>
           <BookRail title="Instant Escape" books={feed.thriller} href="/browse/thriller" />
-          <BookRail title="Completed" books={feed.completed} href="/browse/completed" />
+          <BookRail title="Completed Books" books={feed.completed} href="/browse/completed" />
         </>
       )}
 

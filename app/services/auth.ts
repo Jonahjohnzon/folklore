@@ -22,6 +22,7 @@ export interface AuthUser {
   email: string;
   username: string;
   displayName?: string;
+  role: "user" | "moderator" | "admin"; // add this
   avatarUrl?: string;
   activeMode: "reader" | "creator";
   creatorStatus: "not_applied" | "pending" | "active" | "suspended";
@@ -45,7 +46,9 @@ export const AuthService = {
   login: (body: LoginBody) => api.post<AuthResponse>("/api/pages/auth/login", body),
   register: (body: RegisterBody) => api.post<AuthResponse>("/api/pages/auth/register", body),
   logout: () => api.post<{ success: boolean }>("/api/pages/auth/logout"),
-  me: () => api.get<{ success: boolean; data: { user: AuthUser } }>("/api/pages/auth/me"),
+  // AuthService.ts
+  me: (options?: { headers?: Record<string, string> }) =>
+  api.get<{ success: boolean; data: { user: AuthUser } }>("/api/pages/auth/me", {}, options),
   checkUsernameAvailable: (username: string) =>
   api.get<{ success: boolean; data: { available: boolean } }>("/api/pages/auth/username-available", { username }),
   deactivateAccount: () => api.post<{ success: boolean }>("/api/pages/auth/deactivate"),

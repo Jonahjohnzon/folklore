@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Heart, Globe, Laptop, TrendingUp, Mail, Inbox } from "lucide-react";
-
+import { Heart, Globe, Laptop, TrendingUp, Mail, Inbox, Home } from "lucide-react";
+import Link from "next/link";
 export const metadata: Metadata = {
   title: "Careers at TipaTale",
   description: "Help build the home for serialized fiction. See open roles at TipaTale.",
@@ -15,7 +15,15 @@ const PERKS = [
 
 export default function CareersPage() {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-14 sm:px-6">
+    <main className="mx-auto max-w-4xl flex flex-col items-start px-4 py-14 sm:px-6">
+        <Link
+              href="/"
+              replace
+              className="flex mb-5 items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-3 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+              aria-label="Back to home"
+              >
+              <Home size={20} />
+           </Link>
       <div className="border-b border-hairline pb-8">
         <p className="font-sans text-xs font-semibold uppercase tracking-wide text-accent">Careers</p>
         <h1 className="mt-1 font-display text-4xl font-bold text-ink sm:text-5xl">Build TipaTale with us</h1>

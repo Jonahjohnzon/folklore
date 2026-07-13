@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { Coins, X, Loader2, AlertTriangle } from "lucide-react";
 import { ChapterService } from "@/app/services/ChapterService";
 

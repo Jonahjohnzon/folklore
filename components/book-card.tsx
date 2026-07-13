@@ -11,9 +11,11 @@ function formatReads(n: number) {
 export function BookCard({
   book,
   size = "default",
+  big = false
 }: {
   book: Book;
   size?: "default" | "compact" | "cover-only" | "cover-big" | "cover-stacked";
+  big?:boolean
 }) {
   if (size === "cover-big") {
     return (
@@ -66,7 +68,9 @@ if (size === "cover-stacked") {
   return (
     <Link
       href={`/book/${book.slug}`}
-      className={`group block shrink-0 ${size === "compact" ? "w-24 sm:w-28" : "w-28 sm:w-36"}`}
+      className={`group block shrink-0 ${
+        size === "compact" ? big ? "w-24 sm:w-28":"w-36 sm:w-40" : big ? "w-28 sm:w-36" : "w-40 sm:w-44"
+      }`}
     >
       <div className="relative aspect-4/6 overflow-hidden rounded-lg border border-hairline bg-surface shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg">
         {/* eslint-disable-next-line @next/next/no-img-element */}

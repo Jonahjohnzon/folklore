@@ -6,9 +6,13 @@ import { AdminService, type AdminStats } from "@/app/services/AdminService";
 
 export default function AdminOverview() {
   const [stats, setStats] = useState<AdminStats | null>(null);
-
+  const [loading, setloading] = useState(true)
   useEffect(() => {
+    try{
     AdminService.getStats().then((res) => setStats(res.data.stats)).catch(() => {});
+    setloading(false)
+    }
+    catch{}
   }, []);
 
   const cards = stats
@@ -19,6 +23,8 @@ export default function AdminOverview() {
         { label: "Suspended users", value: stats.suspendedUsers },
       ]
     : [];
+
+  if(loading) return <div></div>
 
   return (
     <div>

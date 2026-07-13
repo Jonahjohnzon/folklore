@@ -1,8 +1,16 @@
-import { Mail, Smartphone } from "lucide-react";
-
+import { Mail, Smartphone, Home } from "lucide-react";
+import Link from "next/link";
 export default function MobileAppPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-bg px-4 py-16 text-center">
+            <Link
+                href="/"
+               replace
+             className="flex mb-5 items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-3 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+                 aria-label="Back to home"
+                >
+                   <Home size={20} />
+                </Link>
       <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-hairline bg-surface shadow-sm">
         <Smartphone size={28} className="text-accent" />
       </div>
@@ -35,26 +43,6 @@ export default function MobileAppPage() {
           </div>
         </div>
       </div>
-
-      <form className="mt-10 flex w-full max-w-sm items-center gap-2">
-        <div className="relative flex-1">
-          <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
-          <input
-            type="email"
-            placeholder="you@example.com"
-            className="w-full rounded-full border border-hairline bg-surface py-2.5 pl-9 pr-3 font-sans text-sm text-ink outline-none focus:border-accent"
-          />
-        </div>
-        <button
-          type="submit"
-          className="shrink-0 rounded-full bg-accent px-5 py-2.5 font-sans text-sm font-semibold text-white transition hover:opacity-90"
-        >
-          Notify me
-        </button>
-      </form>
-      <p className="mt-3 font-sans text-xs text-ink-muted">
-        We&apos;ll email you the moment it launches. No spam.
-      </p>
     </main>
   );
 }

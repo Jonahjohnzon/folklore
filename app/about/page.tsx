@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, PenLine, Users, Coins } from "lucide-react";
+import { BookOpen, PenLine, Users, Coins, Home } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About TipaTale",
@@ -33,8 +33,17 @@ const VALUES = [
 
 export default function AboutPage() {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-14 sm:px-6">
-      <div className="border-b border-hairline pb-8">
+    <main className="mx-auto flex flex-col items-start max-w-4xl px-4 py-14 sm:px-6">
+      <Link
+        href="/"
+        replace
+        className="flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-3 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+        aria-label="Back to home"
+      >
+        <Home size={20} />
+      </Link>
+
+      <div className="mt-6 border-b border-hairline pb-8">
         <p className="font-sans text-xs font-semibold uppercase tracking-wide text-accent">About</p>
         <h1 className="mt-1 font-display text-4xl font-bold text-ink sm:text-5xl">TipaTale</h1>
         <p className="mt-4 max-w-2xl font-sans text-base leading-relaxed text-ink-muted">

@@ -81,9 +81,9 @@ interface RequestOptions extends AxiosRequestConfig {
 // ── API core class ────────────────────────────────────────────────────────────
 export default class ApiClient {
 
-  // GET /endpoint?params
-  async get<T>(endpoint: string, params: Record<string, unknown> = {}): Promise<T> {
-    const response = await api.get<T>(endpoint, { params, withCredentials: true });
+
+  async get<T>(endpoint: string, params: Record<string, unknown> = {}, options?: RequestOptions): Promise<T> {
+    const response = await api.get<T>(endpoint, { ...options, params, withCredentials: true });
     return response.data;
   }
 

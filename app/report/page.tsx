@@ -1,7 +1,7 @@
 "use client";
-
+import Link from "next/link";
 import { useState } from "react";
-import { Flag, CheckCircle2, Loader2 } from "lucide-react";
+import { Flag, CheckCircle2, Loader2, Home } from "lucide-react";
 
 type ReportType = "book" | "chapter" | "comment" | "user" | "other";
 type ReportReason =
@@ -105,7 +105,15 @@ export default function ReportPage() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-14 sm:px-6">
+    <main className="mx-auto flex flex-col items-start max-w-2xl px-4 py-14 sm:px-6">
+              <Link
+                href="/"
+                replace
+                className="flex items-center mb-5 gap-1.5 rounded-full border border-hairline bg-bg px-3 py-3 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+                aria-label="Back to home"
+              >
+                <Home size={20} />
+              </Link>
       <div className="border-b border-hairline pb-6">
         <div className="flex items-center gap-2">
           <Flag size={16} className="text-accent" />

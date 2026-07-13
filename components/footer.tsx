@@ -18,14 +18,13 @@ const PARTNER_LINKS: { label: string; href: string }[] = [
 const LEGAL_LINKS: { label: string; href: string }[] = [
   { label: "Terms", href: "/terms" },
   { label: "Privacy", href: "/privacy" },
-  { label: "Payment Policy", href: "/payment-policy" },
   { label: "Report content", href: "/report" },
   { label: "Help", href: "/help" },
 ];
 
 export function Footer() {
   return (
-    <footer className="border-t border-hairline bg-surface">
+    <footer className="border-t border-hairline bg-bg">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         {/* Row 1 — bold primary nav, centered, wraps on small screens */}
         <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
