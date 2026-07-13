@@ -10,12 +10,12 @@ export interface CoinPackage {
 // These two prices are NOT required to match at some fixed FX rate — set
 // each one to whatever you actually want to charge in that market/rail.
 export const COIN_PACKAGES: CoinPackage[] = [
-  { id: "starter", coins: 100, bonusCoins: 0, nairaPrice: 1380, usdPrice: 0.99 },
-  { id: "popular", coins: 550, bonusCoins: 50, nairaPrice: 7500, usdPrice: 4.99, popular: true },
-  { id: "value", coins: 1200, bonusCoins: 150, nairaPrice: 15000, usdPrice: 9.99 },
-  { id: "plus", coins: 2500, bonusCoins: 400, nairaPrice: 30000, usdPrice: 19.99 },
-  { id: "max", coins: 6500, bonusCoins: 1200, nairaPrice: 75000, usdPrice: 49.99 },
-  { id: "whale", coins: 14000, bonusCoins: 3000, nairaPrice: 150000, usdPrice: 99.99 },
+  { id: "starter", coins: 100, bonusCoins: 0, nairaPrice: 1000, usdPrice: 0.99 },
+  { id: "popular", coins: 550, bonusCoins: 50, nairaPrice: 5500, usdPrice: 4.99, popular: true },
+  { id: "value", coins: 1200, bonusCoins: 150, nairaPrice: 12000, usdPrice: 9.99 },
+  { id: "plus", coins: 2500, bonusCoins: 400, nairaPrice: 25000, usdPrice: 19.99 },
+  { id: "max", coins: 6500, bonusCoins: 1200, nairaPrice: 65000, usdPrice: 49.99 },
+  { id: "whale", coins: 14000, bonusCoins: 3000, nairaPrice: 140000, usdPrice: 99.99 },
 ];
 
 export function totalCoins(pkg: CoinPackage): number {

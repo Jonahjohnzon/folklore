@@ -1,6 +1,6 @@
 "use client";
 import { CoinService, type CoinActivityItem } from "@/app/services/coinService";
-import {  useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import {
@@ -18,6 +18,20 @@ type PaymentMethod = "paystack" | "crypto";
 
 const PENDING_POLL_INTERVAL_MS = 4000;
 const PENDING_POLL_MAX_ATTEMPTS = 20;
+
+// Module scope — this is static config, not per-render state.
+// Keyed off the *actual* type flowing through `activity`, so there's
+// no mismatch between this and item.status.
+const STATUS_STYLES: Record<CoinActivityItem["status"], { label: string; badge: string; amount: string }> = {
+  completed: { label: "", badge: "", amount: "" }, // no badge needed for the default state
+  pending: { label: "Pending", badge: "bg-amber-500/10 text-amber-600", amount: "text-amber-600" },
+  failed: { label: "Failed", badge: "bg-red-500/10 text-red-600", amount: "text-ink-muted line-through" },
+  reversed: { label: "Reversed", badge: "bg-slate-500/10 text-slate-500", amount: "text-ink-muted line-through" },
+};
+
+function getStatusStyle(status: CoinActivityItem["status"]) {
+  return STATUS_STYLES[status] ?? STATUS_STYLES.completed;
+}
 
 export default function CoinsPage() {
   return (
@@ -188,12 +202,12 @@ function CoinsPageContent() {
         <div className="flex flex-wrap gap-2">
           <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Card / bank transfer / mobile money (₦)" />
           <MethodButton
-  active={false}
-  disabled
-  onClick={() => {}}
-  icon={Bitcoin}
-  label="Crypto ($) — Coming soon"
-/>
+            active={false}
+            disabled
+            onClick={() => {}}
+            icon={Bitcoin}
+            label="Crypto ($) — Coming soon"
+          />
         </div>
         {method === "crypto" && (
           <p className="mt-2.5 flex items-center gap-1.5 font-sans text-xs text-ink-muted">
@@ -267,22 +281,53 @@ function CoinsPageContent() {
             </p>
           )}
           {activity?.length === 0 && <p className="px-4 py-6 font-sans text-sm text-ink-muted">No activity yet.</p>}
-          {activity?.map((item, i) => (
-            <div key={item.id} className={`flex items-center justify-between gap-4 px-4 py-3 ${i !== activity.length - 1 ? "border-b border-hairline" : ""}`}>
-              <div className="flex items-center gap-3">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${item.coins > 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-ink-muted/10 text-ink-muted"}`}>
-                  {item.coins > 0 ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
+          {activity?.map((item, i) => {
+            const isCredit = item.coins > 0;
+            const statusStyle = getStatusStyle(item.status);
+            const isVoided = item.status === "failed" || item.status === "reversed";
+
+            return (
+              <div
+                key={item.id}
+                className={`flex items-center justify-between gap-4 px-4 py-3 ${
+                  i !== activity.length - 1 ? "border-b border-hairline" : ""
+                } ${isVoided ? "opacity-60" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                      isVoided
+                        ? "bg-ink-muted/10 text-ink-muted"
+                        : isCredit
+                        ? "bg-emerald-500/10 text-emerald-600"
+                        : "bg-ink-muted/10 text-ink-muted"
+                    }`}
+                  >
+                    {isCredit ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-sans text-sm text-ink">{item.label}</p>
+                      {statusStyle.label && (
+                        <span className={`rounded-full px-1.5 py-0.5 font-sans text-[10px] font-medium ${statusStyle.badge}`}>
+                          {statusStyle.label}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-sans text-xs text-ink-muted">{item.date}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-sans text-sm text-ink">{item.label}</p>
-                  <p className="font-sans text-xs text-ink-muted">{item.date}</p>
-                </div>
+                <p
+                  className={`font-mono text-sm font-semibold ${
+                    statusStyle.amount || (isCredit ? "text-emerald-600" : "text-ink-muted")
+                  }`}
+                >
+                  {isCredit ? "+" : ""}
+                  {item.coins.toLocaleString()}
+                </p>
               </div>
-              <p className={`font-mono text-sm font-semibold ${item.coins > 0 ? "text-emerald-600" : "text-ink-muted"}`}>
-                {item.coins > 0 ? "+" : ""}{item.coins.toLocaleString()}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </main>

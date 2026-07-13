@@ -162,7 +162,7 @@ export default function BecomeCreatorPage() {
               onChange={(e) => setAgreed(e.target.checked)}
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-hairline accent-(--accent,var(--color-accent))"
             />
-            I agree to Lore&apos;s creator guidelines and content policy.
+            I agree to Tipatale&apos;s creator guidelines and content policy.
           </label>
 
           {error && <p className="mt-3 font-sans text-sm text-red-500">{error}</p>}
