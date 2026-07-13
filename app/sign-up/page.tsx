@@ -196,7 +196,7 @@ export default function SignUpPage() {
               onChange={(e) => setMarketingOptIn(e.target.checked)}
               className="mt-0.5 h-4 w-4 rounded border-hairline text-accent focus:ring-accent/30"
             />
-            <span>Email me new chapter alerts and Lore updates.</span>
+            <span>Email me new chapter alerts and Tipatale updates.</span>
           </label>
         </div>
 

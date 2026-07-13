@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/(auth)/reset-password/page.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthService } from "@/app/services/auth";
+import { Suspense } from "react";
 
-export default function ResetPasswordPage() {
+ function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -91,4 +93,12 @@ export default function ResetPasswordPage() {
       </button>
     </form>
   );
+}
+
+export default function Page (){
+  return(
+    <Suspense fallback={<div></div>}>
+      <ResetPasswordPage/>
+    </Suspense>
+  )
 }
