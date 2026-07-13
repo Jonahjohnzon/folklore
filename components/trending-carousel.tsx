@@ -50,25 +50,25 @@ export function TrendingCarousel({ books }: { books: Book[] }) {
       onTouchEnd={onTouchEnd}
     >
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-        <div key={book.id} className="animate-[fadein_0.5s_ease]">
+        <div key={book?.id} className="animate-[fadein_0.5s_ease]">
           <span className="font-sans text-xs font-semibold uppercase tracking-[0.18em] text-accent">
             Trending now · #{index + 1}
           </span>
           <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-ink sm:text-5xl">
-            {book.title}
+            {book?.title}
           </h1>
           <p className="mt-4 max-w-lg font-body text-base leading-relaxed text-ink-muted sm:text-lg line-clamp-3 ">
-            {book.description}
+            {book?.description}
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
-              href={`/book/${book.slug}`}
+              href={`/book/${book?.slug}`}
               className="flex items-center gap-1.5 rounded-full bg-accent px-5 py-2.5 font-sans text-sm font-semibold text-accent-ink transition hover:opacity-90"
             >
               Start reading <ArrowRight size={15} />
             </Link>
             <span className="font-sans text-sm text-ink-muted">
-              by <span className="font-medium text-ink">{book.author.penName}</span> · {book.totalChapters} chapters
+              by <span className="font-medium text-ink">{book?.author?.penName}</span> · {book?.totalChapters} chapters
             </span>
           </div>
         </div>
@@ -77,9 +77,9 @@ export function TrendingCarousel({ books }: { books: Book[] }) {
           <div className="absolute -inset-3 -z-10 rounded-2xl bg-accent/10 blur-xl" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            key={book.id}
-            src={book.coverUrl}
-            alt={book.title}
+            key={book?.id}
+            src={book?.coverUrl}
+            alt={book?.title}
             className="aspect-2/3 w-full animate-[fadein_0.5s_ease] rounded-xl border border-hairline object-cover shadow-2xl"
           />
         </div>
