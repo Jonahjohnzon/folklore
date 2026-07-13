@@ -15,18 +15,23 @@ import { SignalService } from "@/app/services/SignalService"; // ← add this im
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { EmailVerificationBanner } from "@/components/email-verification-banner";
 import { PromoBanner } from "@/components/promo-banner";
+import { useSnapshot } from "valtio";
+import { store } from "./store/userStore";
 const GENRES = [ "Mystery", "Horror", "Drama","Adventure", "Historical", "Slice of Life", "LitRPG", "Poetry"];
 
 export default function HomePage() {
   const [feed, setFeed] = useState<HomeFeed | null>(null);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-
+  const snap = useSnapshot(store)
   useEffect(() => {
     HomeService.getFeed()
       .then(({ data }) => {
         setFeed(data);
-        setShowOnboarding(data.needsOnboarding);
+        if(snap._id)
+          {
+           setShowOnboarding(data.needsOnboarding);
+          }
       })
       .catch(() => setFeed(null))
       .finally(() => setLoading(false));
