@@ -8,6 +8,9 @@ export interface IUser {
   // auth
   email: string;
   passwordHash: string;
+  passwordResetTokenHash?: string | null;
+  passwordResetExpires?: Date | null;
+  passwordResetLastSentAt?: Date | null;
 
   // public identity
   username: string;
@@ -61,6 +64,9 @@ const UserSchema = new Schema<IUser>(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String},
+    passwordResetTokenHash: { type: String, default: null, select: false },
+passwordResetExpires: { type: Date, default: null, select: false },
+passwordResetLastSentAt: { type: Date, default: null, select: false },
 
     username: { type: String, required: true, unique: true, trim: true },
     displayName: { type: String },

@@ -52,16 +52,20 @@ export const AuthService = {
   checkUsernameAvailable: (username: string) =>
   api.get<{ success: boolean; data: { available: boolean } }>("/api/pages/auth/username-available", { username }),
   deactivateAccount: () => api.post<{ success: boolean }>("/api/pages/auth/deactivate"),
-deleteAccount: () => api.delete<{ success: boolean }>("/api/pages/auth/delete"),
-changePassword: (body: { currentPassword: string; newPassword: string }) =>
+  deleteAccount: () => api.delete<{ success: boolean }>("/api/pages/auth/delete"),
+  changePassword: (body: { currentPassword: string; newPassword: string }) =>
   api.post<{ success: boolean }>("/api/pages/auth/change-password", body),
-requestEmailChange: (email: string) =>
+  requestEmailChange: (email: string) =>
   api.post<{ success: boolean }>("/api/pages/auth/request-email-change", { email }),
-googleSignIn: (idToken: string) =>
+  googleSignIn: (idToken: string) =>
   api.post<AuthResponse>("/api/pages/auth/google", { idToken }),
-verifyEmail: (token: string) =>
+  verifyEmail: (token: string) =>
     api.post<{ success: boolean; data: { verified: boolean } }>("/api/pages/auth/verify-email", { token }),
   resendVerification: () =>
     api.post<{ success: boolean; data: { sent: boolean } }>("/api/pages/auth/resend-verification"),
+  forgotPassword: (identifier: string) =>
+  api.post<{ success: boolean; data: { sent: boolean } }>("/api/pages/auth/forgot-password", { identifier }),
+  resetPassword: (body: { token: string; newPassword: string }) =>
+  api.post<{ success: boolean; data: { reset: boolean } }>("/api/pages/auth/reset-password", body),
 
 };

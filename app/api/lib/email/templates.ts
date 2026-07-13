@@ -324,3 +324,23 @@ export function verifyEmailTemplate({ displayName, verifyUrl }: { displayName: s
   const text = `Hi ${displayName},\n\nConfirm your email address: ${verifyUrl}\n\nThis link expires in 24 hours.`;
   return { subject, html, text };
 }
+
+
+// app/api/lib/email/templates.ts — add
+export function resetPasswordTemplate({
+  displayName,
+  resetUrl,
+}: {
+  displayName: string;
+  resetUrl: string;
+}) {
+  const subject = "Reset your password";
+  const text = `Hi ${displayName},\n\nWe received a request to reset your password. This link expires in 30 minutes:\n${resetUrl}\n\nIf you didn't request this, you can safely ignore this email.`;
+  const html = `
+    <p>Hi ${displayName},</p>
+    <p>We received a request to reset your password. This link expires in 30 minutes:</p>
+    <p><a href="${resetUrl}">Reset your password</a></p>
+    <p>If you didn't request this, you can safely ignore this email — your password won't change.</p>
+  `;
+  return { subject, html, text };
+}

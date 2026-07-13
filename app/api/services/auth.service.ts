@@ -7,8 +7,11 @@ import { Types } from "mongoose";
 import * as templates from "@/app/api/lib/email/templates";
 import { sendEmail } from "@/app/api/lib/email/send";
 import { generateVerificationToken, hashVerificationToken } from "@/app/api/lib/auth/email-verification";
-export type SafeUser = Omit<IUser, "passwordHash">;
+import { generateResetToken, hashResetToken } from "@/app/api/lib/auth/password-reset";
+import type { ForgotPasswordInput, ResetPasswordInput } from "@/app/api/validation/auth.schema";
 
+export type SafeUser = Omit<IUser, "passwordHash">;
+const RESET_RESEND_COOLDOWN_MS = 60 * 1000;
 function toSafeUser(user: IUser): SafeUser {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...safe } = user;
@@ -202,4 +205,69 @@ export async function verifyEmailToken(token: string) {
   await user.save();
 
   return { verified: true };
+}
+
+export async function forgotPassword(input: ForgotPasswordInput) {
+  const user = await User.findOne({
+    $or: [{ email: input.identifier.toLowerCase() }, { username: input.identifier }],
+  }).select("email username displayName passwordResetLastSentAt authProviders");
+
+  // Always behave the same whether the user exists or not — no email enumeration.
+  if (!user) {
+    return { sent: true };
+  }
+
+  // Google-only accounts have no password to reset.
+  if (user.authProviders?.length && !user.authProviders.includes("password")) {
+    return { sent: true };
+  }
+
+  if (user.passwordResetLastSentAt) {
+    const elapsed = Date.now() - new Date(user.passwordResetLastSentAt).getTime();
+    if (elapsed < RESET_RESEND_COOLDOWN_MS) {
+      // Silently no-op rather than leaking timing info to the client.
+      return { sent: true };
+    }
+  }
+
+  const { token, tokenHash, expiresAt } = generateResetToken();
+
+  await User.updateOne(
+    { _id: user._id },
+    {
+      passwordResetTokenHash: tokenHash,
+      passwordResetExpires: expiresAt,
+      passwordResetLastSentAt: new Date(),
+    }
+  );
+
+  const resetUrl = `${process.env.APP_URL ?? "https://tipatale.com"}/reset-password?token=${token}`;
+  const { subject, html, text } = templates.resetPasswordTemplate({
+    displayName: user.displayName || user.username,
+    resetUrl,
+  });
+
+  await sendEmail({ to: user.email, subject, html, text });
+
+  return { sent: true };
+}
+
+export async function resetPassword(input: ResetPasswordInput) {
+  const tokenHash = hashResetToken(input.token);
+
+  const user = await User.findOne({
+    passwordResetTokenHash: tokenHash,
+    passwordResetExpires: { $gt: new Date() },
+  }).select("_id passwordResetTokenHash passwordResetExpires");
+
+  if (!user) {
+    throw new ValidationError("This reset link is invalid or has expired");
+  }
+
+  user.passwordHash = await hashPassword(input.newPassword);
+  user.passwordResetTokenHash = null;
+  user.passwordResetExpires = null;
+  await user.save();
+
+  return { reset: true };
 }
