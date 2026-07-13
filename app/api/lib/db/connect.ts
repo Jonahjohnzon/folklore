@@ -18,6 +18,7 @@ export async function connectToDatabase() {
   }
 
   global._mongooseConn = mongoose.connect(MONGODB_URI, {
+    dbName: "tipatale",
     bufferCommands: false,
   });
 
