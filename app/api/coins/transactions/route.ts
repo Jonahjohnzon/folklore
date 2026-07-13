@@ -20,6 +20,7 @@ export const GET = withAuth(async (req) => {
         label: t.label,
         coins: t.coins,
         date: new Date(t.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short" }),
+        status:t.status
       }))
     );
   } catch (error) {

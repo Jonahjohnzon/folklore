@@ -89,6 +89,7 @@ function CoinsPageContent() {
         CoinService.getTransactions(),
       ]);
       setBalance(balRes.data.coinBalance);
+      
       setActivity(actRes.data.filter((item) => item.status !== "pending"));
       return balRes.data.coinBalance;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
