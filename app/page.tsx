@@ -14,6 +14,7 @@ import { HomeSkeleton } from "@/components/home-skeleton";
 import { SignalService } from "@/app/services/SignalService"; // ← add this import
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { EmailVerificationBanner } from "@/components/email-verification-banner";
+import { PromoBanner } from "@/components/promo-banner";
 const GENRES = [ "Mystery", "Horror", "Drama","Adventure", "Historical", "Slice of Life", "LitRPG", "Poetry"];
 
 export default function HomePage() {
@@ -83,6 +84,7 @@ export default function HomePage() {
           <BookRail title="Fresh chapters" subtitle="Recently updated" books={feed.newReleases} href="/browse/new" />
           <BookRail title="Fantasy worlds to get lost in" books={feed.fantasy} href="/browse/fantasy" />
           <BookRail title="Swoon-worthy romance" books={feed.romance} href="/browse/romance" />
+          <PromoBanner/>
           <BookRail title="Instant Escape" books={feed.thriller} href="/browse/thriller" />
         </>
       )}

@@ -7,13 +7,14 @@ import StoreHydrator from "@/app/store/StoreHydrator";
 import { RouteProgressBar } from "@/components/route-progress-bar";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-toploader";
-
+import { Kalam } from "next/font/google";
 
 
 const SITE_NAME = "TipaTale";
 const SITE_URL = "https://tipatale.com";
 const DESCRIPTION =
   "Read and write serialized fiction — romance, fantasy, thrillers, and more. Discover new stories, support the authors you love, and publish your own on TipaTale.";
+const kalam = Kalam({ subsets: ["latin"], weight: ["700"], variable: "--font-heading" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -120,7 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <meta name="cryptomus" content="8bcee79e" />
       </head>
-      <body>
+      <body className={`${kalam.variable}`}>
           <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>

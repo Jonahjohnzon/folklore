@@ -233,3 +233,8 @@ body {
   opacity: 1;
   transform: rotate(3deg) translate(0px, -4px);
 }
+
+/* globals.css, alongside your other font-* utilities */
+.font-heading {
+  font-family: var(--font-heading);
+}

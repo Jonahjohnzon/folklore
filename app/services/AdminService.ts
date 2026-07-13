@@ -83,7 +83,26 @@ export interface AdminPayoutRequestRow {
   createdAt: string;
   processedAt: string | null;
 }
-
+export interface AdminPromoBanner extends PublicPromoBannerShape {
+  _id: string;
+  active: boolean;
+  order: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+}
+interface PublicPromoBannerShape {
+  type: "books" | "announcement";
+  heading: string;
+  accent: string;
+  bgColor: string;
+  waveColor: string;
+  books: { title: string; coverUrl: string; href: string }[];
+  imageUrl?: string;
+  linkUrl?: string;
+  linkLabel?: string;
+  openInNewTab: boolean;
+}
 
 export interface CreateSoundBody {
   label: string;
@@ -154,4 +173,11 @@ export const AdminService = {
   ),
   updatePayoutRequest: (id: string, body: { status: "approved" | "paid" | "rejected"; adminNote?: string }) =>
   api.patch<Envelope<{ status: string }>>(`/api/admin/payout-requests/${id}`, body),
+  getPromoBanners: () => api.get<Envelope<{ banners: AdminPromoBanner[] }>>("/api/admin/promo-banners"),
+  createPromoBanner: (body: PublicPromoBannerShape & { active: boolean; order: number }) =>
+  api.post<Envelope<{ banner: AdminPromoBanner }>>("/api/admin/promo-banners", body),
+  updatePromoBanner: (id: string, body: Partial<PublicPromoBannerShape & { active: boolean; order: number }>) =>
+  api.patch<Envelope<{ banner: AdminPromoBanner }>>(`/api/admin/promo-banners/${id}`, body),
+  deletePromoBanner: (id: string) =>
+  api.delete<Envelope<{ deleted: boolean }>>(`/api/admin/promo-banners/${id}`),
 };
