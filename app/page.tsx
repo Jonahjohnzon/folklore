@@ -82,10 +82,11 @@ export default function HomePage() {
           />
 
           <BookRail title="Fresh chapters" subtitle="Recently updated" books={feed.newReleases} href="/browse/new" />
-          <BookRail title="Fantasy worlds to get lost in" books={feed.fantasy} href="/browse/fantasy" />
+          <BookRail title="Fantasy worlds to get lost in" books={feed.fantasy} href="/browse/fantasy" pattern="big-stacked" />
           <BookRail title="Swoon-worthy romance" books={feed.romance} href="/browse/romance" />
           <PromoBanner/>
           <BookRail title="Instant Escape" books={feed.thriller} href="/browse/thriller" />
+          <BookRail title="Completed" books={feed.completed} href="/browse/completed" />
         </>
       )}
 

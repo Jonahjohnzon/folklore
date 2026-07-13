@@ -1,6 +1,6 @@
 // app/admin/layout.tsx
 import Link from "next/link";
-import { LayoutDashboard, Users,  Award,  Music, Wallet, Megaphone } from "lucide-react";
+import { LayoutDashboard, Users,  Award,  Music, Wallet, Megaphone, Flag } from "lucide-react";
 
 
 const NAV = [
@@ -10,6 +10,7 @@ const NAV = [
   { href: "/admin/badges", label: "Badges", icon: Award },
   { href: "/admin/payouts", label: "Payouts", icon: Wallet },
   { href: "/admin/promo-banners", label: "Banners", icon: Megaphone },
+  { href: "/admin/reports", label: "Reports", icon: Flag },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

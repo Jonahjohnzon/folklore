@@ -20,6 +20,7 @@ export interface HomeFeed {
   fantasy: Book[];
   romance: Book[];
   thriller: Book[];
+  completed:Book[];
 }
 
 

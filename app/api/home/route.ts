@@ -97,16 +97,27 @@ async function getGenrePicks(genreSlug: string) {
   return books.map(serializeBook);
 }
 
+async function getCompletedBooks() {
+  const books = await Book.find({ status: "completed" })
+    .select("title slug description coverUrl totalChapters authorId totalReads")
+    .sort({ totalReads: -1 })
+    .limit(RAIL_SIZE)
+    .populate("authorId", "penName username")
+    .lean();
+  return books.map(serializeBook);
+}
+
 export const GET = optionalAuth(async (req) => {
   try {
     await connectToDatabase();
 
-    const [trending, newReleases, fantasy, romance, thriller] = await Promise.all([
+    const [trending, newReleases, fantasy, romance, thriller, completed] = await Promise.all([
       getTrending(),
       getNewReleases(),
       getGenrePicks("fantasy"),
       getGenrePicks("romance"),
       getGenrePicks("thriller"),
+      getCompletedBooks()
     ]);
 
      let continueReading: Awaited<ReturnType<typeof getContinueReading>> = null;
@@ -140,7 +151,8 @@ export const GET = optionalAuth(async (req) => {
       newReleases,
       fantasy,
       romance,
-      thriller
+      thriller,
+      completed
     });
   } catch (error) {
     return fail(error);

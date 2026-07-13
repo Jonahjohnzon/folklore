@@ -92,30 +92,66 @@ const INITIAL_BOT_MESSAGE: ChatMessage = {
   text: "Hi! I'm the TipaTale help bot. Ask me about accounts, Coins, publishing, or reporting — or tell me what's going on and I'll point you in the right direction.",
 };
 
-// Lightweight keyword matching so the widget is useful before it's wired up
-// to a real backend. Swap `getBotReply` for a call to /api/support-chat
-// (or another AI-backed endpoint) once one exists.
+
+const RULES: { keywords: string[]; reply: string }[] = [
+  {
+    keywords: ["refund"],
+    reply:
+      "Coin purchases are final and non-refundable — see the full policy under 'Coins & Payments' on our Terms of Service page. If something went wrong with the charge itself (like a duplicate charge), email support@tipatale.com.",
+  },
+  {
+    keywords: ["payout", "earnings", "paid", "payment for my"],
+    reply:
+      "Creator payouts are calculated after each calendar month closes and sent out during the first week of the following month, once you're above the minimum threshold with valid payout details on file.",
+  },
+  {
+    keywords: ["password", "log in", "login", "can't sign in", "locked out"],
+    reply:
+      "Reset your password from the login page using 'Forgot password?'. If the email doesn't arrive in a few minutes, check spam or email support@tipatale.com.",
+  },
+  {
+    keywords: ["mature", "18+", "explicit content"],
+    reply:
+      "Toggle 'Mature Content' when editing a chapter, before publishing. This restricts it to readers 18+ and keeps your story compliant with our guidelines.",
+  },
+  {
+    keywords: ["publish", "upload", "new book", "write a book", "how do i post"],
+    reply:
+      "Go to your Creator dashboard → New Book, add a title, description, cover, and genre tags, then add your first chapter. Chapters can be saved as drafts or published right away.",
+  },
+  {
+    keywords: ["block", "harass", "abuse", "stalking"],
+    reply:
+      "You can block a user from their profile → menu icon → Block. For harassment or abuse, please also file a report at our Report a Problem page.",
+  },
+  {
+    keywords: ["report", "flag", "copyright", "stolen"],
+    reply:
+      "You can report any book, chapter, comment, or user using the Report link on their page, or through our Report a Problem page. Our team reviews every report.",
+  },
+  {
+    keywords: ["username", "pen name", "change my name"],
+    reply:
+      "Change your pen name (shown on published books) anytime from Settings → Profile. Your account username has a cooldown between changes.",
+  },
+  {
+    keywords: ["buy coin", "purchase coin", "get coin", "coin package"],
+    reply:
+      "Go to your Coin balance in the top nav → 'Buy Coins' → pick a package → checkout. Coins are added instantly. Purchases are final and non-refundable.",
+  },
+  {
+    keywords: ["coin"],
+    reply:
+      "Coins are TipaTale's currency for unlocking chapters and tipping writers. Buy them from your Coin balance in the top nav.",
+  },
+];
+
 function getBotReply(input: string): string {
   const q = input.toLowerCase();
-  if (q.includes("refund")) {
-    return "Coin purchases are final and non-refundable — you can see the full policy on our Terms of Service page under 'Coins & Payments'. If something went wrong with a charge itself (like a duplicate charge), email support@tipatale.com and we'll take a look.";
+  for (const rule of RULES) {
+    if (rule.keywords.some((kw) => q.includes(kw))) return rule.reply;
   }
-  if (q.includes("payout") || q.includes("earnings") || q.includes("paid")) {
-    return "Creator payouts are calculated after each calendar month closes and sent out during the first week of the following month, as long as you're above the minimum threshold with valid payout details on file.";
-  }
-  if (q.includes("password") || q.includes("login") || q.includes("log in")) {
-    return "You can reset your password from the login page using 'Forgot password?'. If the email doesn't arrive within a few minutes, check spam or contact support@tipatale.com.";
-  }
-  if (q.includes("publish") || q.includes("write") || q.includes("upload") || q.includes("novel") || q.includes("book")) {
-    return "To publish, go to your Creator dashboard → New Book, then add chapters from there. You can mark chapters mature, price them in Coins, or leave them free.";
-  }
-  if (q.includes("report") || q.includes("abuse") || q.includes("harass")) {
-    return "You can report any book, chapter, comment, or user using the Report link on their page, or through our Report a Problem page. Our team reviews every submission.";
-  }
-  if (q.includes("coin")) {
-    return "Coins are TipaTale's currency for unlocking chapters and tipping writers. Buy them from your Coin balance in the top nav — purchases are final and non-refundable.";
-  }
-  return "Thanks for the details! I couldn't find an exact match in what I know, but our support team can help directly — email support@tipatale.com, or check the FAQ below in the meantime.";
+  return "I couldn't find an exact match for that. Try browsing the FAQ categories below, or email support@tipatale.com and our team will help directly.";
 }
 
 export default function HelpPage() {

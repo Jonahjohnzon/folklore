@@ -30,7 +30,7 @@ export function PromoBanner() {
   }
 
   return (
-    <section className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6">
+    <section className="relative mx-auto max-w-7xl px-4 py-2 sm:px-6">
       {banner.type === "announcement" ? (
         <AnnouncementBanner banner={banner} />
       ) : (
@@ -72,7 +72,7 @@ export function PromoBanner() {
 function BooksBanner({ banner }: { banner: PublicPromoBanner }) {
   return (
     <div
-      className="relative overflow-hidden rounded-3xl pb-20 pt-10 transition-colors duration-500"
+      className="relative overflow-hidden rounded-3xl pb-2 pt-2 transition-colors duration-500"
       style={{ backgroundColor: banner.bgColor }}
     >
       <div className="relative z-10 mx-auto max-w-xl px-10 text-center">
