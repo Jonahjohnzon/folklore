@@ -96,7 +96,13 @@ function BooksBanner({ banner }: { banner: PublicPromoBanner }) {
             className="group relative shrink-0 overflow-hidden rounded-md shadow-lg transition-transform duration-200 hover:-translate-y-2 hover:scale-[1.03]"
             style={{ transform: `rotate(${(i % 2 === 0 ? -1 : 1) * 3}deg) translateY(${i % 3 === 1 ? 10 : 0}px)` }}
           >
-            <Image src={book.coverUrl} alt={book.title} width={112} height={168} className="h-36 w-24 object-cover sm:h-44 sm:w-28" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={book.coverUrl}
+                alt={book.title}
+                className="h-36 w-24 object-cover sm:h-44 sm:w-28"
+                loading="lazy"
+              />
           </a>
         ))}
       </div>
@@ -116,7 +122,12 @@ function AnnouncementBanner({ banner }: { banner: PublicPromoBanner }) {
       style={{ backgroundColor: banner.bgColor }}
     >
       {banner.imageUrl && (
-        <Image src={banner.imageUrl} alt="" fill className="absolute inset-0 object-cover opacity-40" />
+          // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={banner.imageUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-40"
+        />
       )}
       <div className="relative z-10 max-w-xl">
         <p className="font-heading text-3xl font-bold leading-tight text-white sm:text-4xl">
