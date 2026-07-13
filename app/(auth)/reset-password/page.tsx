@@ -34,7 +34,7 @@ import { useRouter } from "nextjs-toploader/app";
     try {
       await AuthService.resetPassword({ token, newPassword });
       setStatus("done");
-      setTimeout(() => router.push("/sign-in"), 2000);
+      setTimeout(() => router.replace("/sign-in"), 2000);
     } catch (err) {
       setError("This reset link is invalid or has expired.");
       setStatus("idle");
