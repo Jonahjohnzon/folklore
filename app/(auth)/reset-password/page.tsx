@@ -3,10 +3,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {  useSearchParams } from "next/navigation";
 import { AuthService } from "@/app/services/auth";
 import { Suspense } from "react";
-
+import { useRouter } from "nextjs-toploader/app";
  function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,7 +34,7 @@ import { Suspense } from "react";
     try {
       await AuthService.resetPassword({ token, newPassword });
       setStatus("done");
-      setTimeout(() => router.push("/login"), 2000);
+      setTimeout(() => router.push("/sign-in"), 2000);
     } catch (err) {
       setError("This reset link is invalid or has expired.");
       setStatus("idle");
