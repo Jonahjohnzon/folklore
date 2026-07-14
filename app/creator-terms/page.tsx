@@ -1,248 +1,179 @@
-// app/creator-terms/page.tsx
+// app/settings/payout/page.tsx
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Wallet, Calendar, ShieldOff } from "lucide-react";
+import { Loader2, CheckCircle2, Landmark, Wallet } from "lucide-react";
+import { PayoutService, type PayoutAccountView } from "@/app/services/PayoutService";
+import { BackButton } from "@/components/back-button";
 
-export const metadata = {
-  title: "Creator Terms — TipaTale",
-  description: "Terms every creator agrees to before receiving payouts on TipaTale.",
-};
+const CRYPTO_NETWORKS = ["USDT-TRC20", "USDT-ERC20", "USDT-BEP20", "BTC", "ETH", "USDC-ERC20"];
 
-const SECTIONS = [
-  { id: "acceptance", title: "Acceptance of these terms" },
-  { id: "eligibility", title: "Eligibility" },
-  { id: "earnings", title: "How earnings are calculated" },
-  { id: "schedule", title: "Payment schedule" },
-  { id: "methods", title: "Payout methods" },
-  { id: "removed-books", title: "Removed or deleted books" },
-  { id: "fraud", title: "Fraud, chargebacks, and disputes" },
-  { id: "taxes", title: "Taxes" },
-  { id: "holds", title: "Account holds" },
-  { id: "changes", title: "Changes to these terms" },
-  { id: "contact", title: "Questions" },
-];
+export default function PayoutSettingsPage() {
+  const [account, setAccount] = useState<PayoutAccountView | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [method, setMethod] = useState<"bank" | "crypto">("bank");
 
-export default function CreatorTermsPage() {
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [cryptoNetwork, setCryptoNetwork] = useState(CRYPTO_NETWORKS[0]);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    PayoutService.get()
+      .then(({ data }) => {
+        if (data.account) {
+          setAccount(data.account);
+          setMethod(data.account.method);
+          if (data.account.method === "bank") {
+            setBankName(data.account.bankName ?? "");
+            setAccountName(data.account.accountName ?? "");
+          } else {
+            setCryptoNetwork(data.account.cryptoNetwork ?? CRYPTO_NETWORKS[0]);
+          }
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    try {
+      if (!agreedToTerms) {
+        throw new Error("You need to read and agree to the Creator Terms before saving payout details.");
+      }
+      if (method === "bank") {
+        if (!/^\d{10}$/.test(accountNumber)) throw new Error("Nigerian account numbers are 10 digits.");
+        await PayoutService.save({ method: "bank", bankName: bankName.trim(), accountNumber: accountNumber.trim(), accountName: accountName.trim() });
+      } else {
+        if (walletAddress.trim().length < 20) throw new Error("That wallet address looks too short.");
+        await PayoutService.save({ method: "crypto", cryptoNetwork, walletAddress: walletAddress.trim() });
+      }
+      setSaved(true);
+      setAccountNumber("");
+      setWalletAddress("");
+      setAgreedToTerms(false);
+      const { data } = await PayoutService.get();
+      setAccount(data.account);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't save your payout details.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="flex min-h-[40vh] items-center justify-center gap-2 text-ink-muted">
+        <Loader2 size={18} className="animate-spin" /> Loading…
+      </main>
+    );
+  }
+
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <Link
-        href="/settings/payout"
-        className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-ink-muted transition hover:text-ink"
-      >
-        <ArrowLeft size={15} /> Back to payout settings
-      </Link>
+    <main className="mx-auto max-w-lg px-4 py-10 sm:px-6">
+      <BackButton label="Back to settings" fallbackHref="/settings" />
 
-      <div className="mt-6 border-b border-hairline pb-8">
-        <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-1 font-sans text-xs font-semibold uppercase tracking-wide text-accent">
-          Legal
-        </span>
-        <h1 className="mt-3 font-display text-3xl font-bold text-ink sm:text-4xl">Creator Terms</h1>
-        <p className="mt-3 max-w-2xl font-sans text-sm leading-relaxed text-ink-muted">
-          These are the terms every TipaTale creator agrees to before receiving coin-earning
-          payouts. Read them once, then check back any time — they&apos;re always at this link.
-        </p>
-        <p className="mt-4 font-sans text-xs text-ink-muted">Last updated July 14, 2026</p>
+      <h1 className="mt-5 font-display text-2xl font-bold text-ink">Payout details</h1>
+      <p className="mt-1.5 font-sans text-sm text-ink-muted">
+        Where we send your coin earnings. Only visible to you and TipaTale admins processing payouts.
+      </p>
 
-        {/* Quick facts */}
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <FactCard
-            icon={<Wallet size={16} />}
-            label="You keep"
-            value="80%"
-            detail="TipaTale takes a 20% platform commission"
-          />
-          <FactCard
-            icon={<Calendar size={16} />}
-            label="Paid out"
-            value="Monthly"
-            detail="Processed in the second week, for the prior month"
-          />
-          <FactCard
-            icon={<ShieldOff size={16} />}
-            label="Heads up"
-            value="No refunds on takedowns"
-            detail="Removed or deleted books forfeit unpaid earnings"
-          />
+      {account && (
+        <div className="mt-5 rounded-xl border border-hairline bg-surface p-4">
+          <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Currently on file</p>
+          {account.method === "bank" ? (
+            <p className="mt-1 font-sans text-sm text-ink">{account.bankName} — {account.accountNumberMasked} ({account.accountName})</p>
+          ) : (
+            <p className="mt-1 font-sans text-sm text-ink">{account.cryptoNetwork} — {account.walletAddressMasked}</p>
+          )}
+          <p className="mt-1 flex items-center gap-1 font-sans text-xs">
+            {account.verified ? (
+              <span className="flex items-center gap-1 text-emerald-600"><CheckCircle2 size={12} /> Verified</span>
+            ) : (
+              <span className="text-ink-muted">Pending verification</span>
+            )}
+          </p>
         </div>
+      )}
+
+      <div className="mt-6 flex gap-2">
+        <button onClick={() => setMethod("bank")} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2.5 font-sans text-sm font-medium transition ${method === "bank" ? "border-accent bg-accent/10 text-accent" : "border-hairline text-ink-muted"}`}>
+          <Landmark size={15} /> Nigerian bank
+        </button>
+        <button onClick={() => setMethod("crypto")} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2.5 font-sans text-sm font-medium transition ${method === "crypto" ? "border-accent bg-accent/10 text-accent" : "border-hairline text-ink-muted"}`}>
+          <Wallet size={15} /> Crypto wallet
+        </button>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[220px_1fr]">
-        {/* Table of contents */}
-        <nav aria-label="Table of contents" className="lg:sticky lg:top-10 lg:self-start">
-          <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">On this page</p>
-          <ul className="mt-3 flex flex-col gap-2 border-l border-hairline pl-3">
-            {SECTIONS.map((s) => (
-              <li key={s.id}>
-                <a
-                  href={`#${s.id}`}
-                  className="font-sans text-sm text-ink-muted transition hover:text-accent"
-                >
-                  {s.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+      <form onSubmit={handleSave} className="mt-5 flex flex-col gap-3">
+        {method === "bank" ? (
+          <>
+            <Field label="Bank name">
+              <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. GTBank, Access Bank, Kuda" required className="w-full rounded-lg border border-hairline px-3 py-2 font-sans text-sm" />
+            </Field>
+            <Field label="Account number">
+              <input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="10-digit NUBAN" inputMode="numeric" required className="w-full rounded-lg border border-hairline px-3 py-2 font-sans text-sm" />
+            </Field>
+            <Field label="Account name">
+              <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Name on the account" required className="w-full rounded-lg border border-hairline px-3 py-2 font-sans text-sm" />
+            </Field>
+          </>
+        ) : (
+          <>
+            <Field label="Network">
+              <select value={cryptoNetwork} onChange={(e) => setCryptoNetwork(e.target.value)} className="w-full rounded-lg border border-hairline px-3 py-2 font-sans text-sm">
+                {CRYPTO_NETWORKS.map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </Field>
+            <Field label="Wallet address">
+              <input value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} placeholder="Paste your wallet address" required className="w-full rounded-lg border border-hairline px-3 py-2 font-mono text-xs" />
+            </Field>
+          </>
+        )}
 
-        {/* Content */}
-        <div className="flex flex-col gap-9">
-          <Section id="acceptance" number="1" title="Acceptance of these terms">
-            <p>
-              These Creator Terms apply to any author who adds payout details to receive coin
-              earnings on TipaTale. They sit alongside, and don&apos;t replace, our general Terms of
-              Service. If the two conflict on payout matters, these Creator Terms control.
-            </p>
-          </Section>
-
-          <Section id="eligibility" number="2" title="Eligibility">
-            <p>
-              You must be the verified owner of the payout account or wallet you add. Payout
-              details must belong to you personally, or to a business you&apos;re authorized to
-              receive funds on behalf of. We may ask for identity verification before releasing a
-              payout, and may delay or withhold payment until that verification is complete.
-            </p>
-          </Section>
-
-          <Section id="earnings" number="3" title="How earnings are calculated">
-            <p>
-              TipaTale takes a <strong className="text-ink">20% platform commission</strong> on
-              coin earnings generated by your books. You keep the remaining{" "}
-              <strong className="text-ink">80%</strong>. This split applies to reads, tips, and any
-              other coin-based earning event on the platform, and is reflected in your earnings
-              dashboard before payout.
-            </p>
-          </Section>
-
-          <Section id="schedule" number="4" title="Payment schedule">
-            <p>
-              Payouts are processed once a month, during the{" "}
-              <strong className="text-ink">second week of the month</strong>, covering earnings
-              from the previous calendar month. Payouts aren&apos;t issued on a fixed calendar day
-              — bank and network processing times vary, so funds may land a few business days
-              after processing begins. We don&apos;t offer early or on-demand payouts outside this
-              cycle.
-            </p>
-          </Section>
-
-          <Section id="methods" number="5" title="Payout methods">
-            <p>
-              You can be paid to a Nigerian bank account (NUBAN) or to a supported crypto wallet.
-              You&apos;re responsible for entering accurate details — we&apos;re not liable for
-              funds sent to an incorrect account or wallet address you provided. Crypto payouts are
-              sent on the network you select; sending to the wrong network can result in permanent
-              loss of funds, and TipaTale cannot recover or reimburse misdirected crypto transfers.
-            </p>
-          </Section>
-
-          <Section id="removed-books" number="6" title="Removed or deleted books">
-            <p>
-              If a book is deleted by you, or taken down by TipaTale for violating our content
-              policies or Terms of Service, any unpaid earnings tied to that book are forfeited and
-              will not be paid out. This applies whether the removal happens before or after the
-              earnings would otherwise have been included in a payout cycle. Earnings already paid
-              out prior to removal are not clawed back solely because the book was later removed,
-              unless the removal was for fraud, plagiarism, or a chargeback-related violation.
-            </p>
-          </Section>
-
-          <Section id="fraud" number="7" title="Fraud, chargebacks, and disputes">
-            <p>
-              If coins used to generate your earnings are later reversed — for example due to a
-              payment dispute, chargeback, or fraudulent purchase — the corresponding amount may be
-              deducted from your current balance or a future payout. Accounts found to be
-              artificially inflating reads, tips, or engagement to generate payouts will have those
-              earnings withheld and may be suspended.
-            </p>
-          </Section>
-
-          <Section id="taxes" number="8" title="Taxes">
-            <p>
-              You&apos;re solely responsible for determining and meeting any tax obligations that
-              apply to your earnings under the laws of your country or state. TipaTale doesn&apos;t
-              withhold taxes on your behalf and doesn&apos;t provide tax advice.
-            </p>
-          </Section>
-
-          <Section id="holds" number="9" title="Account holds">
-            <p>
-              We may place a temporary hold on a payout if we suspect fraud, if your payout details
-              fail verification, or if your account is under review for a Terms of Service
-              violation. We&apos;ll aim to resolve holds promptly and let you know what&apos;s
-              needed to release them.
-            </p>
-          </Section>
-
-          <Section id="changes" number="10" title="Changes to these terms">
-            <p>
-              We may update these Creator Terms from time to time, including the commission split
-              or payment schedule. Material changes will be communicated in-app or by email before
-              they take effect. Continuing to earn on TipaTale after a change takes effect means you
-              accept the updated terms.
-            </p>
-          </Section>
-
-          <Section id="contact" number="11" title="Questions">
-            <p>
-              If anything here is unclear, reach out to creator-support before adding your payout
-              details — not after a payout has already been processed.
-            </p>
-          </Section>
-
-          <div className="border-t border-hairline pt-6">
-            <Link
-              href="/settings/payout"
-              className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-accent hover:underline"
-            >
-              <ArrowLeft size={15} /> Back to payout settings
+        <label className="mt-1 flex items-start gap-2.5 rounded-lg border border-hairline bg-surface px-3.5 py-3">
+          <input
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-hairline accent-accent"
+          />
+          <span className="font-sans text-sm text-ink-muted">
+            I&apos;ve read and agree to the{" "}
+            <Link href="/creator-terms" target="_blank" className="font-medium text-accent hover:underline">
+              Creator Terms
             </Link>
-          </div>
-        </div>
-      </div>
+            , including the payment schedule, the 20% platform commission, and the policy on
+            removed or deleted books.
+          </span>
+        </label>
+
+        {error && <div className="rounded-lg border border-red-300 bg-red-50 px-3.5 py-2 font-sans text-sm text-red-700">{error}</div>}
+        {saved && <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3.5 py-2 font-sans text-sm text-emerald-700">Saved. We&apos;ll verify it before your next payout.</div>}
+
+        <button type="submit" disabled={saving || !agreedToTerms} className="mt-1 rounded-full bg-accent py-2.5 font-sans text-sm font-semibold text-accent-ink disabled:opacity-50">
+          {saving ? "Saving…" : "Save payout details"}
+        </button>
+      </form>
     </main>
   );
 }
 
-function FactCard({
-  icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  detail: string;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-hairline bg-surface p-4">
-      <div className="flex items-center gap-1.5 text-accent">
-        {icon}
-        <span className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          {label}
-        </span>
-      </div>
-      <p className="mt-2 font-display text-lg font-bold text-ink">{value}</p>
-      <p className="mt-0.5 font-sans text-xs leading-snug text-ink-muted">{detail}</p>
-    </div>
-  );
-}
-
-function Section({
-  id,
-  number,
-  title,
-  children,
-}: {
-  id: string;
-  number: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="scroll-mt-10">
-      <h2 className="font-display text-base font-semibold text-ink">
-        <span className="text-ink-muted">{number}.</span> {title}
-      </h2>
-      <div className="mt-1.5 font-sans text-sm leading-relaxed text-ink-muted">{children}</div>
-    </section>
+    <label className="flex flex-col gap-1">
+      <span className="font-sans text-xs font-medium text-ink-muted">{label}</span>
+      {children}
+    </label>
   );
 }
