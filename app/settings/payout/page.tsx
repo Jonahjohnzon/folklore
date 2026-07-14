@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, CheckCircle2, Landmark, Wallet } from "lucide-react";
+import { Loader2, CheckCircle2, Landmark, Wallet, ArrowLeft } from "lucide-react";
 import { PayoutService, type PayoutAccountView } from "@/app/services/PayoutService";
 
 const CRYPTO_NETWORKS = ["USDT-TRC20", "USDT-ERC20", "USDT-BEP20", "BTC", "ETH", "USDC-ERC20"];
@@ -80,7 +80,15 @@ export default function PayoutSettingsPage() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10 sm:px-6">
-      <h1 className="font-display text-2xl font-bold text-ink">Payout details</h1>
+      <Link
+        href="/dashboard"
+        replace
+        className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-ink-muted transition hover:text-ink"
+      >
+        <ArrowLeft size={15} /> Back to settings
+      </Link>
+
+      <h1 className="mt-5 font-display text-2xl font-bold text-ink">Payout details</h1>
       <p className="mt-1.5 font-sans text-sm text-ink-muted">
         Where we send your coin earnings. Only visible to you and TipaTale admins processing payouts.
       </p>

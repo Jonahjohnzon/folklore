@@ -162,7 +162,14 @@ export default function BecomeCreatorPage() {
               onChange={(e) => setAgreed(e.target.checked)}
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-hairline accent-(--accent,var(--color-accent))"
             />
-            I agree to Tipatale&apos;s creator guidelines and content policy.
+            <span className="font-sans text-sm text-ink-muted">
+            I&apos;ve read and agree to the{" "}
+            <Link href="/creator-terms" target="_blank" className="font-medium text-accent hover:underline">
+              Creator Terms
+            </Link>
+            , including the payment schedule, the 20% platform commission, and the policy on
+            removed or deleted books.
+          </span>
           </label>
 
           {error && <p className="mt-3 font-sans text-sm text-red-500">{error}</p>}

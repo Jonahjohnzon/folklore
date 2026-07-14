@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
-import { Bell, ArrowLeft, CheckCheck, Loader2, Trash2, X, Inbox } from "lucide-react";
+import { ArrowLeft, CheckCheck, Loader2, Trash2, X, Inbox } from "lucide-react";
 import { NotificationService, type NotificationItem } from "@/app/services/NotificationService";
 
 const NOTIFICATION_ICONS: Record<string, string> = {
