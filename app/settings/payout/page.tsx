@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Loader2, CheckCircle2, Landmark, Wallet } from "lucide-react";
 import { PayoutService, type PayoutAccountView } from "@/app/services/PayoutService";
 
@@ -17,6 +18,7 @@ export default function PayoutSettingsPage() {
   const [accountName, setAccountName] = useState("");
   const [cryptoNetwork, setCryptoNetwork] = useState(CRYPTO_NETWORKS[0]);
   const [walletAddress, setWalletAddress] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +47,9 @@ export default function PayoutSettingsPage() {
     setError(null);
     setSaved(false);
     try {
+      if (!agreedToTerms) {
+        throw new Error("You need to read and agree to the Creator Terms before saving payout details.");
+      }
       if (method === "bank") {
         if (!/^\d{10}$/.test(accountNumber)) throw new Error("Nigerian account numbers are 10 digits.");
         await PayoutService.save({ method: "bank", bankName: bankName.trim(), accountNumber: accountNumber.trim(), accountName: accountName.trim() });
@@ -55,6 +60,7 @@ export default function PayoutSettingsPage() {
       setSaved(true);
       setAccountNumber("");
       setWalletAddress("");
+      setAgreedToTerms(false);
       const { data } = await PayoutService.get();
       setAccount(data.account);
     } catch (err) {
@@ -132,10 +138,27 @@ export default function PayoutSettingsPage() {
           </>
         )}
 
+        <label className="mt-1 flex items-start gap-2.5 rounded-lg border border-hairline bg-surface px-3.5 py-3">
+          <input
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-hairline accent-accent"
+          />
+          <span className="font-sans text-sm text-ink-muted">
+            I&apos;ve read and agree to the{" "}
+            <Link href="/creator-terms" target="_blank" className="font-medium text-accent hover:underline">
+              Creator Terms
+            </Link>
+            , including the payment schedule, the 20% platform commission, and the policy on
+            removed or deleted books.
+          </span>
+        </label>
+
         {error && <div className="rounded-lg border border-red-300 bg-red-50 px-3.5 py-2 font-sans text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3.5 py-2 font-sans text-sm text-emerald-700">Saved. We&apos;ll verify it before your next payout.</div>}
 
-        <button type="submit" disabled={saving} className="mt-1 rounded-full bg-accent py-2.5 font-sans text-sm font-semibold text-accent-ink disabled:opacity-50">
+        <button type="submit" disabled={saving || !agreedToTerms} className="mt-1 rounded-full bg-accent py-2.5 font-sans text-sm font-semibold text-accent-ink disabled:opacity-50">
           {saving ? "Saving…" : "Save payout details"}
         </button>
       </form>
