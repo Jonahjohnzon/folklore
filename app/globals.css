@@ -241,7 +241,7 @@ body {
 
 .prose-block {
   width: 100%;
-  max-width: 100%;
+  
   white-space: normal;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -251,4 +251,11 @@ body {
   white-space: pre-wrap;
   font-family: inherit;
   overflow-wrap: break-word;
+}
+
+/* in your global CSS or a <style> block */
+@media (min-width: 1024px) {
+  .cr-page-frame {
+    height: max(52dvh, calc(100cqw * 1.4142)) !important;
+  }
 }

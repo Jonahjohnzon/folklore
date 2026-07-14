@@ -1,6 +1,4 @@
-// Splits chapter.content into an ordered array of HTML block strings, one
-// per paragraph/heading/etc, so each block's array index can be used
-// directly as a stable `paragraphIndex` for comments.
+// lib/reader-blocks.ts
 
 const BLOCK_TAGS = new Set([
   "P", "H1", "H2", "H3", "H4", "H5", "H6",
@@ -18,17 +16,12 @@ export function withDropCap(html: string): string {
   return `${prefix}<span class="cr-drop-cap">${firstChar}</span>${html.slice(prefix.length + firstChar.length)}`;
 }
 
-// Recursively unwraps single-container wrappers (e.g. one outer <div>) and
-// flattens levels that don't themselves contain recognized block tags,
-// until it finds the actual list of paragraph-level elements.
 function collectBlockElements(root: Element, depth = 0): Element[] {
-  if (depth > 8) return Array.from(root.children); // safety valve
+  if (depth > 8) return Array.from(root.children);
 
   const direct = Array.from(root.children);
-
   if (direct.length === 0) return [];
 
-  // Single non-block wrapper (<div><p>...</p><p>...</p></div>) -> drill in.
   if (direct.length === 1 && !BLOCK_TAGS.has(direct[0].tagName)) {
     return collectBlockElements(direct[0], depth + 1);
   }
@@ -36,36 +29,42 @@ function collectBlockElements(root: Element, depth = 0): Element[] {
   const hasAnyBlockChild = direct.some((el) => BLOCK_TAGS.has(el.tagName));
   if (hasAnyBlockChild) return direct;
 
-  // None of the direct children are recognized block tags — flatten one
-  // level down and see if that surfaces real blocks.
   const nested = direct.flatMap((el) => collectBlockElements(el, depth + 1));
   return nested.length > 0 ? nested : direct;
 }
 
-// Some editors save every paragraph inside a single <p> (or <div>),
-// separated by <br> / <br/> / <br /> tags instead of separate elements.
-// Detect that case and split on the <br> boundaries instead.
+// Some editors save several real paragraphs inside ONE element, separated
+// by <br><br> (or a run of <br>s) instead of separate <p> tags. This now
+// runs on every block element we find — not just when the whole doc is a
+// single wrapper — so mid-document merged paragraphs get split too.
 function splitByBreaks(el: Element): string[] {
   const inner = el.innerHTML;
   const tag = el.tagName.toLowerCase();
 
-  if (/<br\s*\/?>/i.test(inner)) {
-    return inner
-      .split(/(?:<br\s*\/?>\s*){1,}/i)
+  // Require a DOUBLE break (or more) to count as a paragraph boundary —
+  // a single <br> is a soft line break (e.g. dialogue, poetry) and should
+  // stay inside the same paragraph, matching how Wattpad/Inkitt treat it.
+  const DOUBLE_BR = /(?:<br\s*\/?>\s*){2,}/i;
+
+  if (DOUBLE_BR.test(inner)) {
+    const chunks = inner
+      .split(DOUBLE_BR)
       .map((chunk) => chunk.trim())
-      .filter(Boolean)
-      .map((chunk) => `<${tag}>${chunk}</${tag}>`);
+      .filter(Boolean);
+    if (chunks.length > 1) {
+      return chunks.map((chunk) => `<${tag}>${chunk}</${tag}>`);
+    }
   }
 
-  // No <br> markup — check for raw text separated by blank lines
-  // (common when plain text was pasted straight into a <p>/<pre>).
   const text = el.textContent ?? "";
   if (/\n{2,}/.test(text)) {
-    return text
+    const chunks = text
       .split(/\n{2,}/)
       .map((chunk) => chunk.trim())
-      .filter(Boolean)
-      .map((chunk) => `<p>${escapeHtml(chunk)}</p>`); // always <p>, not <pre>
+      .filter(Boolean);
+    if (chunks.length > 1) {
+      return chunks.map((chunk) => `<p>${escapeHtml(chunk)}</p>`);
+    }
   }
 
   return [el.outerHTML];
@@ -79,13 +78,9 @@ export function splitIntoBlocks(content: string): string[] {
     const elements = collectBlockElements(doc.body);
 
     if (elements.length > 0) {
-      // If we ended up with exactly one block, check whether it's actually
-      // several paragraphs joined by <br> tags and split those out too.
-      if (elements.length === 1) {
-        const brSplit = splitByBreaks(elements[0]);
-        if (brSplit.length > 1) return brSplit;
-      }
-      return elements.map((el) => el.outerHTML);
+      // Run the break-split on EVERY element and flatten — fixes the case
+      // where only one wrapper among several was ever checked before.
+      return elements.flatMap((el) => splitByBreaks(el));
     }
   }
 

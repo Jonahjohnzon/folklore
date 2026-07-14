@@ -25,6 +25,8 @@ import { store } from "@/app/store/userStore";
 import { SHEET_THEMES } from "@/lib/sheet-themes";
 import { getSheetSurfaceStyle } from "@/lib/sheet-surface";
 import { RecommendedSidebar } from "./recommended-sidebar";
+import { ChapterShareRail } from "./chapter-share-rail";
+
 
 const FONTS: { id: string; label: string; stack: string }[] = [
   { id: "serif", label: "Source Serif", stack: "var(--font-body)" },
@@ -370,75 +372,88 @@ export function ChapterReader({
           </div>
         </div>
       </div>
-      <div className="mx-auto flex max-w-7xl gap-6 px-4  pt-14 sm:px-6">
+  
 
-      <article className="min-w-0 max-w-4xl flex-1">
-        <div className="relative">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -left-1 -top-7 select-none font-display text-[6rem] font-bold leading-none opacity-[0.055] sm:text-[8rem]"
-            style={{ color: effectiveTheme.textColor }}
-          >
-            {String(chapter.orderIndex).padStart(2, "0")}
-          </span>
-          <p className="relative font-sans text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-            Chapter {chapter.orderIndex}
-          </p>
-          <h1 className="relative mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">{chapter.title}</h1>
-          {mode === "author" && (
-            <p className="relative mt-1.5 font-sans text-xs text-ink-muted">{"Reading in the author's style"}</p>
-          )}
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 pt-14 sm:px-6 lg:grid-cols-[1fr_auto_1fr]">
+        {/* Left rail column — equal width to the right column so the
+            center sheet stays visually centered, even though the rail
+            itself is much narrower than the sidebar. Content pinned to
+            the inner (right) edge, right up against the article. */}
+        <div className="hidden lg:flex lg:justify-end">
+          <ChapterShareRail bookSlug={bookSlug} chapterId={String(chapter._id)} title={chapter.title} />
         </div>
 
-        <ReaderContentSheet
-          blocks={blocks}
-          commentCounts={commentCounts}
-          stripFontFamily={mode === "custom"}
-          fontStack={effectiveFont.stack}
-          fontSize={effectiveFontSize}
-          lineHeight={presentation.lineHeight}
-          ruleColor={effectiveTheme.textColor}
-          surfaceStyle={getSheetSurfaceStyle(effectiveTheme)}
-          onOpenComments={setActiveParagraph}
-        />
-
-        {isFullscreen && <p className="mt-6 font-sans text-xs text-ink-muted">Press Esc to exit fullscreen.</p>}
-
-        <div className="mt-10 flex items-center gap-3 border-t border-hairline pt-6">
-          <ChapterLikeButton chapterId={String(chapter._id)} />
-        </div>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          {prevId ? (
-            <Link
-              href={`/book/${bookSlug}/chapter/${prevId}`}
-              onClick={(e) => playPageTurn(e, `/book/${bookSlug}/chapter/${prevId}`)}
-              className="flex flex-1 items-center gap-1.5 rounded-xl border border-hairline px-4 py-3.5 font-sans text-sm font-medium text-ink-muted transition hover:border-accent hover:text-accent sm:flex-initial sm:justify-center"
+        <article className="min-w-0 w-full max-w-2xl">
+          <div className="relative">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -left-1 -top-7 select-none font-display text-[6rem] font-bold leading-none opacity-[0.055] sm:text-[8rem]"
+              style={{ color: effectiveTheme.textColor }}
             >
-              <ChevronLeft size={16} /> Previous
-            </Link>
-          ) : <span className="hidden sm:block sm:flex-initial" />}
-          {nextId && (
-            <Link
-              href={`/book/${bookSlug}/chapter/${nextId}`}
-              onClick={(e) => playPageTurn(e, `/book/${bookSlug}/chapter/${nextId}`)}
-              className="group flex flex-1 items-center justify-between gap-3 rounded-xl bg-accent px-5 py-3.5 font-sans text-accent-ink transition hover:opacity-90"
-            >
-              <span className="flex flex-col items-start leading-tight">
-                <span className="text-[11px] font-medium uppercase tracking-wide opacity-75">Continue reading</span>
-                <span className="text-sm font-semibold">Next chapter</span>
-              </span>
-              <ChevronRight size={18} className="shrink-0 transition-transform group-hover:translate-x-1" />
-            </Link>
-          )}
-        </div>
+              {String(chapter.orderIndex).padStart(2, "0")}
+            </span>
+            <p className="relative font-sans text-xs font-semibold uppercase tracking-[0.14em] text-accent">
+              Chapter {chapter.orderIndex}
+            </p>
+            <h1 className="relative mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">{chapter.title}</h1>
+            {mode === "author" && (
+              <p className="relative mt-1.5 font-sans text-xs text-ink-muted">{"Reading in the author's style"}</p>
+            )}
+          </div>
 
-        <CommentSection chapterId={String(chapter._id)} />
-      </article>
-      <div className="hidden shrink-0 lg:block">
-        <RecommendedSidebar bookId={bookId} />
+          <ReaderContentSheet
+            blocks={blocks}
+            commentCounts={commentCounts}
+            stripFontFamily={mode === "custom"}
+            fontStack={effectiveFont.stack}
+            fontSize={effectiveFontSize}
+            lineHeight={presentation.lineHeight}
+            ruleColor={effectiveTheme.textColor}
+            surfaceStyle={getSheetSurfaceStyle(effectiveTheme)}
+            onOpenComments={setActiveParagraph}
+          />
+
+          {isFullscreen && <p className="mt-6 font-sans text-xs text-ink-muted">Press Esc to exit fullscreen.</p>}
+
+          <div className="mt-10 flex items-center gap-3 border-t border-hairline pt-6">
+            <ChapterLikeButton chapterId={String(chapter._id)} />
+          </div>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            {prevId ? (
+              <Link
+                href={`/book/${bookSlug}/chapter/${prevId}`}
+                onClick={(e) => playPageTurn(e, `/book/${bookSlug}/chapter/${prevId}`)}
+                className="flex flex-1 items-center gap-1.5 rounded-xl border border-hairline px-4 py-3.5 font-sans text-sm font-medium text-ink-muted transition hover:border-accent hover:text-accent sm:flex-initial sm:justify-center"
+              >
+                <ChevronLeft size={16} /> Previous
+              </Link>
+            ) : <span className="hidden sm:block sm:flex-initial" />}
+            {nextId && (
+              <Link
+                href={`/book/${bookSlug}/chapter/${nextId}`}
+                onClick={(e) => playPageTurn(e, `/book/${bookSlug}/chapter/${nextId}`)}
+                className="group flex flex-1 items-center justify-between gap-3 rounded-xl bg-accent px-5 py-3.5 font-sans text-accent-ink transition hover:opacity-90"
+              >
+                <span className="flex flex-col items-start leading-tight">
+                  <span className="text-[11px] font-medium uppercase tracking-wide opacity-75">Continue reading</span>
+                  <span className="text-sm font-semibold">Next chapter</span>
+                </span>
+                <ChevronRight size={18} className="shrink-0 transition-transform group-hover:translate-x-1" />
+              </Link>
+            )}
+          </div>
+
+          <CommentSection chapterId={String(chapter._id)} />
+        </article>
+
+        {/* Right column — sidebar pinned to inner (left) edge, matching
+            the left column's width so the article stays centered. */}
+        <div className="hidden lg:flex lg:justify-start">
+          <RecommendedSidebar bookId={bookId} />
+        </div>
       </div>
-        </div>
+        
       <ParagraphCommentPanel
         open={activeParagraph !== null}
         chapterId={chapter._id}
