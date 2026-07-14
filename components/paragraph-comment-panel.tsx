@@ -279,9 +279,12 @@ function ThreadedComment({
     setReplies((prev) => (prev ? prev.map((r) => (r.id === id ? { ...r, body } : r)) : prev));
   }
 
+  // Replies are excluded from the server-side ChapterCommentCount counter
+  // (see the POST route's `if (!parentId)` guard), so deleting one must
+  // NOT touch commentCounts/paragraph badge state — only the locally
+  // rendered reply list and this thread's own reply count.
   async function handleDeleteReply(id: string) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    await onEdit === undefined ? null : null; // no-op guard, keeps types happy if onEdit unused elsewhere
+    await CommentService.remove(chapterId, id);
     setReplies((prev) => (prev ? prev.filter((r) => r.id !== id) : prev));
     setReplyCount((n) => Math.max(0, n - 1));
   }

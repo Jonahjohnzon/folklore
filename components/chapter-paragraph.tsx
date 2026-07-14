@@ -41,7 +41,12 @@ export function ChapterParagraph({
   // stuck showing a stale paragraph's icon when the pointer moves quickly.
   const [revealed, setRevealed] = useState(false);
 
-  const iconVisible = commentCount > 0 || revealed;
+  // The stored count can be negative from historical drift (e.g. a paragraph
+  // whose count went below zero before the increment/decrement bug was
+  // fixed server-side). Clamp for display so a real new comment doesn't look
+  // like a no-op just because -1 + 1 = 0, which still fails a `> 0` check.
+  const displayCount = Math.max(0, commentCount);
+  const iconVisible = displayCount > 0 || revealed;
 
   return (
     <div
@@ -58,13 +63,13 @@ export function ChapterParagraph({
           e.stopPropagation();
           onOpenComments(index);
         }}
-        aria-label={commentCount > 0 ? `View ${commentCount} comments` : "Add a comment"}
+        aria-label={displayCount > 0 ? `View ${displayCount} comments` : "Add a comment"}
         className={`absolute right-6 top-1 z-10 flex touch-manipulation items-center gap-1 rounded-full border px-2.5 py-1.5 font-sans text-[11px] transition-opacity duration-150 lg:py-1 ${
-          commentCount > 0 ? "border-accent/40 bg-accent/10 text-accent" : "border-hairline text-ink-muted"
+          displayCount > 0 ? "border-accent/40 bg-accent/10 text-accent" : "border-hairline text-ink-muted"
         } ${iconVisible ? "opacity-100" : "opacity-0"} group-hover/para:opacity-100`}
       >
         <MessageCircle size={12} />
-        {commentCount > 0 && commentCount}
+        {displayCount > 0 && displayCount}
       </button>
     </div>
   );

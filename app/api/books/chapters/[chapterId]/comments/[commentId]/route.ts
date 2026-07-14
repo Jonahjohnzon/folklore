@@ -73,9 +73,26 @@ export const DELETE = withAuth(async (req, ctx) => {
 
     if (isTopLevel) {
       await ParagraphComment.deleteMany({ $or: [{ _id: commentId }, { parentId: commentId }] });
+
+      // Aggregation-pipeline update ($set with an expression, not a plain
+      // object) so the "decrement, but never below 0" logic runs as a
+      // single atomic step on the server. A plain `$inc: -1` can't express
+      // a floor, and doing the clamp as a separate follow-up query would
+      // leave a window where a concurrent delete for the same paragraph
+      // could still push the stored value negative between the two steps.
+      const field = `counts.${existing.paragraphIndex}`;
       await ChapterCommentCount.updateOne(
         { chapterId },
-        { $inc: { [`counts.${existing.paragraphIndex}`]: -1 } }
+        [
+          {
+            $set: {
+              [field]: {
+                $max: [0, { $subtract: [{ $ifNull: [`$${field}`, 0] }, 1] }],
+              },
+            },
+          },
+        ],
+        { upsert: true }
       );
     } else {
       await ParagraphComment.deleteOne({ _id: commentId });
