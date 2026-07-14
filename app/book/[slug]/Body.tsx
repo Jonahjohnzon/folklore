@@ -20,6 +20,7 @@ import ChapterUnlockModal from "@/components/ChapterUnlockModal";
 import { useRouter } from "nextjs-toploader/app";
 import { useSnapshot } from "valtio";
 import { store } from "@/app/store/userStore";
+import { Avatar } from "@/components/avatar";
 
 function formatReads(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M reads`;
@@ -293,7 +294,8 @@ export default function BookDetailPage() {
               className="mt-5 flex items-center gap-3 rounded-xl border border-hairline bg-surface p-3"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={book.author.avatarUrl ?? ""} alt={book.author.penName} className="h-10 w-10 rounded-full object-cover" />
+                      <Avatar avatarUrl={book.author.avatarUrl || null} name={book.author.penName} size={40} />
+
               <div>
                 <p className="font-sans text-sm font-semibold text-ink">{book.author.penName}</p>
                 <p className="font-sans text-xs text-ink-muted">@{book.author.username}</p>

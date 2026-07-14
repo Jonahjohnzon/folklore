@@ -238,3 +238,17 @@ body {
 .font-heading {
   font-family: var(--font-heading);
 }
+
+.prose-block {
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.prose-block pre {
+  white-space: pre-wrap;
+  font-family: inherit;
+  overflow-wrap: break-word;
+}

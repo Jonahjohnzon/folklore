@@ -2,7 +2,7 @@
 import { getSheetSurfaceStyle, SheetOpeningRule } from "@/lib/sheet-surface";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Save, UploadCloud, FileUp, Loader2, CheckCircle2 } from "lucide-react";
+import { Save, UploadCloud, FileUp, Loader2, CheckCircle2, FilePlus } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -128,6 +128,11 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
     },
     onUpdate: ({ editor }) => updateWordCount(editor.getText()),
   });
+
+  function handleNextChapter() {
+
+  window.location.href = window.location.pathname;
+  }
 
   // Load the book so the header shows its real title instead of a placeholder.
   useEffect(() => {
@@ -438,6 +443,13 @@ async function handleLocksChange(next: CreatorLocks) {
           >
             {importing ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
             {importing ? "Importing…" : "Import file"}
+          </button>
+          <button
+            onClick={handleNextChapter}
+            className="flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-4 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent"
+          >
+            <FilePlus size={14} />
+            Next chapter
           </button>
           <button
             onClick={handleSaveDraft}

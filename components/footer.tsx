@@ -44,7 +44,7 @@ export function Footer() {
             <Link
               key={l.href}
               href={l.href}
-              className="font-sans text-sm font-semibold text-ink transition hover:text-accent"
+              className="font-sans text-xs sm:text-sm font-semibold text-ink transition hover:text-accent"
             >
               {l.label}
             </Link>
@@ -57,15 +57,15 @@ export function Footer() {
             <Link
               key={l.href}
               href={l.href}
-              className="font-sans text-xs font-medium text-ink-muted transition hover:text-accent"
+              className="font-sans text-[12px] sm:text-xs font-medium text-ink-muted transition hover:text-accent"
             >
               {l.label}
             </Link>
           ))}
-          <span className="font-sans text-xs text-ink-muted">
+          <span className="font-sans text-[10px] sm:text-xs text-ink-muted">
             © {new Date().getFullYear()} TipaTale
           </span>
-        </div>
+        </div> 
       </div>
     </footer>
   );

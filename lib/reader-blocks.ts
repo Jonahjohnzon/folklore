@@ -47,14 +47,28 @@ function collectBlockElements(root: Element, depth = 0): Element[] {
 // Detect that case and split on the <br> boundaries instead.
 function splitByBreaks(el: Element): string[] {
   const inner = el.innerHTML;
-  if (!/<br\s*\/?>/i.test(inner)) return [el.outerHTML];
-
   const tag = el.tagName.toLowerCase();
-  return inner
-    .split(/(?:<br\s*\/?>\s*){1,}/i)
-    .map((chunk) => chunk.trim())
-    .filter(Boolean)
-    .map((chunk) => `<${tag}>${chunk}</${tag}>`);
+
+  if (/<br\s*\/?>/i.test(inner)) {
+    return inner
+      .split(/(?:<br\s*\/?>\s*){1,}/i)
+      .map((chunk) => chunk.trim())
+      .filter(Boolean)
+      .map((chunk) => `<${tag}>${chunk}</${tag}>`);
+  }
+
+  // No <br> markup — check for raw text separated by blank lines
+  // (common when plain text was pasted straight into a <p>/<pre>).
+  const text = el.textContent ?? "";
+  if (/\n{2,}/.test(text)) {
+    return text
+      .split(/\n{2,}/)
+      .map((chunk) => chunk.trim())
+      .filter(Boolean)
+      .map((chunk) => `<p>${escapeHtml(chunk)}</p>`); // always <p>, not <pre>
+  }
+
+  return [el.outerHTML];
 }
 
 export function splitIntoBlocks(content: string): string[] {
