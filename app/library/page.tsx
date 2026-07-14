@@ -54,20 +54,19 @@ export default function LibraryPage() {
         <Link
           href="/history"
           replace
-          className="inline-flex w-fit items-center gap-1.5 rounded-full border border-hairline px-3.5 py-2 font-sans text-sm font-medium text-ink-muted hover:border-accent hover:text-accent"
+          className="inline-flex w-fit items-center gap-1.5 rounded-full border border-hairline px-3.5 py-2 font-sans text-sm font-medium text-ink-muted transition active:scale-[0.97] sm:hover:border-accent sm:hover:text-accent"
         >
           <History size={14} /> Reading history
         </Link>
       </div>
 
-      {/* StatusTabs isn't shown here, but if it renders several tabs in a row it likely
-          needs the same `overflow-x-auto` treatment on narrow screens so labels don't clip. */}
-      <div className="-mx-3 overflow-x-auto scrollbar-none px-3 sm:mx-0  sm:px-0">
+      {/* Sticky so the filter stays reachable while scrolling a long shelf, on both mobile and desktop */}
+      <div className="sticky top-0 z-10 -mx-3 bg-page/95 px-3 pb-2 pt-1 backdrop-blur supports-backdrop-blur:bg-page/80 sm:-mx-6 sm:px-6">
         <StatusTabs active={status} counts={counts} onChange={setStatus} />
       </div>
 
       {loading ? (
-        <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-5 sm:mt-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 md:grid-cols-4 lg:grid-cols-6">
+        <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-5 sm:mt-4 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 md:grid-cols-4 lg:grid-cols-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="aspect-2/3 animate-pulse rounded-lg bg-hairline" />
           ))}
@@ -80,7 +79,7 @@ export default function LibraryPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-5 sm:mt-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 md:grid-cols-4 lg:grid-cols-6">
+        <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-5 sm:mt-4 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 md:grid-cols-4 lg:grid-cols-6">
           {entries.map((entry) => (
             <BookGridCard key={entry.bookId} entry={entry} />
           ))}
