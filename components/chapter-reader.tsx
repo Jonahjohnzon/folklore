@@ -115,14 +115,35 @@ export function ChapterReader({
   function toggleAmbientSound() {
     const audio = ambientAudioRef.current;
     if (!audio || !ambientAllowed) return;
-    if (ambientPlaying) {
+    if (!audio.paused) {
       audio.pause();
-      setAmbientPlaying(false);
     } else {
-      audio.play().catch(() => setAmbientPlaying(false));
-      setAmbientPlaying(true);
+      audio.play().catch(() => {});
     }
   }
+
+      useEffect(() => {
+      const audio = ambientAudioRef.current;
+      if (!audio) return;
+
+      const handlePlay = () => setAmbientPlaying(true);
+      const handlePause = () => setAmbientPlaying(false);
+      // Fires on buffering stalls/network hiccups — treat as paused so the
+      // UI doesn't lie about what's actually audible.
+      const handleStalled = () => setAmbientPlaying(false);
+
+      audio.addEventListener("play", handlePlay);
+      audio.addEventListener("pause", handlePause);
+      audio.addEventListener("stalled", handleStalled);
+      audio.addEventListener("suspend", handleStalled);
+
+      return () => {
+        audio.removeEventListener("play", handlePlay);
+        audio.removeEventListener("pause", handlePause);
+        audio.removeEventListener("stalled", handleStalled);
+        audio.removeEventListener("suspend", handleStalled);
+      };
+    }, [ambientSound?.id]);
 
   useEffect(() => {
     const stored = loadReaderPrefs();
