@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, User, AtSign, KeyRound, Bell, ShieldCheck, TriangleAlert } from "lucide-react";
+import { X, User, AtSign, KeyRound, Bell } from "lucide-react";
 import { ProfileTab } from "./edit-profile/ProfileTab";
 import { AccountTab } from "./edit-profile/AccountTab";
 import { PasswordTab } from "./edit-profile/PasswordTab";
@@ -31,14 +31,13 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
     danger: false,
   });
 
-
-    useEffect(() => {
+  useEffect(() => {
     const original = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = original;
     };
-    }, []);
+  }, []);
 
   const markDirty = (tab: TabId, value: boolean) =>
     setDirty((prev) => (prev[tab] === value ? prev : { ...prev, [tab]: value }));
@@ -57,17 +56,29 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
   };
 
   const content = (
-    <div className="fixed inset-0 z-50  flex bg-bg ">
-      {/* Close bar, always visible so it never gets lost behind long forms */}
+    <div className="fixed inset-0 z-50 flex flex-col bg-bg sm:flex-row">
+      {/* Mobile header: title + close, replaces the old floating close button on small screens */}
+      <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-page px-4 py-3 sm:hidden">
+        <h2 className="font-display text-base font-semibold text-ink">Edit profile</h2>
+        <button
+          onClick={handleClose}
+          aria-label="Close settings"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink transition active:scale-95 active:bg-surface"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* Desktop close button, floats over the sidebar/content split */}
       <button
         onClick={handleClose}
         aria-label="Close settings"
-        className="absolute right-4 top-4 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-hairline text-ink transition hover:border-accent hover:text-accent sm:right-6 sm:top-6"
+        className="absolute right-6 top-6 z-10 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-hairline text-ink transition hover:border-accent hover:text-accent sm:flex"
       >
         <X size={18} />
       </button>
 
-      {/* Tab rail */}
+      {/* Tab rail (desktop sidebar) */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-hairline px-4 py-8 sm:flex">
         <h2 className="px-3 font-display text-lg font-semibold text-ink">Edit profile</h2>
         <nav className="mt-6 flex flex-col gap-1">
@@ -91,28 +102,41 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
         </nav>
       </aside>
 
-      {/* Mobile tab rail: horizontal scroller instead of sidebar */}
-      <nav className="fixed inset-x-0 top-0 z-10 flex gap-1 overflow-x-auto border-b border-hairline bg-page px-3 py-3 sm:hidden">
-        {TABS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => handleTabChange(id)}
-            className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 font-sans text-xs font-medium transition ${
-              active === id
-                ? "bg-accent text-accent-ink"
-                : id === "danger"
-                  ? "text-red-500"
-                  : "text-ink-muted"
-            }`}
-          >
-            <Icon size={13} />
-            {label}
-          </button>
-        ))}
+      {/* Mobile tab rail: full-width segmented control, every tab always visible, nothing to scroll */}
+      <nav
+        className="grid shrink-0 border-b border-hairline bg-page sm:hidden"
+        style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}
+      >
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const isActive = active === id;
+          const isDanger = id === "danger";
+          return (
+            <button
+              key={id}
+              onClick={() => handleTabChange(id)}
+              aria-current={isActive ? "true" : undefined}
+              className={`relative flex flex-col items-center justify-center gap-1 border-b-2 px-1 py-2.5 font-sans text-[10.5px] font-medium leading-none transition active:bg-surface ${
+                isActive
+                  ? "border-accent text-accent"
+                  : isDanger
+                    ? "border-transparent text-red-500"
+                    : "border-transparent text-ink-muted"
+              }`}
+            >
+              <span className="relative">
+                <Icon size={17} />
+                {dirty[id] && (
+                  <span className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-accent" />
+                )}
+              </span>
+              <span className="truncate">{label}</span>
+            </button>
+          );
+        })}
       </nav>
 
       {/* Active panel */}
-      <div className="flex-1 overflow-y-auto px-4 pb-16 pt-16 sm:px-10 sm:pt-10">
+      <div className="flex-1 overflow-y-auto px-4 pb-10 pt-5 sm:px-10 sm:pt-10">
         <div className="mx-auto max-w-xl">
           {active === "profile" && <ProfileTab onDirtyChange={(v) => markDirty("profile", v)} />}
           {active === "account" && <AccountTab onDirtyChange={(v) => markDirty("account", v)} />}

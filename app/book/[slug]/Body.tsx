@@ -346,7 +346,7 @@ export default function BookDetailPage() {
               ))}
             </div>
 
-            <p className="prose-reader mt-5 max-w-2xl text-ink">{book.description}</p>
+            <p className="prose-reader mt-5 max-w-2xl text-sm sm:text-base text-ink">{book.description}</p>
 
             {/* Chapters */}
             <h2 className="mt-10 font-display text-xl font-semibold text-ink">Chapters</h2>

@@ -62,7 +62,7 @@ export default function LibraryPage() {
 
       {/* StatusTabs isn't shown here, but if it renders several tabs in a row it likely
           needs the same `overflow-x-auto` treatment on narrow screens so labels don't clip. */}
-      <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:overflow-visible sm:px-0">
+      <div className="-mx-3 overflow-x-auto scrollbar-none px-3 sm:mx-0  sm:px-0">
         <StatusTabs active={status} counts={counts} onChange={setStatus} />
       </div>
 
