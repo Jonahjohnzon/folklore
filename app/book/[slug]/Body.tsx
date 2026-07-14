@@ -49,7 +49,7 @@ export default function BookDetailPage() {
   const [isAuthor, setIsAuthor] = useState(false);
   const router = useRouter();
   const { _id: userId, authChecked } = useSnapshot(store);
-  const CHAPTERS_PER_PAGE = 8;
+  const CHAPTERS_PER_PAGE = 7;
   const [chapterPage, setChapterPage] = useState(1);
 
   useEffect(() => {
