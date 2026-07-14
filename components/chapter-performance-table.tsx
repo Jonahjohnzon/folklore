@@ -31,7 +31,9 @@ export function ChapterPerformanceTable({
 
   return (
     <div>
-      <div className="overflow-x-auto">
+      {/* Table — sm and up. A horizontally-scrolling table is a poor mobile
+          experience (tiny sideways-scrubbing text), so it's swapped for cards below `sm`. */}
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full border-collapse font-sans text-sm">
           <thead>
             <tr className="border-b border-hairline text-left text-xs uppercase tracking-wide text-ink-muted">
@@ -83,39 +85,81 @@ export function ChapterPerformanceTable({
         </table>
       </div>
 
+      {/* Cards — below `sm`. Same data, stacked so nothing gets clipped or
+          needs sideways scrolling on a phone. */}
+      <div className="divide-y divide-hairline sm:hidden">
+        {pagedChapters.map((c) => (
+          <div key={c._id} className="flex items-start justify-between gap-3 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-sans text-sm font-medium text-ink">
+                {c.orderIndex}. {c.title}
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-sans text-xs text-ink-muted">
+                <span>{c.wordCount.toLocaleString()} words</span>
+                <span>
+                  {c.accessType === "free" ? (
+                    "Free"
+                  ) : (
+                    <span className="inline-flex items-center gap-1">
+                      <Lock size={11} /> {c.coinsRequired} coins
+                    </span>
+                  )}
+                </span>
+                <span>{c.publishedAt ? formatRelativeDate(c.publishedAt) : "Draft"}</span>
+              </div>
+            </div>
+            <Link
+              href={`/write/${bookId}/editor?chapterId=${c._id}`}
+              aria-label={`Edit ${c.title}`}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-hairline px-3 py-1.5 font-sans text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+            >
+              <Pencil size={12} /> Edit
+            </Link>
+          </div>
+        ))}
+      </div>
+
       {totalPages > 1 && (
         <div className="mt-3 flex items-center justify-center gap-1">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
             aria-label="Previous page"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-hairline text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-hairline text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
           >
             <ChevronLeft size={14} />
           </button>
 
-          {Array.from({ length: totalPages }).map((_, i) => {
-            const pageNum = i + 1;
-            return (
-              <button
-                key={pageNum}
-                onClick={() => setPage(pageNum)}
-                className={`h-8 w-8 rounded-full font-sans text-xs font-medium transition ${
-                  pageNum === currentPage
-                    ? "bg-accent text-accent-ink"
-                    : "border border-hairline text-ink-muted hover:border-accent hover:text-accent"
-                }`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
+          {/* Numbered pages — sm and up. On mobile a long run of page buttons
+              (e.g. 8+ chapters worth of pages) would overflow, so it collapses
+              to a simple "Page X of Y" label instead. */}
+          <div className="hidden items-center gap-1 sm:flex">
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const pageNum = i + 1;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`h-8 w-8 rounded-full font-sans text-xs font-medium transition ${
+                    pageNum === currentPage
+                      ? "bg-accent text-accent-ink"
+                      : "border border-hairline text-ink-muted hover:border-accent hover:text-accent"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          <span className="px-2 font-sans text-xs font-medium text-ink-muted sm:hidden">
+            Page {currentPage} of {totalPages}
+          </span>
 
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
             aria-label="Next page"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-hairline text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-hairline text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
           >
             <ChevronRight size={14} />
           </button>

@@ -219,7 +219,7 @@ function AccountMenu() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Account"
-        className="hidden cursor-pointer h-9 w-9 items-center justify-center rounded-full lg:flex"
+        className="hidden cursor-pointer  items-center justify-center rounded-full lg:flex"
       >
         {isLoggedIn ? (
           <Avatar avatarUrl={snap.avatarUrl} name={snap.displayName || snap.username} size={40} />

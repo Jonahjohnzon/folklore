@@ -160,12 +160,12 @@ export default function NotificationsPage() {
   }, [visibleItems]);
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-4xl px-4 py-6 sm:py-8 sm:px-6">
       <Link href="/" className="mb-5 flex items-center gap-1.5 font-sans text-sm font-medium text-ink-muted hover:text-ink">
         <ArrowLeft size={15} /> Back
       </Link>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-ink">Notifications</h1>
           {unreadCount > 0 && (
@@ -174,41 +174,43 @@ export default function NotificationsPage() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllRead}
-              disabled={markingAll}
-              className="flex items-center gap-1.5 rounded-full border border-hairline px-3.5 py-2 font-sans text-xs font-semibold text-ink transition hover:border-accent/50 disabled:opacity-50"
-            >
-              <CheckCheck size={14} />
-              {markingAll ? "Marking…" : "Mark all read"}
-            </button>
-          )}
-          {items.length > 0 && (
-            <button
-              onClick={handleClearAllClick}
-              disabled={clearing}
-              className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 font-sans text-xs font-semibold transition disabled:opacity-50 ${
-                confirmingClear
-                  ? "border-red-500/60 bg-red-500/10 text-red-500"
-                  : "border-hairline text-ink-muted hover:border-red-500/40 hover:text-red-500"
-              }`}
-            >
-              <Trash2 size={14} />
-              {confirmingClear ? "Confirm clear?" : "Clear all"}
-            </button>
-          )}
-        </div>
+        {(unreadCount > 0 || items.length > 0) && (
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                disabled={markingAll}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-hairline px-3.5 py-2.5 font-sans text-xs font-semibold text-ink transition active:scale-[0.97] active:bg-surface sm:hover:border-accent/50 sm:flex-none sm:py-2 disabled:opacity-50"
+              >
+                <CheckCheck size={14} />
+                {markingAll ? "Marking…" : "Mark all read"}
+              </button>
+            )}
+            {items.length > 0 && (
+              <button
+                onClick={handleClearAllClick}
+                disabled={clearing}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3.5 py-2.5 font-sans text-xs font-semibold transition active:scale-[0.97] sm:flex-none sm:py-2 disabled:opacity-50 ${
+                  confirmingClear
+                    ? "border-red-500/60 bg-red-500/10 text-red-500"
+                    : "border-hairline text-ink-muted sm:hover:border-red-500/40 sm:hover:text-red-500"
+                }`}
+              >
+                <Trash2 size={14} />
+                {confirmingClear ? "Confirm clear?" : "Clear all"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {items.length > 0 && (
-        <div className="mb-4 flex gap-1.5">
+        <div className="mb-4 flex gap-1.5 overflow-x-auto">
           {(["all", "unread"] as FilterMode[]).map((mode) => (
             <button
               key={mode}
               onClick={() => setFilter(mode)}
-              className={`rounded-full px-3.5 py-1.5 font-sans text-xs font-semibold transition ${
+              className={`shrink-0 rounded-full px-3.5 py-1.5 font-sans text-xs font-semibold transition ${
                 filter === mode
                   ? "bg-ink text-bg"
                   : "text-ink-muted hover:bg-surface-raised"
@@ -264,38 +266,42 @@ export default function NotificationsPage() {
                   {group}
                 </div>
               )}
-              <Link
-                href={item.link}
-                onClick={() => handleItemClick(item)}
-                className={`group/notif relative flex items-start gap-3 px-4 py-4 font-sans text-sm transition-all duration-200 hover:bg-bg ${
+              <div
+                className={`group/notif relative transition-all duration-200 ${
                   i !== grouped.length - 1 ? "border-b border-hairline" : ""
                 } ${item.read ? "" : "bg-accent/5"} ${
                   removingIds.has(item.id) ? "-translate-x-2 opacity-0" : "opacity-100"
                 }`}
               >
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg text-base">
-                  {NOTIFICATION_ICONS[item.type] ?? "🔔"}
-                </span>
-                <div className="min-w-0 flex-1 pr-6">
-                  <p className={item.read ? "text-ink-muted" : "font-medium text-ink"}>{item.message}</p>
-                  <p className="mt-1 text-xs text-ink-muted">
-                    {new Date(item.createdAt).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-                {!item.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" aria-label="Unread" />}
+                <Link
+                  href={item.link}
+                  onClick={() => handleItemClick(item)}
+                  className="flex items-start gap-3 px-4 py-4 pr-11 font-sans text-sm active:bg-bg sm:hover:bg-bg"
+                >
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg text-base">
+                    {NOTIFICATION_ICONS[item.type] ?? "🔔"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={item.read ? "text-ink-muted" : "font-medium text-ink"}>{item.message}</p>
+                    <p className="mt-1 text-xs text-ink-muted">
+                      {new Date(item.createdAt).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  {!item.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" aria-label="Unread" />}
+                </Link>
                 <button
                   onClick={(e) => handleDelete(e, item)}
                   aria-label="Delete notification"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-ink-muted opacity-0 transition hover:bg-red-500/10 hover:text-red-500 focus-visible:opacity-100 group-hover/notif:opacity-100"
+                  className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-muted opacity-40 transition active:scale-90 active:bg-red-500/10 active:text-red-500 active:opacity-100 sm:opacity-0 sm:hover:bg-red-500/10 sm:hover:text-red-500 sm:group-hover/notif:opacity-100 sm:focus-visible:opacity-100"
                 >
-                  <X size={14} />
+                  <X size={15} />
                 </button>
-              </Link>
+              </div>
             </div>
           ))}
       </div>
@@ -305,7 +311,7 @@ export default function NotificationsPage() {
           <button
             onClick={loadMore}
             disabled={loadingMore}
-            className="flex items-center gap-2 rounded-full border border-hairline px-5 py-2.5 font-sans text-sm font-medium text-ink transition hover:border-accent/50 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-hairline px-5 py-3 font-sans text-sm font-medium text-ink transition active:scale-[0.98] active:bg-surface sm:w-auto sm:py-2.5 sm:hover:border-accent/50 disabled:opacity-50"
           >
             {loadingMore ? (
               <>
@@ -319,7 +325,7 @@ export default function NotificationsPage() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-ink px-4 py-2.5 font-sans text-xs font-semibold text-bg shadow-lg">
+        <div className="fixed left-1/2 z-50 -translate-x-1/2 rounded-full bg-ink px-4 py-2.5 font-sans text-xs font-semibold text-bg shadow-lg bottom-[calc(1.5rem+env(safe-area-inset-bottom))]">
           {toast}
         </div>
       )}

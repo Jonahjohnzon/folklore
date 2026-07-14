@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 import { Types } from "mongoose";
 import { connectToDatabase } from "@/app/api/lib/db/connect";

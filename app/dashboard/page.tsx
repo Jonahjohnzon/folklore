@@ -179,7 +179,7 @@ export default function DashboardPage() {
             </Link>
             <div>
               <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Creator dashboard</p>
-              <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Your books at a glance</h1>
+              <h1 className="font-display text-sm font-bold text-ink sm:text-3xl">Your books at a glance</h1>
             </div>
           </div>
 

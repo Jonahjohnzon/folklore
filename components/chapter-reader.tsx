@@ -140,6 +140,7 @@ export function ChapterReader({
     let cancelled = false;
     CommentService.getCounts(chapter._id)
       .then(({ data }) => {
+        console.log(data)
         if (!cancelled) setCommentCounts(data.counts);
       })
       .catch(() => {});

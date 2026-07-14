@@ -5,8 +5,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ChapterParagraph } from "@/components/chapter-paragraph";
 import { SheetOpeningRule, SHEET_PADDING, SHEET_RADIUS } from "@/lib/sheet-surface";
 import { usePaginatedBlocks } from "@/lib/reader-pagination";
-import { hasSeenSwipeOnboarding, markSwipeOnboardingSeen } from "@/lib/reader-swipe-onboarding";
-import { SwipeOnboardingHint } from "@/components/reader-swipe-onboarding";
 
 // Short chapters just render as one continuous sheet — no point paginating
 // something that's already a single screenful.
@@ -69,11 +67,6 @@ function PagedSheet({
   const measureRef = useRef<HTMLDivElement>(null);
   const [pageHeight, setPageHeight] = useState(0);
   const [current, setCurrent] = useState(0);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
-
-  const dragState = useRef({ startX: 0, dx: 0, dragging: false });
 
   // Bigger fonts → taller lines → more rounding slack needed between the
   // hidden measurement sandbox and the real render. Scale the safety
@@ -100,56 +93,12 @@ function PagedSheet({
     if (ready) setCurrent((c) => Math.min(c, Math.max(0, pages.length - 1)));
   }, [ready, pages.length]);
 
-  useEffect(() => {
-    if (ready && pages.length > 1 && !hasSeenSwipeOnboarding()) {
-      const t = setTimeout(() => setShowOnboarding(true), 500);
-      return () => clearTimeout(t);
-    }
-  }, [ready, pages.length]);
-
-  const dismissOnboarding = useCallback(() => {
-    setShowOnboarding(false);
-    markSwipeOnboardingSeen();
-  }, []);
-
   const goTo = useCallback(
     (index: number) => {
       setCurrent(Math.min(Math.max(index, 0), pages.length - 1));
-      if (showOnboarding) dismissOnboarding();
     },
-    [pages.length, showOnboarding, dismissOnboarding]
+    [pages.length]
   );
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    dragState.current = { startX: e.clientX, dx: 0, dragging: true };
-    setIsDragging(true);
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    const ds = dragState.current;
-    if (!ds.dragging) return;
-    const dx = e.clientX - ds.startX;
-    ds.dx = dx;
-    const atStart = current === 0 && dx > 0;
-    const atEnd = current === pages.length - 1 && dx < 0;
-    setDragOffset(atStart || atEnd ? dx * 0.35 : dx);
-  };
-
-  const endDrag = () => {
-    const ds = dragState.current;
-    if (!ds.dragging) return;
-    const frameWidth = frameRef.current?.clientWidth ?? 1;
-    const threshold = frameWidth * 0.18;
-
-    if (ds.dx <= -threshold && current < pages.length - 1) goTo(current + 1);
-    else if (ds.dx >= threshold && current > 0) goTo(current - 1);
-    else if (showOnboarding) dismissOnboarding();
-
-    dragState.current = { startX: 0, dx: 0, dragging: false };
-    setIsDragging(false);
-    setDragOffset(0);
-  };
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -161,7 +110,7 @@ function PagedSheet({
   }, [current, goTo]);
 
   const pageWidthPct = pages.length > 0 ? 100 / pages.length : 100;
-  const trackTransform = `translateX(calc(${-current * pageWidthPct}% + ${dragOffset}px))`;
+  const trackTransform = `translateX(-${current * pageWidthPct}%)`;
 
   return (
     <div
@@ -174,15 +123,10 @@ function PagedSheet({
       <div ref={measureRef} className="pointer-events-none absolute inset-x-0 top-0 h-0 overflow-hidden opacity-0" aria-hidden />
 
       {/* group/page scopes the chevron hover so it doesn't leak into per-block group/para hovers below */}
-    <div
-      ref={frameRef}
-      className="group/page relative min-h-360 max-h-450 w-full touch-pan-y select-none overflow-hidden pb-32 pt-10 lg:min-h-180 lg:max-h-225"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-      onPointerLeave={(e) => { if (e.pointerType !== "touch") endDrag(); }}
-    >
+      <div
+        ref={frameRef}
+        className="group/page relative min-h-360 max-h-450 w-full overflow-hidden pb-32 pt-10 lg:min-h-180 lg:max-h-225"
+      >
         {!ready ? (
           <div className="h-full animate-pulse" />
         ) : (
@@ -191,13 +135,13 @@ function PagedSheet({
             style={{
               width: `${pages.length * 100}%`,
               transform: trackTransform,
-              transition: isDragging ? "none" : "transform 420ms cubic-bezier(0.22, 1, 0.36, 1)",
+              transition: "transform 420ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
             {pages.map((indices, pageIdx) => (
               <div
                 key={pageIdx}
-                className="h-full shrink-0 overflow-hidden pb-8"
+                className="h-full shrink-0 overflow-hidden pb-10 sm:pb-8"
                 style={{ width: `${pageWidthPct}%` }}
               >
                 {indices.map((blockIdx) => (
@@ -216,37 +160,34 @@ function PagedSheet({
             ))}
           </div>
         )}
-
-        <SwipeOnboardingHint visible={showOnboarding} onDismiss={dismissOnboarding} />
-
-
       </div>
-              {/* Desktop-only chevrons — mobile relies entirely on the drag above */}
-       {ready && pages.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="Previous page"
-                    onClick={() => goTo(current - 1)}
-                    disabled={current === 0}
-                    className="absolute -left-4 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full border border-hairline bg-surface/90 p-2 text-ink-muted opacity-100 shadow-sm transition-opacity duration-200 hover:text-accent disabled:pointer-events-none disabled:opacity-0 lg:flex lg:group-hover/page:opacity-100"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Next page"
-                    onClick={() => goTo(current + 1)}
-                    disabled={current === pages.length - 1}
-                    className="absolute -right-4 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full border border-hairline bg-surface/90 p-2 text-ink-muted opacity-100 shadow-sm transition-opacity duration-200 hover:text-accent disabled:pointer-events-none disabled:opacity-0 lg:flex lg:group-hover/page:opacity-100"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </>
-              )}
+
+      {/* Chevron nav — now the only way to turn pages, on every screen size */}
+      {ready && pages.length > 1 && (
+        <>
+          <button
+            type="button"
+            aria-label="Previous page"
+            onClick={() => goTo(current - 1)}
+            disabled={current === 0}
+            className="absolute left-1  bottom-1 flex -translate-y-1/2 items-center justify-center rounded-full border border-accent bg-surface/90 p-2 text-ink-muted shadow-sm transition-colors hover:text-accent disabled:pointer-events-none disabled:opacity-0 lg:-left-4"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            type="button"
+            aria-label="Next page"
+            onClick={() => goTo(current + 1)}
+            disabled={current === pages.length - 1}
+            className="absolute right-1 bottom-1  flex -translate-y-1/2 items-center justify-center rounded-full border border-accent bg-surface/90 p-2 text-ink-muted shadow-sm transition-colors hover:text-accent disabled:pointer-events-none disabled:opacity-0 lg:-right-4"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </>
+      )}
 
       {ready && pages.length > 1 && (
-        <div className="mt-3 flex items-center justify-center gap-1.5">
+        <div className="mt-16 sm:mt-3 mb-5 flex items-center justify-center gap-1.5">
           {pages.map((_, i) => (
             <button
               key={i}

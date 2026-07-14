@@ -17,7 +17,7 @@ function removeFontFamily(html: string) {
 }
 
 const LONG_PRESS_MS = 500;
-const MOVE_CANCEL_PX = 10;
+const MOVE_CANCEL_PX = 24;
 
 export function ChapterParagraph({
   html,
@@ -40,50 +40,59 @@ export function ChapterParagraph({
   const finalHtml = isFirst ? withDropCap(rendered) : rendered;
 
   const [revealed, setRevealed] = useState(false);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
-  const touchStart = useRef({ x: 0, y: 0 });
+  const start = useRef({ x: 0, y: 0 });
 
-  function clearLongPress() {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
+  function clearTimer() {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
     }
   }
 
-  function onTouchStart(e: React.TouchEvent) {
-    const t = e.touches[0];
-    touchStart.current = { x: t.clientX, y: t.clientY };
+  function onPointerDown(e: React.PointerEvent) {
+    // Desktop already has hover-to-reveal; only run the press gesture for touch/pen.
+    if (e.pointerType === "mouse") return;
+    start.current = { x: e.clientX, y: e.clientY };
     longPressFired.current = false;
-    clearLongPress();
-    longPressTimer.current = setTimeout(() => {
+    clearTimer();
+    timer.current = setTimeout(() => {
       longPressFired.current = true;
-      // Haptic-ish confirmation isn't available on web, so just open directly.
       onOpenComments(index);
     }, LONG_PRESS_MS);
   }
 
-  function onTouchMove(e: React.TouchEvent) {
-    const t = e.touches[0];
-    const dx = Math.abs(t.clientX - touchStart.current.x);
-    const dy = Math.abs(t.clientY - touchStart.current.y);
-    if (dx > MOVE_CANCEL_PX || dy > MOVE_CANCEL_PX) clearLongPress();
+  function onPointerMove(e: React.PointerEvent) {
+    if (e.pointerType === "mouse" || !timer.current) return;
+    const dx = Math.abs(e.clientX - start.current.x);
+    const dy = Math.abs(e.clientY - start.current.y);
+    if (dx > MOVE_CANCEL_PX || dy > MOVE_CANCEL_PX) clearTimer();
   }
 
-  function onTouchEnd() {
-    clearLongPress();
-    // Long press already handled opening — don't also toggle reveal.
-    if (longPressFired.current) return;
+  function onPointerUp(e: React.PointerEvent) {
+    if (e.pointerType === "mouse") return;
+    clearTimer();
+  }
+
+  function onClick(e: React.MouseEvent) {
+    // Suppress the reveal-toggle when this click follows a long-press-open,
+    // since touch devices fire a click right after touchend/pointerup too.
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
     setRevealed((r) => !r);
   }
 
   return (
     <div
       className="group/para relative -mx-4 mb-0 rounded-lg px-4 py-0.5 transition active:bg-black/5 lg:hover:bg-black/2.5 sm:-mx-6 sm:px-6 last:mb-0"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      onTouchCancel={clearLongPress}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={clearTimer}
+      onClick={onClick}
     >
       <div
         className={`prose-block px-8 ${isFirst ? "cr-first-block" : ""}`}
@@ -91,7 +100,10 @@ export function ChapterParagraph({
         style={{ fontFamily: fontStack }}
       />
       <button
-        onClick={() => onOpenComments(index)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenComments(index);
+        }}
         aria-label={commentCount > 0 ? `View ${commentCount} comments` : "Add a comment"}
         className={`absolute right-6 top-1 z-10 flex touch-manipulation items-center gap-1 rounded-full border px-2.5 py-1.5 font-sans text-[11px] transition lg:py-1 ${
           commentCount > 0

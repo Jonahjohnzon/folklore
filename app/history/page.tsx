@@ -25,13 +25,13 @@ export default function ReadingHistoryPage() {
   const groups = groupHistoryByDate(entries);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+    <main className="mx-auto max-w-3xl px-3 py-4 sm:px-6 sm:py-6">
       <Link href="/" replace className="mb-4 inline-flex items-center gap-1.5 font-sans text-sm text-ink-muted hover:text-ink">
         <ArrowLeft size={15} /> Home
       </Link>
 
-      <h1 className="mb-1 font-display text-2xl font-bold text-ink sm:text-3xl">Reading history</h1>
-      <p className="mb-6 font-sans text-sm text-ink-muted">
+      <h1 className="mb-1 font-display text-xl font-bold text-ink sm:text-2xl md:text-3xl">Reading history</h1>
+      <p className="mb-5 font-sans text-sm text-ink-muted sm:mb-6">
         {"Every chapter you've opened, regardless of what shelf the book is on."}
       </p>
 
@@ -42,11 +42,11 @@ export default function ReadingHistoryPage() {
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-16 text-center">
+        <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
           <p className="font-sans text-sm text-ink-muted">No reading activity yet.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5 sm:gap-6">
           {groups.map((group) => (
             <div key={group.label}>
               <h2 className="mb-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">

@@ -403,32 +403,37 @@ async function handleLocksChange(next: CreatorLocks) {
   }, []);
 
   return (
-    <main className="mx-auto max-w-375 px-4 py-6 sm:px-6">
-      {/* Obvious success toast — top-of-viewport, fixed, auto-dismisses */}
+    <main className="mx-auto max-w-375 px-3 py-4 sm:px-6 sm:py-6">
+      {/* Obvious success toast — top-of-viewport, fixed, auto-dismisses.
+          Constrained width + inset padding so it never overflows a narrow screen. */}
       {toast && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed left-1/2 top-6 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-top-2"
+          className="fixed left-1/2 top-3 z-50 w-[calc(100%-1.5rem)] max-w-xs -translate-x-1/2 sm:top-6 sm:w-auto sm:max-w-none animate-in fade-in slide-in-from-top-2"
         >
-          <div className="flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-lg shadow-emerald-600/30">
-            <CheckCircle2 size={18} />
-            {toast === "published" ? "Chapter published!" : "Chapter saved!"}
+          <div className="flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 font-sans text-sm font-semibold text-white shadow-lg shadow-emerald-600/30 sm:px-5">
+            <CheckCircle2 size={18} className="shrink-0" />
+            <span className="truncate">{toast === "published" ? "Chapter published!" : "Chapter saved!"}</span>
           </div>
         </div>
       )}
 
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      {/* Header: title stacks above the action row on mobile, sits side-by-side on larger screens */}
+      <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-sans text-xs font-medium uppercase tracking-wide text-accent">
             {book?.title ?? "Loading…"}
           </p>
-          <h1 className="mt-0.5 font-display text-2xl font-bold text-ink">
+          <h1 className="mt-0.5 font-display text-xl font-bold text-ink sm:text-2xl">
             {chapterId ? "Edit chapter" : "New chapter"}
           </h1>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="font-sans text-xs text-ink-muted">{savedLabel()}</span>
+
+        {/* Action row: horizontally scrollable on narrow screens instead of wrapping/overflowing,
+            with icon-only buttons below `sm` to keep everything reachable in one thumb-swipe. */}
+        <div className="-mx-3 flex items-center gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+          <span className="shrink-0 whitespace-nowrap font-sans text-xs text-ink-muted">{savedLabel()}</span>
           <input
             ref={fileInputRef}
             type="file"
@@ -439,33 +444,37 @@ async function handleLocksChange(next: CreatorLocks) {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
-            className="flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-4 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent disabled:opacity-50"
+            aria-label="Import file"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent disabled:opacity-50 sm:px-4"
           >
             {importing ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
-            {importing ? "Importing…" : "Import file"}
+            <span className="hidden sm:inline">{importing ? "Importing…" : "Import file"}</span>
           </button>
           <button
             onClick={handleNextChapter}
-            className="flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-4 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent"
+            aria-label="Next chapter"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent sm:px-4"
           >
             <FilePlus size={14} />
-            Next chapter
+            <span className="hidden sm:inline">Next chapter</span>
           </button>
           <button
             onClick={handleSaveDraft}
             disabled={saving || publishing}
-            className="flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-4 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent disabled:opacity-50"
+            aria-label="Save draft"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent disabled:opacity-50 sm:px-4"
           >
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            Save draft
+            <span className="hidden sm:inline">Save draft</span>
           </button>
           <button
             onClick={handlePublish}
             disabled={saving || publishing}
-            className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-sans text-sm font-semibold text-accent-ink shadow-sm transition hover:opacity-90 hover:shadow-md disabled:opacity-50"
+            aria-label="Publish"
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-3 py-2 font-sans text-sm font-semibold text-accent-ink shadow-sm transition hover:opacity-90 hover:shadow-md disabled:opacity-50 sm:px-4"
           >
             {publishing ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
-            Publish
+            <span className="hidden sm:inline">Publish</span>
           </button>
         </div>
       </div>
@@ -486,7 +495,7 @@ async function handleLocksChange(next: CreatorLocks) {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_300px] lg:gap-6">
         {/* Editor */}
         <div className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
           <EditorToolbar
@@ -499,19 +508,20 @@ async function handleLocksChange(next: CreatorLocks) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Chapter title"
-            className="w-full bg-transparent px-5 pt-5 font-display text-2xl font-semibold text-ink placeholder:text-ink-muted/50 focus:outline-none"
+            className="w-full bg-transparent px-4 pt-4 font-display text-xl font-semibold text-ink placeholder:text-ink-muted/50 focus:outline-none sm:px-5 sm:pt-5 sm:text-2xl"
            />
-          <p className="px-5 pt-1 font-sans text-[11px] text-ink-muted">Title and content are required to save.</p>
+          <p className="px-4 pt-1 font-sans text-[11px] text-ink-muted sm:px-5">Title and content are required to save.</p>
 
-          {/* Page canvas — a neutral tray the "sheet" sits in, like a doc editor */}
-          <div className="overflow-x-auto bg-ink/[0.035] px-4 py-10 sm:px-10">
+          {/* Page canvas — a neutral tray the "sheet" sits in, like a doc editor.
+              Padding shrinks on mobile so the sheet keeps as much usable width as possible. */}
+          <div className="overflow-x-auto bg-ink/[0.035] px-2 py-6 sm:px-10 sm:py-10">
             <div
               ref={sheetRef}
-              className="prose-reader relative mx-auto min-h-275 w-full max-w-210 rounded-sm border p-12 text-base shadow-lg sm:p-16"
+              className="prose-reader relative mx-auto min-h-125 w-full max-w-210 rounded-sm border p-5 text-base shadow-lg sm:min-h-275 sm:p-12 lg:p-16"
               style={getSheetSurfaceStyle(sheetTheme)}
             >
               <SheetOpeningRule color={sheetTheme.textColor} />
-              <EditorContent editor={editor} className="relative z-0 min-h-250" />
+              <EditorContent editor={editor} className="relative z-0 min-h-125 sm:min-h-250" />
             </div>
           </div>
         </div>

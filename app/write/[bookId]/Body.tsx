@@ -115,12 +115,12 @@ async function handleRestore() {
         </div>
       )}
 
-      <div className="mt-4 flex justify-end gap-2">
+      <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         {isRemoved ? (
           <button
             onClick={handleRestore}
             disabled={restoring}
-            className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2.5 font-sans text-sm font-semibold text-accent-ink transition hover:opacity-90 disabled:opacity-60"
+            className="flex items-center justify-center gap-1.5 rounded-full bg-accent px-4 py-2.5 font-sans text-sm font-semibold text-accent-ink transition hover:opacity-90 disabled:opacity-60"
           >
             {restoring ? <Loader2 size={15} className="animate-spin" /> : <RotateCcw size={15} />}
             {restoring ? "Restoring…" : "Restore book"}
@@ -129,19 +129,19 @@ async function handleRestore() {
           <>
             <button
               onClick={() => setEditOpen(true)}
-              className="flex items-center gap-1.5 rounded-full border border-hairline px-4 py-2.5 font-sans text-sm font-medium text-ink transition hover:border-accent hover:text-accent"
+              className="flex items-center justify-center gap-1.5 rounded-full border border-hairline px-4 py-2.5 font-sans text-sm font-medium text-ink transition hover:border-accent hover:text-accent"
             >
               <Pencil size={15} /> Edit book info
             </button>
             <button
               onClick={() => setDeleteOpen(true)}
-              className="flex items-center gap-1.5 rounded-full border border-red-200 px-4 py-2.5 font-sans text-sm font-medium text-red-600 transition hover:border-red-400 hover:bg-red-50"
+              className="flex items-center justify-center gap-1.5 rounded-full border border-red-200 px-4 py-2.5 font-sans text-sm font-medium text-red-600 transition hover:border-red-400 hover:bg-red-50"
             >
               <Trash2 size={15} /> Delete
             </button>
             <Link
               href={`/write/${book._id}/editor`}
-              className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2.5 font-sans text-sm font-semibold text-accent-ink transition hover:opacity-90"
+              className="flex items-center justify-center gap-1.5 rounded-full bg-accent px-4 py-2.5 font-sans text-sm font-semibold text-accent-ink transition hover:opacity-90"
             >
               <PenSquare size={15} /> New chapter
             </Link>
