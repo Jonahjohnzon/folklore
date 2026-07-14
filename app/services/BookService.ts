@@ -108,7 +108,10 @@ export interface BookDTO {
   status: "draft" | "ongoing" | "completed" | "hiatus" | "removed";
   author: BookAuthorDTO;
 }
-
+export interface PublicBookSlugDTO {
+  slug: string;
+  updatedAt: string;
+}
 
 export type UpdateBookBody = Partial<CreateBookBody>;
 
@@ -175,4 +178,8 @@ export const BookService = {
       formData
     );
   },
+  listAllSlugs: () =>
+    api.get<{ success: boolean; data: { books: PublicBookSlugDTO[] } }>(
+      "/api/books/public/slugs"
+    ),
 };

@@ -17,7 +17,7 @@ export const PAGE_SOUNDS: PlatformSound[] = [
     id: "page-turn",
     label: "Page turn",
     category: "impact",
-    url: "https://res.cloudinary.com/luzebox/video/upload/v1784068381/sound/freesound_community-pageturn-102978_vsdnvo.mp3",
+    url: "https://res.cloudinary.com/luzebox/video/upload/v1784070920/sound/page-flip-6_ooqp5s.wav",
   },
 ];
 

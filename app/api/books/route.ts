@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/books/route.ts
 import { withAuth } from "@/app/api/auth/withAuth";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
