@@ -49,6 +49,8 @@ export default function BookDetailPage() {
   const [isAuthor, setIsAuthor] = useState(false);
   const router = useRouter();
   const { _id: userId, authChecked } = useSnapshot(store);
+  const CHAPTERS_PER_PAGE = 10;
+  const [chapterPage, setChapterPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +83,11 @@ export default function BookDetailPage() {
       cancelled = true;
     };
   }, [params.slug]);
+
+  useEffect(() => {
+  setChapterPage(1);
+  }, [params.slug]);
+
 
   useEffect(() => {
     CoinService.getBalance()
@@ -187,6 +194,12 @@ export default function BookDetailPage() {
       setTimeout(() => setShareCopied(false), 2000);
     }
   }
+
+  const totalChapterPages = Math.max(1, Math.ceil(chapters.length / CHAPTERS_PER_PAGE));
+    const pagedChapters = chapters.slice(
+      (chapterPage - 1) * CHAPTERS_PER_PAGE,
+      chapterPage * CHAPTERS_PER_PAGE
+    );
 
   if (loading) {
     return (
@@ -355,7 +368,7 @@ export default function BookDetailPage() {
                   }}
                 />
               )}
-              {chapters.map((c) => {
+              {pagedChapters.map((c) => {
                 const locked = !c.unlocked;
 
                 const commonInner = (
@@ -407,6 +420,43 @@ export default function BookDetailPage() {
                 );
               })}
             </div>
+
+            {chapters.length > CHAPTERS_PER_PAGE && (
+                  <div className="mt-3 flex items-center justify-center gap-1">
+                    <button
+                      onClick={() => setChapterPage((p) => Math.max(1, p - 1))}
+                      disabled={chapterPage === 1}
+                      className="rounded-full border border-hairline px-3 py-1.5 font-sans text-xs font-medium text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
+                    >
+                      Prev
+                    </button>
+
+                    {Array.from({ length: totalChapterPages }).map((_, i) => {
+                      const page = i + 1;
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setChapterPage(page)}
+                          className={`h-8 w-8 rounded-full font-sans text-xs font-medium transition ${
+                            page === chapterPage
+                              ? "bg-accent text-accent-ink"
+                              : "border border-hairline text-ink-muted hover:border-accent hover:text-accent"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      onClick={() => setChapterPage((p) => Math.min(totalChapterPages, p + 1))}
+                      disabled={chapterPage === totalChapterPages}
+                      className="rounded-full border border-hairline px-3 py-1.5 font-sans text-xs font-medium text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
 
             {/* Reviews */}
             <h2 className="mt-10 font-display text-xl font-semibold text-ink">Reader reviews</h2>
