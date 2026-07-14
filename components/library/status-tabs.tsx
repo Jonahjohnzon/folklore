@@ -20,7 +20,7 @@ export function StatusTabs({
   onChange: (status: LibraryStatus | "all") => void;
 }) {
   return (
-    <div className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto scroll-px-3 pb-1">
+    <div className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto scrollbar-none scroll-px-3 pb-1">
       {TABS.map((tab) => (
         <button
           key={tab.id}
