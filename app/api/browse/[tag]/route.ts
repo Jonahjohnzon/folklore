@@ -34,11 +34,16 @@ const SORT_MAP: Record<(typeof SORT_OPTIONS)[number], Record<string, 1 | -1>> = 
 
 // Virtual genres: slugs that don't correspond to a real Tag document, but map
 // to a canned query instead.
-// "new"      = latest published books, no tag filter.
-// "trending" = top books by totalReads, no tag filter.
-const VIRTUAL_TAGS: Record<string, { name: string; sort: (typeof SORT_OPTIONS)[number] }> = {
+// "new"       = latest published books, no tag filter.
+// "trending"  = top books by totalReads, no tag filter.
+// "completed" = latest finished books, no tag filter, status forced to "completed".
+const VIRTUAL_TAGS: Record<
+  string,
+  { name: string; sort: (typeof SORT_OPTIONS)[number]; forceStatus?: (typeof STATUS_FILTERS)[number] }
+> = {
   new: { name: "New Releases", sort: "newest" },
   trending: { name: "Trending", sort: "trending" },
+  completed: { name: "Completed", sort: "newest", forceStatus: "completed" },
 };
 
 // Public route: browsing by genre doesn't require a signed-in user.
@@ -55,12 +60,15 @@ export async function GET(
     if (!parsed.success) {
       throw new ValidationError("Invalid query params", parsed.error.flatten().fieldErrors);
     }
-    const { page, limit, status, mature } = parsed.data;
+    const { page, limit, mature } = parsed.data;
 
     const virtual = VIRTUAL_TAGS[tagSlug];
     // Virtual tags force their own sort (e.g. "new" always sorts newest-first,
     // "trending" always sorts by totalReads), ignoring whatever ?sort= was passed.
     const sort = virtual ? virtual.sort : parsed.data.sort;
+    // Some virtual tags (e.g. "completed") also force the status filter,
+    // ignoring whatever ?status= was passed.
+    const status = virtual?.forceStatus ?? parsed.data.status;
 
     let tagData: { _id: unknown; name: string; slug: string } | null = null;
     if (!virtual) {

@@ -16,7 +16,7 @@ export interface RecommendedBookDTO {
 }
 
 export const RecommendationService = {
-  getForBook: (bookId: string, limit = 10) =>
+  getForBook: (bookId: string, limit = 3) =>
     api.get<{ success: boolean; data: { books: RecommendedBookDTO[] } }>(
       `/api/books/${bookId}/recommendations?limit=${limit}`
     ),
