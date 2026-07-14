@@ -10,7 +10,7 @@ import { ok, fail } from "@/app/api/response";
 import { dispatchNotification } from "@/app/api/lib/notifications/dispatch";
 import { PopulatedCommentDoc } from "@/app/api/lib/serialize-comment";
 
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 2; // was 10
 const MAX_PAGE_SIZE = 50;
 const MAX_CONTENT_LENGTH = 2000;
 
@@ -34,6 +34,11 @@ export const GET = withAuth(async (req, ctx) => {
 
   const userId = req.user?.sub;
 
+  // Resolve the book's author once per request to flag their comments.
+  const chapter = await Chapter.findById(chapterId).select("bookId").lean();
+  const book = chapter ? await Book.findById(chapter.bookId).select("authorId").lean() : null;
+  const authorId = book?.authorId ? String(book.authorId) : undefined;
+
   const [total, comments] = await Promise.all([
     Comment.countDocuments(filter),
     Comment.find(filter)
@@ -56,7 +61,7 @@ export const GET = withAuth(async (req, ctx) => {
   }
 
   return ok({
-    comments: comments.map((c) => serializeComment(c, likedIds)),
+    comments: comments.map((c) => serializeComment(c, likedIds, authorId)),
     page,
     limit,
     total,
@@ -178,5 +183,5 @@ export const POST = withAuth(async (req, ctx) => {
     }
   }
 
-  return ok({ comment: serializeComment(populatedObj, new Set()) });
+  return ok({ comment: serializeComment(populatedObj, new Set(), book?.authorId ? String(book.authorId) : undefined) });
 });

@@ -63,7 +63,7 @@ export function CommentItem({
   async function loadReplies(page: number) {
     setLoadingReplies(true);
     try {
-      const { data } = await CommentService.getCommentReplies(comment._id, page, 10);
+      const { data } = await CommentService.getCommentReplies(comment._id, page, 2);
       setReplies((prev) => (page === 1 ? data.replies ?? [] : [...prev, ...(data.replies ?? [])]));
       setRepliesHasMore(data.hasMore);
       setRepliesPage(page);
@@ -88,14 +88,20 @@ export function CommentItem({
   }
 
   return (
-    <div className={`flex gap-3 ${!isReply ? "border border-hairline bg-surface" : " bg-accent-ink"}  p-3 rounded-lg`} id={`comment-${comment._id}`}>
+    <div className={`comment-enter flex gap-3 ${!isReply ? "border border-hairline bg-surface" : " bg-accent-ink"} p-3 rounded-lg`}
+    id={`comment-${comment._id}`}>
       <Avatar name={comment.user?.name ?? "Reader"} url={comment.user?.avatarUrl ?? null} />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="font-sans text-sm font-semibold text-ink">{comment.user?.name ?? "Reader"}</span>
-          <span className="font-sans text-xs text-ink-muted">{formatTimeAgo(comment.createdAt)}</span>
-        </div>
+        <span className="font-sans text-sm font-semibold text-ink">{comment.user?.name ?? "Reader"}</span>
+        {comment.isAuthor && (
+          <span className="rounded-full bg-accent/15 px-1.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-accent">
+            Author
+          </span>
+        )}
+        <span className="font-sans text-xs text-ink-muted">{formatTimeAgo(comment.createdAt)}</span>
+      </div>
 
         <p className="mt-0.5 whitespace-pre-wrap font-sans text-sm text-ink">{comment.content}</p>
 
@@ -160,6 +166,21 @@ export function CommentItem({
           </div>
         )}
       </div>
+       <style jsx>{`
+        .comment-enter {
+          animation: comment-in 320ms ease-out;
+        }
+        @keyframes comment-in {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

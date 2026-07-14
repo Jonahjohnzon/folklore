@@ -50,7 +50,7 @@ export function ChapterParagraph({
 
   return (
     <div
-      className="group/para relative -mx-4 mb-0 select-none cursor-pointer rounded-lg px-4 py-0.5 transition active:bg-black/5 hover:bg-black/[0.025] sm:-mx-6 sm:px-6 last:mb-0"
+      className="group/para relative -mx-4 mb-0 select-none cursor-pointer rounded-lg px-4 py-0.5 transition active:bg-black/5 hover:bg-black/2.5 sm:-mx-6 sm:px-6 last:mb-0"
       onClick={() => setRevealed((r) => !r)}
     >
       <div

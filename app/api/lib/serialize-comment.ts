@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/lib/serialize-comment.ts (or wherever it lives) — add near the top
 import type { Types } from "mongoose";
 
@@ -26,7 +27,8 @@ export interface PopulatedCommentDoc {
 // Turns a lean/populated Comment mongoose doc into the DTO shape the
 // frontend expects. Kept in one place so the comments-list, replies-list,
 // and create-comment routes can't drift out of sync with each other.
-export function serializeComment(c: any, likedIds: Set<string>) {
+export function serializeComment(c: any, likedIds: Set<string>,authorId?: string) {
+  const userId = c.userId?._id ? String(c.userId._id) : String(c.userId)
   return {
     _id: String(c._id),
     chapterId: String(c.chapterId),
@@ -38,6 +40,7 @@ export function serializeComment(c: any, likedIds: Set<string>) {
     likedByMe: likedIds.has(String(c._id)),
     edited: Boolean(c.edited),
     createdAt: c.createdAt,
+    isAuthor: !!authorId && userId === authorId,
     user: c.userId
       ? {
           _id: String(c.userId._id ?? c.userId),

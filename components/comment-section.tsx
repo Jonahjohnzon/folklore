@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -38,7 +39,7 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
     else setLoadingMore(true);
 
     try {
-      const { data } = await CommentService.getChapterComments(chapterId, pageToLoad, 10);
+     const { data } = await CommentService.getChapterComments(chapterId, pageToLoad, 2);
       setComments((prev) => (pageToLoad === 1 ? data.comments ?? [] : [...prev, ...(data.comments ?? [])]));
       setTotal(data.total);
       setHasMore(data.hasMore);
@@ -123,12 +124,14 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
 
         {!loading && hasMore && !locating && (
           <button
-            onClick={() => load(page + 1)}
-            disabled={loadingMore}
-            className="self-start font-sans text-sm font-semibold text-accent hover:underline disabled:opacity-50"
-          >
+          onClick={() => load(page + 1)}
+          disabled={loadingMore}
+          className="self-start font-sans text-sm font-semibold text-accent transition-opacity duration-150 hover:underline disabled:opacity-50"
+        >
+          <span className="inline-block transition-opacity duration-150">
             {loadingMore ? "Loading…" : "Load more comments"}
-          </button>
+          </span>
+        </button>
         )}
       </div>
 

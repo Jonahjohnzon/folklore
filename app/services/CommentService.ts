@@ -16,6 +16,7 @@ export interface ParagraphCommentDTO {
   replyCount?: number;
   createdAt: string;
   updatedAt: string;
+  isAuthor: boolean;
 }
 
 export interface CreateCommentBody {
@@ -42,6 +43,7 @@ export interface CommentDTO {
   edited: boolean;
   createdAt: string;
   user: CommentUserDTO | null;
+  isAuthor: boolean;
 }
  
 // Kept for backward compatibility with existing usage (ParagraphCommentPanel).
@@ -98,7 +100,7 @@ export const CommentService = {
       `/api/books/chapters/${chapterId}/comments/${commentId}`
     ),
 
-  getChapterComments(chapterId: string, page = 1, limit = 10) {
+  getChapterComments(chapterId: string, page = 1, limit = 2) {
     return api.get<{data:PaginatedComments}>(`/api/chapters/${chapterId}/comments`, {
       params: { page, limit },
     });
@@ -111,7 +113,7 @@ export const CommentService = {
     });
   },
  
-  getCommentReplies(commentId: string, page = 1, limit = 10) {
+  getCommentReplies(commentId: string, page = 1, limit = 2) {
     return api.get<{data:PaginatedComments}>(`/api/comments/${commentId}/replies`, {
       params: { page, limit },
     });

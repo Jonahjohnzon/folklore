@@ -8,6 +8,7 @@ import { ok, fail } from "@/app/api/response";
 import { Chapter } from "@/app/api/lib/models/Chapter";
 import { ParagraphComment } from "@/app/api/lib/models/ParagraphComment";
 import { ChapterCommentCount } from "@/app/api/lib/models/ChapterCommentCount";
+import { Book } from "@/app/api/lib/models/Book";
 
 const createCommentSchema = z.object({
   paragraphIndex: z.number().int().min(0),
@@ -17,19 +18,21 @@ const createCommentSchema = z.object({
 
 // Shared shape for a populated user reference — either a hydrated doc or
 // just the raw ObjectId if population failed/was skipped somehow.
-function serializeComment(doc: any, viewerId?: string) {
+function serializeComment(doc: any, viewerId?: string, authorId?: string) {
   const user = doc.userId && typeof doc.userId === "object" ? doc.userId : null;
+  const userId = user ? user._id.toString() : doc.userId.toString();
 
   return {
-    id: doc._id.toString(),
+   id: doc._id.toString(),
     chapterId: doc.chapterId.toString(),
     paragraphIndex: doc.paragraphIndex,
-    userId: user ? user._id.toString() : doc.userId.toString(),
+    userId,
     username: user?.username ?? "Unknown",
     avatarUrl: user?.avatarUrl ?? null,
     body: doc.body,
     helpfulVotes: doc.helpfulVotes,
     lovedByMe: !!viewerId && (doc.lovedBy ?? []).some((id: Types.ObjectId) => id.toString() === viewerId),
+    isAuthor: !!authorId && userId === authorId, // <-- new
     parentId: doc.parentId ? doc.parentId.toString() : null,
     replyCount: typeof doc.replyCount === "number" ? doc.replyCount : undefined,
     createdAt: doc.createdAt,
@@ -59,6 +62,12 @@ export const GET = optionalAuth(async (req, ctx) => {
 
     const viewerId = req.user?.sub;
 
+    // Resolve the book's author so we can flag their comments.
+    const chapter = await Chapter.findById(chapterId).select("bookId").lean();
+    if (!chapter) return fail("Chapter not found");
+    const book = await Book.findById(chapter.bookId).select("authorId").lean();
+    const authorId = book?.authorId?.toString();
+
     const filter = { chapterId, paragraphIndex, parentId: { $exists: false } };
 
     const [comments, total] = await Promise.all([
@@ -84,8 +93,8 @@ export const GET = optionalAuth(async (req, ctx) => {
       replyCount: countByParent.get(c._id.toString()) ?? 0,
     }));
 
-    return ok({
-      comments: withCounts.map((c) => serializeComment(c, viewerId)),
+   return ok({
+      comments: withCounts.map((c) => serializeComment(c, viewerId, authorId)),
       total,
       hasMore: skip + comments.length < total,
     });

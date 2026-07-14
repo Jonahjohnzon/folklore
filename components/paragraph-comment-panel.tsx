@@ -83,8 +83,15 @@ function CommentRow({
       <div className="rounded-xl border border-hairline bg-bg p-3">
         <div className="flex items-center gap-2">
           <Avatar avatarUrl={comment.avatarUrl} name={comment.username} size={28} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-sans text-sm font-semibold text-ink">{comment.username}</p>
+         <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <p className="truncate font-sans text-sm font-semibold text-ink">{comment.username}</p>
+              {comment.isAuthor && (
+                <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-accent">
+                  Author
+                </span>
+              )}
+            </div>
             <p className="font-sans text-[11px] text-ink-muted">
               {timeAgo(comment.createdAt)}
               {wasEdited && " · edited"}
