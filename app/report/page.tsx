@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Flag, CheckCircle2, Loader2, Home } from "lucide-react";
 
 type ReportType = "book" | "chapter" | "comment" | "user" | "other";
@@ -47,10 +48,36 @@ const INITIAL_STATE: FormState = {
   email: "",
 };
 
-export default function ReportPage() {
+// Builds the content link + default report type from the query params a
+// "Report" button elsewhere in the app can deep-link with, e.g.
+// /report?bookSlug=littlebrother&chapterId=6a559add6ea3f309d7276091
+function prefillFromParams(bookSlug: string | null, chapterId: string | null) {
+  if (!bookSlug) return null;
+  const url = chapterId
+    ? `https://tipatale.com/book/${bookSlug}/chapter/${chapterId}`
+    : `https://tipatale.com/book/${bookSlug}`;
+  const type: ReportType = chapterId ? "chapter" : "book";
+  return { url, type };
+}
+
+function ReportForm() {
+  const searchParams = useSearchParams();
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+
+  // Runs on mount, and again if the query string itself changes (e.g.
+  // following one report-me link right after another without a full reload).
+  useEffect(() => {
+    const prefill = prefillFromParams(
+      searchParams.get("bookSlug"),
+      searchParams.get("chapterId")
+    );
+    if (prefill) {
+      setForm((f) => ({ ...f, url: prefill.url, type: prefill.type }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -230,6 +257,24 @@ export default function ReportPage() {
           For urgent safety issues involving a minor, also contact your local authorities directly.
         </p>
       </form>
+    </main>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary around any component that
+// calls it, or the page fails to statically render / errors in dev.
+export default function ReportPage() {
+  return (
+    <Suspense fallback={<ReportFormFallback />}>
+      <ReportForm />
+    </Suspense>
+  );
+}
+
+function ReportFormFallback() {
+  return (
+    <main className="mx-auto flex max-w-2xl items-center justify-center px-4 py-24 sm:px-6">
+      <Loader2 size={20} className="animate-spin text-ink-muted" />
     </main>
   );
 }
