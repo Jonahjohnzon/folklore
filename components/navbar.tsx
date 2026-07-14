@@ -162,7 +162,7 @@ function AccountHeader({ snap }: { snap: typeof store }) {
   const name = snap.displayName || snap.username;
   return (
     <div className="flex items-center gap-2.5 px-2 py-2">
-      <Avatar avatarUrl={snap.avatarUrl} name={name} size={36} />
+      <Avatar avatarUrl={snap.avatarUrl} name={name} size={40} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-sans text-sm font-semibold text-ink">{name}</p>
         <p className="truncate font-sans text-xs text-ink-muted">@{snap.username}</p>
@@ -222,7 +222,7 @@ function AccountMenu() {
         className="hidden cursor-pointer h-9 w-9 items-center justify-center rounded-full lg:flex"
       >
         {isLoggedIn ? (
-          <Avatar avatarUrl={snap.avatarUrl} name={snap.displayName || snap.username} size={32} />
+          <Avatar avatarUrl={snap.avatarUrl} name={snap.displayName || snap.username} size={40} />
         ) : (
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-muted transition hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-accent">
             <LayoutDashboard size={16} />
@@ -257,11 +257,11 @@ function AccountMenu() {
                   Become a creator
                 </DropdownItem>
               )}
-              {!isCreator && (
+              {/* {!isCreator && (
                 <DropdownItem href="/premium" onClick={() => setOpen(false)} icon={Sparkles} variant="gold">
                   Try Premium
                 </DropdownItem>
-              )}
+              )} */}
 
               <DropdownDivider />
 
@@ -479,11 +479,11 @@ function MobileMenu() {
                 Become a creator
               </DropdownItem>
             )}
-              {!isCreator && (
+              {/* {!isCreator && (
                 <DropdownItem href="/premium" onClick={() => setOpen(false)} icon={Sparkles} variant="gold">
                   Try Premium
                 </DropdownItem>
-              )}
+              )} */}
             </>
           )}
 

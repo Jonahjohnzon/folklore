@@ -174,15 +174,15 @@ function PagedSheet({
       <div ref={measureRef} className="pointer-events-none absolute inset-x-0 top-0 h-0 overflow-hidden opacity-0" aria-hidden />
 
       {/* group/page scopes the chevron hover so it doesn't leak into per-block group/para hovers below */}
-      <div
-        ref={frameRef}
-        className="group/page relative min-h-180  max-h-225 w-full touch-pan-y select-none overflow-hidden pb-32 pt-10"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onPointerLeave={(e) => { if (e.pointerType !== "touch") endDrag(); }}
-      >
+    <div
+      ref={frameRef}
+      className="group/page relative min-h-360 max-h-450 w-full touch-pan-y select-none overflow-hidden pb-32 pt-10 lg:min-h-180 lg:max-h-225"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onPointerLeave={(e) => { if (e.pointerType !== "touch") endDrag(); }}
+    >
         {!ready ? (
           <div className="h-full animate-pulse" />
         ) : (

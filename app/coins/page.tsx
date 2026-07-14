@@ -219,8 +219,8 @@ function CoinsPageContent() {
 
       <section className="mb-10">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold text-ink">Choose a pack</h2>
-          <p className="flex items-center gap-1.5 font-sans text-xs text-ink-muted">
+          <h2 className="font-display sm:text-xl  font-semibold text-ink">Choose a pack</h2>
+          <p className="hidden sm:flex items-center gap-1.5 font-sans text-xs text-ink-muted">
             <Info size={13} /> Bars show value — longer means more coins per {currency === "NGN" ? "₦" : "$"}.
           </p>
         </div>

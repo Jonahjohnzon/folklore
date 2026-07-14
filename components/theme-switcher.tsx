@@ -41,11 +41,13 @@ export function ThemeSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-hairline bg-surface-raised p-3 shadow-xl">
+        <div
+          className="fixed right-4 top-16 z-50 w-[calc(100vw-2rem)] max-w-xs overflow-hidden rounded-xl border border-hairline bg-surface-raised p-3 shadow-xl sm:absolute sm:right-0 sm:left-auto sm:top-auto sm:mt-2 sm:w-56 sm:max-w-none"
+        >
           <p className="px-0.5 pb-2.5 font-sans text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
             Reading mode
           </p>
-          <div className="flex items-center justify-between gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {THEMES.map((t) => {
               const Icon = t.icon;
               const selected = theme === t.id;
@@ -78,7 +80,7 @@ export function ThemeSwitcher() {
                       </span>
                     )}
                   </span>
-                  <span className="text-[10px] font-sans text-ink-muted transition group-hover:text-ink">
+                  <span className="text-[10px] font-sans text-ink-muted transition group-hover:text-ink text-center leading-tight">
                     {t.label}
                   </span>
                 </button>
