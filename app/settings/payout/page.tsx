@@ -1,9 +1,9 @@
 // app/settings/payout/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, CheckCircle2, Landmark, Wallet, ArrowLeft } from "lucide-react";
+import { Loader2, CheckCircle2, Landmark, Wallet, ArrowLeft, Check, ChevronDown } from "lucide-react";
 import { PayoutService, type PayoutAccountView } from "@/app/services/PayoutService";
 
 const CRYPTO_NETWORKS = ["USDT-TRC20", "USDT-ERC20", "USDT-BEP20", "BTC", "ETH", "USDC-ERC20"];
@@ -17,6 +17,8 @@ export default function PayoutSettingsPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [cryptoNetwork, setCryptoNetwork] = useState(CRYPTO_NETWORKS[0]);
+  const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
+  const networkDropdownRef = useRef<HTMLDivElement>(null);
   const [walletAddress, setWalletAddress] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -40,6 +42,19 @@ export default function PayoutSettingsPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Close the network dropdown on outside click.
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (networkDropdownRef.current && !networkDropdownRef.current.contains(e.target as Node)) {
+        setNetworkDropdownOpen(false);
+      }
+    }
+    if (networkDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [networkDropdownOpen]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -136,9 +151,64 @@ export default function PayoutSettingsPage() {
         ) : (
           <>
             <Field label="Network">
-              <select value={cryptoNetwork} onChange={(e) => setCryptoNetwork(e.target.value)} className="w-full rounded-lg border border-hairline px-3 py-2 font-sans text-sm">
-                {CRYPTO_NETWORKS.map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
+              <div ref={networkDropdownRef} className="relative">
+                <div
+                  role="combobox"
+                  aria-expanded={networkDropdownOpen}
+                  aria-haspopup="listbox"
+                  tabIndex={0}
+                  onClick={() => setNetworkDropdownOpen((o) => !o)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setNetworkDropdownOpen((o) => !o);
+                    }
+                    if (e.key === "Escape") setNetworkDropdownOpen(false);
+                  }}
+                  className={`flex cursor-pointer items-center justify-between rounded-lg border bg-bg px-3 py-2 font-sans text-sm text-ink transition ${
+                    networkDropdownOpen ? "border-accent" : "border-hairline hover:border-accent/60"
+                  }`}
+                >
+                  <span>{cryptoNetwork}</span>
+                  <ChevronDown
+                    size={14}
+                    className={`shrink-0 text-ink-muted transition-transform ${networkDropdownOpen ? "rotate-180" : ""}`}
+                  />
+                </div>
+
+                {networkDropdownOpen && (
+                  <div
+                    role="listbox"
+                    className="absolute z-10 mt-1 max-h-52 w-full overflow-y-auto scrollbar-thin rounded-lg border border-hairline bg-surface shadow-lg"
+                  >
+                    {CRYPTO_NETWORKS.map((n) => (
+                      <div
+                        key={n}
+                        role="option"
+                        aria-selected={cryptoNetwork === n}
+                        tabIndex={0}
+                        onClick={() => {
+                          setCryptoNetwork(n);
+                          setNetworkDropdownOpen(false);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setCryptoNetwork(n);
+                            setNetworkDropdownOpen(false);
+                          }
+                        }}
+                        className={`flex cursor-pointer items-center justify-between border-b border-hairline px-3 py-2 font-sans text-sm transition last:border-b-0 ${
+                          cryptoNetwork === n ? "bg-accent/10 text-accent" : "text-ink hover:bg-hairline/20"
+                        }`}
+                      >
+                        {n}
+                        {cryptoNetwork === n && <Check size={14} className="shrink-0 text-accent" />}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </Field>
             <Field label="Wallet address">
               <input value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} placeholder="Paste your wallet address" required className="w-full rounded-lg border border-hairline px-3 py-2 font-mono text-xs" />
