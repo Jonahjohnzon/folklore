@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -43,21 +44,21 @@ export default function ProfilePage() {
     };
   }, [params.username]);
 
-  useEffect(() => {
-    if (!profile || profile.creatorStatus !== "active") {
-      setWorks([]);
-      return;
-    }
-    let cancelled = false;
-    setWorksLoading(true);
-    BookService.getWorksForUser(params.username)
-      .then((res) => !cancelled && setWorks(res.data.books))
-      .catch(() => !cancelled && setWorks([]))
-      .finally(() => !cancelled && setWorksLoading(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [profile, params.username]);
+useEffect(() => {
+  if (!profile || profile.creatorStatus !== "active") {
+    setWorks([]);
+    return;
+  }
+  let cancelled = false;
+  setWorksLoading(true);
+  BookService.getWorksForUser(params.username)
+    .then((res) => !cancelled && setWorks(res.data.books))
+    .catch(() => !cancelled && setWorks([]))
+    .finally(() => !cancelled && setWorksLoading(false));
+  return () => {
+    cancelled = true;
+  };
+}, [profile?.creatorStatus, params.username]);
 
   // Called by ProfileActions -> FollowButton after a successful follow/unfollow
   const handleFollowChange = (isNowFollowing: boolean) => {
