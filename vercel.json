@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/cron/purge-removed-books", "schedule": "0 3 * * *" }
+  ]
+}

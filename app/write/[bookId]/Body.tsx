@@ -20,7 +20,7 @@ import { BookService } from "@/app/services/BookService";
 import { formatCompactNumber } from "@/lib/format";
 import { DeleteBookDialog } from "@/components/delete-book-dialog";
 
-const GRACE_PERIOD_DAYS = 30;
+const GRACE_PERIOD_DAYS = 10;
 
 function daysRemaining(deletedAt?: string | null): number | null {
   if (!deletedAt) return null;

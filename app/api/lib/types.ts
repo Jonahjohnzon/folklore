@@ -90,7 +90,9 @@ export type NotificationType =
   | "payout_completed"
   | "earnings_update"
   | "subscription_expiring"
-  | "chapter_unlocked";
+  | "chapter_unlocked"
+  | "admin_warning"   // new
+  | "book_deleted"
 
 // ── Sound Effects (JSONB shape) ───────────────────────────────
 export interface SoundEffect {

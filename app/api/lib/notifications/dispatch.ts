@@ -59,6 +59,8 @@ const PREFERENCE_FIELD: Record<NotificationType, PrefField | null> = {
   earnings_update: null,
   subscription_expiring: null,
   chapter_unlocked: null,
+  admin_warning: null,
+  book_deleted: null,
 };
 
 /**

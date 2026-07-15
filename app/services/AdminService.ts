@@ -10,6 +10,19 @@ export interface AdminStats {
   suspendedUsers: number;
 }
 
+
+export interface AdminBookRow {
+  _id: string;
+  title: string;
+  slug: string;
+  status: "draft" | "ongoing" | "completed" | "hiatus" | "removed";
+  coverUrl: string | null;
+  totalChapters: number;
+  totalReads: number;
+  createdAt: string;
+  author: { _id: string; username: string; displayName: string; email: string } | null;
+}
+
 export type AdminUserStatus = "active" | "suspended" | "deleted";
 export type AdminUserRole = "user" | "moderator" | "admin";
 export interface AdminPayoutAccountRow {
@@ -180,4 +193,17 @@ export const AdminService = {
   api.patch<Envelope<{ banner: AdminPromoBanner }>>(`/api/admin/promo-banners/${id}`, body),
   deletePromoBanner: (id: string) =>
   api.delete<Envelope<{ deleted: boolean }>>(`/api/admin/promo-banners/${id}`),
+  getBooks: (page = 1, q?: string) =>
+  api.get<Envelope<{ books: AdminBookRow[]; total: number; page: number; hasMore: boolean }>>(
+    "/api/admin/books",
+    q ? { page, q } : { page }
+  ),
+
+deleteBook: (bookId: string, reason?: string) =>
+  api.delete<Envelope<{ deleted: boolean }>>(
+    `/api/admin/books/${bookId}${reason ? `?reason=${encodeURIComponent(reason)}` : ""}`
+  ),
+
+warnBookAuthor: (bookId: string, message: string) =>
+  api.post<Envelope<{ sent: boolean }>>(`/api/admin/books/${bookId}/warn`, { message }),
 };
