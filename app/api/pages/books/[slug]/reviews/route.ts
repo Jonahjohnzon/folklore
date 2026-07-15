@@ -79,14 +79,14 @@ export const POST = withAuth(async (req, ctx) => {
       { bookId: book._id, userId: req.user.sub },
       { $set: { rating, body: trimmedBody, verifiedReader: hasReadChapter !== null } },
       { upsert: true, new: true }
-    );
+    ).populate("userId", "username displayName avatarUrl");
 
     await recalculateBookRating(book._id);
 
-    // Only notify on a genuinely new review, and never notify an author about their own book.
     if (!wasExisting && String(book.authorId) !== String(req.user.sub)) {
-      const reviewer = await User.findById(req.user.sub).select("username displayName").lean();
-      const actorName = reviewer?.displayName || reviewer?.username || "Someone";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const u = review.userId as any;
+      const actorName = u?.displayName || u?.username || "Someone";
       const link = `/book/${book.slug}`;
 
       await dispatchNotification({
@@ -98,19 +98,36 @@ export const POST = withAuth(async (req, ctx) => {
         message: `${actorName} left a ${rating}-star review on ${book.title}`,
         link,
         email: {
-          templateName: "newReviewTemplate", // add this to lib/email/templates if it doesn't exist yet
+          templateName: "newReviewTemplate",
           templateArgs: {
             actorName,
             bookTitle: book.title,
             rating: String(rating),
-            reviewExcerpt: (body?.trim() || "").slice(0, 140),
-            link: `https://yourdomain.com${link}`, // match whatever base-URL pattern your other templates use
+            reviewExcerpt: trimmedBody.slice(0, 140),
+            link: `https://yourdomain.com${link}`,
           },
         },
       });
     }
 
-    return ok({ review });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const u = review.userId as any;
+    return ok({
+      review: {
+        id: String(review._id),
+        userId: String(u._id),
+        username: u.username,
+        displayName: u.displayName ?? null,
+        avatarUrl: u.avatarUrl ?? null,
+        rating: review.rating,
+        body: review.body ?? "",
+        helpfulVotes: review.helpfulVotes,
+        unhelpfulVotes: review.unhelpfulVotes,
+        verifiedReader: review.verifiedReader,
+        isPinned: review.isPinned,
+        createdAt: review.createdAt,
+      },
+    });
   } catch (error) {
     return fail(error);
   }

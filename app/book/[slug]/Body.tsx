@@ -72,11 +72,6 @@ export default function BookDetailPage() {
         setBook(bookRes.data.book);
         setChapters(chaptersRes.data.chapters);
         setIsAuthor(chaptersRes.data.isAuthor);
-        // The API returns _id on each review; earlier code stored these
-        // as-is, so `id` was undefined for every review except the one
-        // just submitted in this session. That's what caused
-        // DELETE /api/pages/reviews/undefined. Normalize here so every
-        // review in state always has a real string id.
         setReviews(
           reviewsRes.data.reviews.map((r: any) => ({
             ...r,
@@ -149,11 +144,6 @@ export default function BookDetailPage() {
     setSubmitting(true);
     try {
       const { data } = await ReviewService.submit(book.slug, myRating, myBody.trim());
-      // Normalize the id to a string ONCE up front — the API returns a raw
-      // ObjectId here, and comparing that against the string ids already
-      // stored in state (see the `id: String(...)` below) always fails,
-      // silently. That left duplicate/stale review rows behind after every
-      // submit or delete.
       const newId = String((data.review as any)._id);
       setReviews((prev) => {
         const withoutMine = prev.filter((r) => r.id !== newId);
@@ -556,7 +546,7 @@ export default function BookDetailPage() {
                 <div key={r.id} className="rounded-xl border border-hairline bg-surface p-4">
                   <div className="flex items-center gap-2.5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={r.avatarUrl ?? ""} alt={r.username} className="h-8 w-8 rounded-full object-cover" />
+                    <Avatar avatarUrl={r.avatarUrl ?? ""} name={r.username}/>
                     <div>
                       <p className="font-sans text-sm font-semibold text-ink">{r.username}</p>
                       <div className="flex items-center gap-0.5">
