@@ -35,8 +35,8 @@ export function BookCard({
 
 if (size === "cover-stacked") {
   return (
-    <Link href={`/book/${book.slug}`} className="group block w-16 min-h-0 flex-1 shrink-0 sm:w-20">
-      <div className="relative h-full overflow-hidden rounded-md border border-hairline bg-surface shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg">
+    <Link href={`/book/${book.slug}`} className="group block w-20 min-h-0 flex-1 shrink-0 sm:w-24">
+      <div className="relative h-full overflow-hidden rounded-sm border border-hairline bg-surface shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={book.coverUrl} alt={book.title} className="h-full w-full object-cover" loading="lazy" />
         {book.matureContent && (
