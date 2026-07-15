@@ -38,6 +38,8 @@ const NotificationSchema = new Schema<INotification>(
         "earnings_update",
         "subscription_expiring",
         "chapter_unlocked", // reader confirmation that a paid chapter is now theirs
+         "admin_warning",
+        "book_deleted",
       ] satisfies NotificationType[],
       required: true,
     },

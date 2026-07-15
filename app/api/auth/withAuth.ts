@@ -3,6 +3,8 @@ import { getAuthCookie } from "./cookies";
 import { verifyAuthToken, type AuthTokenPayload } from "./jwt";
 import { UnauthorizedError } from "../lib/db/errors";
 import { fail } from "../response";
+import { connectToDatabase } from "../lib/db/connect";
+import { User } from "../lib/models/User";
 
 export interface AuthedRequest extends NextRequest {
   user: AuthTokenPayload;
@@ -39,6 +41,30 @@ export function withAuth<TParams extends Record<string, string | string[]> = Rec
       }
 
       const payload = await verifyAuthToken(token);
+
+      // The JWT only proves who the user was at login time — status can
+      // change (suspend, delete) any time within that 7-day window, so it
+      // has to be checked fresh against the DB on every request, not read
+      // off the token.
+      await connectToDatabase();
+      const user = await User.findById(payload.sub).select("status").lean();
+
+      if (!user) {
+        throw new UnauthorizedError("Account not found");
+      }
+
+      if (user.status === "deleted") {
+        throw new UnauthorizedError("This account has been deleted");
+      }
+
+      if (user.status === "suspended") {
+        throw new UnauthorizedError("This account has been suspended");
+      }
+
+      if (user.status !== "active") {
+        throw new UnauthorizedError("This account is not active");
+      }
+
       (req as AuthedRequest).user = payload;
 
       return handler(req as AuthedRequest, ctx);

@@ -291,7 +291,7 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-hairline bg-white p-5 shadow-xl">
+      <div className="w-full max-w-md rounded-2xl border border-hairline bg-bg p-5 shadow-xl">
         <div className="flex justify-end">
           <button onClick={onClose} className="text-ink-muted hover:text-ink">
             <X size={16} />

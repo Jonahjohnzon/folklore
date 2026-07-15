@@ -75,7 +75,15 @@ export async function loginUser(input: LoginInput) {
     throw new UnauthorizedError("Invalid email/username or password");
   }
 
-  if (user.status !== 'active') {
+   if (user.status === "deleted") {
+    throw new UnauthorizedError("This account has been deleted");
+  }
+
+    if (user.status === "suspended") {
+    throw new UnauthorizedError("This account has been suspended");
+  }
+
+   if (user.status !== "active") {
     throw new UnauthorizedError("This account is not active");
   }
 
@@ -132,7 +140,15 @@ export async function loginOrRegisterWithGoogle(identity: {
     });
   }
 
-  if (user.status !== "active") {
+  if (user.status === "deleted") {
+    throw new UnauthorizedError("This account has been deleted");
+  }
+
+    if (user.status === "suspended") {
+    throw new UnauthorizedError("This account has been suspended");
+  }
+
+   if (user.status !== "active") {
     throw new UnauthorizedError("This account is not active");
   }
 
