@@ -140,7 +140,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
                 <StoreHydrator />
         <ThemeProvider>{children}</ThemeProvider>
-        <CookieConsentBanner />
+        {/* <CookieConsentBanner /> */}
       </body>
     </html>
   );
