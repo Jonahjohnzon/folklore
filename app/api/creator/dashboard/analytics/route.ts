@@ -21,7 +21,6 @@ function dateKey(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-// fills gaps so charts don't have holes on inactive days
 function fillDays(range: number, map: Map<string, number>) {
   const out: { date: string; value: number }[] = [];
   for (let i = range - 1; i >= 0; i--) {
@@ -50,10 +49,11 @@ export const GET = withAuth(async (req) => {
       topChaptersAgg,
       followersAgg,
       completionAgg,
-      topReadChaptersAgg, // NEW: per-chapter totals, all-time (not windowed to `range`)
+      topReadChaptersAgg,
     ] = await Promise.all([
-      // Dashboard-wide reads over time — grouped by date only, chapter
-      // identity is intentionally collapsed here for the trend chart.
+      // Dashboard-wide raw pageview trend. Intentionally NOT deduped by
+      // user — this is meant to show total traffic volume over time, and
+      // DailyStat has no userId to dedupe by anyway.
       DailyStat.aggregate([
         { $match: { bookId: { $in: bookIds }, date: { $gte: sinceKey } } },
         { $group: { _id: "$date", reads: { $sum: "$reads" } } },
@@ -67,8 +67,7 @@ export const GET = withAuth(async (req) => {
           },
         },
       ]),
-      // Top chapters by coin unlocks (paywall revenue) — NOT the same as
-      // most-read; a free chapter can be read heavily and never appear here.
+      // Top chapters by coin unlocks (revenue) — distinct from most-read.
       ChapterUnlock.aggregate([
         { $match: { bookId: { $in: bookIds } } },
         { $group: { _id: "$chapterId", coins: { $sum: "$coinsSpent" }, unlocks: { $sum: 1 } } },
@@ -84,12 +83,10 @@ export const GET = withAuth(async (req) => {
           },
         },
       ]),
-      // Completion rate — derived from ReadingProgress (per-user furthest
-      // chapter reached), NOT from DailyStat, since DailyStat has no
-      // userId and can't tell distinct readers apart.
+      // Completion rate — per-user furthest chapter reached, from
+      // ReadingProgress (has userId; DailyStat does not).
       ReadingProgress.aggregate([
         { $match: { bookId: { $in: bookIds } } },
-        // collapse to each reader's furthest chapter per book
         { $group: { _id: { bookId: "$bookId", userId: "$userId" }, maxOrder: { $max: "$chapterOrderIndex" } } },
         {
           $lookup: {
@@ -118,13 +115,18 @@ export const GET = withAuth(async (req) => {
           },
         },
       ]),
-      // NEW: total reads per chapter, all-time — the piece that was
-      // previously missing. Grouped by chapterId instead of date, so
-      // chapter identity is preserved instead of collapsed.
-      DailyStat.aggregate([
+      // Most-read chapters by UNIQUE reader — from ReadingProgress, not
+      // DailyStat. ReadingProgress is upserted on { userId, chapterId },
+      // so each user contributes exactly one document per chapter no
+      // matter how many times they reread it — repeat opens update
+      // lastReadAt on the same doc instead of creating a new one.
+      // Counting documents therefore counts distinct readers, correctly
+      // collapsing repeats to "one," which DailyStat's raw $inc counter
+      // cannot do since it has no userId to dedupe against.
+      ReadingProgress.aggregate([
         { $match: { bookId: { $in: bookIds } } },
-        { $group: { _id: "$chapterId", totalReads: { $sum: "$reads" } } },
-        { $sort: { totalReads: -1 } },
+        { $group: { _id: "$chapterId", uniqueReaders: { $sum: 1 } } },
+        { $sort: { uniqueReaders: -1 } },
         { $limit: 5 },
       ]),
     ]);
@@ -137,8 +139,6 @@ export const GET = withAuth(async (req) => {
       rate: b.readers > 0 ? Math.round((b.finishers / b.readers) * 1000) / 10 : 0,
     }));
 
-    // Chapter titles needed for both the coin-based topChapters AND the
-    // new reads-based topReadChapters — fetch both id sets in one query.
     const chapterIds = Array.from(
       new Set([
         ...topChaptersAgg.map((c) => String(c._id)),
@@ -174,7 +174,7 @@ export const GET = withAuth(async (req) => {
       followersByDay: fillDays(range, followersMap).map((d) => ({ date: d.date, followers: d.value })),
       totalEarnings,
       earningsTrendPct,
-      overallCompletionRate, // e.g. 42.7 (%)
+      overallCompletionRate,
       bookCompletionRates,
       readsInstrumented: readsAgg.length > 0,
       topChapters: topChaptersAgg.map((c) => {
@@ -187,15 +187,13 @@ export const GET = withAuth(async (req) => {
           unlocks: c.unlocks,
         };
       }),
-      // NEW field — actual most-read chapters, distinct from topChapters
-      // (which ranks by coin revenue, not reads).
       topReadChapters: topReadChaptersAgg.map((c) => {
         const chapter = chapterById.get(String(c._id));
         return {
           chapterId: String(c._id),
           title: chapter?.title ?? "Untitled chapter",
           bookTitle: bookTitleById.get(String(chapter?.bookId)) ?? "",
-          totalReads: c.totalReads,
+          uniqueReaders: c.uniqueReaders,
         };
       }),
     });
