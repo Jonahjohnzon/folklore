@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Users, Award, Music, Wallet, Megaphone, Flag } from "lucide-react";
+import { LayoutDashboard, Users, Award, Music, Wallet, Megaphone, Flag, BookOpen } from "lucide-react";
 import { AuthService } from "@/app/services/auth";
 
 const NAV = [
@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/payouts", label: "Payouts", icon: Wallet },
   { href: "/admin/promo-banners", label: "Banners", icon: Megaphone },
   { href: "/admin/reports", label: "Reports", icon: Flag },
+  { href: "/admin/books", label: "Books", icon: BookOpen },
 ];
 
 async function requireAdmin() {
