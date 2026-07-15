@@ -181,7 +181,7 @@ export default function NewBookPage() {
                   <ImagePlus size={18} className="text-accent" />
                 </div>
                 <span className="font-sans text-xs font-medium text-ink-muted">
-                  Upload cover - [8MB]
+                  Upload cover - [1MB]
                   <br />
                   <span className="text-ink-muted/70">recommended 600×900</span>
                 </span>
