@@ -34,6 +34,7 @@ export const POST = async (req: Request) => {
 
     user.email = newEmail;
     user.emailVerified = true; // clicking the link proves ownership of the new address
+    user.emailChangedAt = new Date();
     await user.save();
 
     return ok({ verified: true, email: user.email });

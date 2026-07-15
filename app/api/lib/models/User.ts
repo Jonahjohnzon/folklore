@@ -58,6 +58,7 @@ export interface IUser {
   emailVerificationExpires:Date | null;
   emailVerificationLastSentAt:Date;
   websiteUrl:string
+  emailChangedAt?: Date | null;
 }
 
 // ── Schema ────────────────────────────────────────────────────
@@ -88,7 +89,7 @@ const UserSchema = new Schema<IUser>(
       index: true,
     },
     creatorActivatedAt: { type: Date },
-
+    emailChangedAt: { type: Date, default: null },
     status: {
       type: String,
       enum: ["active", "suspended", "deleted"] satisfies AccountStatus[],
