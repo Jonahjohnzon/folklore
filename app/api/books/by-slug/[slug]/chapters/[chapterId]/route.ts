@@ -53,7 +53,9 @@ export const GET = withAuth(async (req, ctx) => {
       }
     }
 
-    await Book.updateOne({ _id: book._id }, { $inc: { totalReads: 1 } });
+    if (!isOwnBook) {
+  await Book.updateOne({ _id: book._id }, { $inc: { totalReads: 1 } });
+}
 
     // Feeds the creator dashboard's daily-reads chart. Excludes the author's
     // own reads/previews of their own book, same as the badge-crediting rule
@@ -68,11 +70,6 @@ export const GET = withAuth(async (req, ctx) => {
 
     if (userId) {
       const now = new Date();
-
-      // Checked before the upsert specifically so we know whether this is
-      // this user's first-ever open of this chapter — the upsert itself
-      // doesn't tell you created-vs-matched without inspecting raw driver
-      // results, which Mongoose's findOneAndUpdate doesn't expose cleanly.
       const existingProgress = await ReadingProgress.findOne({ userId, chapterId: chapter._id })
         .select("_id")
         .lean();
