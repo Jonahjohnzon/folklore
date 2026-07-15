@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -27,6 +28,7 @@ export function AccountTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) 
       await AuthService.requestEmailChange(email);
       setPendingVerification(true);
       setStatus("saved");
+      setTimeout(() => setStatus("idle"), 2000);
     } catch (err: any) {
       setStatus("error");
       setError(err?.response?.data?.message ?? "Couldn't update your email.");

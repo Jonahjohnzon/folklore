@@ -25,7 +25,7 @@ export const POST = withAuth(async (req) => {
       .setExpirationTime("1h")
       .sign(JWT_SECRET);
 
-    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email-change?token=${token}`;
+    const verifyUrl = `${process.env.APP_URL}/verify-email-change?token=${token}`;
 
     await sendEmail({
       to: email,

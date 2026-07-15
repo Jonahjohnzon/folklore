@@ -67,5 +67,10 @@ export const AuthService = {
   api.post<{ success: boolean; data: { sent: boolean } }>("/api/pages/auth/forgot-password", { identifier }),
   resetPassword: (body: { token: string; newPassword: string }) =>
   api.post<{ success: boolean; data: { reset: boolean } }>("/api/pages/auth/reset-password", body),
+  confirmEmailChange: (token: string) =>
+  api.post<{ success: boolean; data: { verified: boolean; email: string } }>(
+    "/api/pages/auth/verify-email-change",
+    { token }
+  ),
 
 };
