@@ -333,66 +333,70 @@ export function ChapterReader({
         <div className="h-full bg-accent transition-[width] duration-150 ease-out" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="sticky top-0 z-30 border-b border-hairline bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2 px-4 py-2.5 sm:px-6">
-          <Link href={`/book/${bookSlug}`} className="min-w-0 truncate font-sans text-sm font-medium text-ink-muted hover:text-accent">
-            ← {bookTitle}
-          </Link>
+        <div className="sticky top-0 z-30 border-b border-hairline bg-surface/95 backdrop-blur">
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-2 px-3 py-2 sm:px-6 sm:py-2.5">
+            <Link
+              href={`/book/${bookSlug}`}
+              className="min-w-0 truncate font-sans text-sm font-medium text-ink-muted hover:text-accent"
+            >
+              ← {bookTitle}
+            </Link>
 
-          <div className="flex shrink-0 items-center gap-1.5">
-            <div className="flex items-center gap-1 rounded-full border border-hairline px-1">
+            <div className="flex shrink-0 items-center gap-1">
+              <div className="flex items-center gap-0.5 rounded-full border border-hairline px-0.5">
+                <button
+                  onClick={() => updatePrefs({ fontSize: Math.max(14, effectiveFontSize - 2) })}
+                  className="flex h-9 w-9 items-center justify-center text-ink-muted active:text-accent sm:h-7 sm:w-7"
+                  aria-label="Decrease text size"
+                >
+                  <Minus size={14} />
+                </button>
+                <span className="hidden font-mono text-xs text-ink-muted xs:inline">
+                  {effectiveFontSize}px
+                </span>
+                <button
+                  onClick={() => updatePrefs({ fontSize: Math.min(26, effectiveFontSize + 2) })}
+                  className="flex h-9 w-9 items-center justify-center text-ink-muted active:text-accent sm:h-7 sm:w-7"
+                  aria-label="Increase text size"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+
+              {ambientSound && ambientAllowed && (
+                <button
+                  onClick={toggleAmbientSound}
+                  aria-label={ambientPlaying ? `Pause ${ambientSound.label}` : `Play ${ambientSound.label}`}
+                  title={ambientPlaying ? `Pause: ${ambientSound.label}` : `Play: ${ambientSound.label}`}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border transition active:scale-95 sm:h-7 sm:w-7 ${
+                    ambientPlaying
+                      ? "border-accent text-accent"
+                      : "border-hairline text-ink-muted hover:border-accent hover:text-accent"
+                  } ${ambientAttention ? "ambient-attention" : ""}`}
+                >
+                  <Volume2 size={14} />
+                </button>
+              )}
+
               <button
-                onClick={() => updatePrefs({ fontSize: Math.max(14, effectiveFontSize - 2) })}
-                className="flex h-7 w-7 items-center justify-center text-ink-muted"
-                aria-label="Decrease text size"
+                onClick={() => setSettingsOpen(true)}
+                aria-label="Reading settings"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-muted hover:border-accent hover:text-accent sm:h-7 sm:w-7"
               >
-                <Minus size={13} />
+                <Settings2 size={14} />
               </button>
-              <span className="font-mono text-xs text-ink-muted">{effectiveFontSize}px</span>
+
               <button
-                onClick={() => updatePrefs({ fontSize: Math.min(26, effectiveFontSize + 2) })}
-                className="flex h-7 w-7 items-center justify-center text-ink-muted"
-                aria-label="Increase text size"
+                onClick={toggleFullscreen}
+                aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen reading mode"}
+                title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen reading mode"}
+                className="hidden h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-muted hover:border-accent hover:text-accent sm:flex sm:h-7 sm:w-7"
               >
-                <Plus size={13} />
+                {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
               </button>
             </div>
-
-            {ambientSound && ambientAllowed && (
-              <button
-                onClick={toggleAmbientSound}
-                aria-label={ambientPlaying ? `Pause ${ambientSound.label}` : `Play ${ambientSound.label}`}
-                title={ambientPlaying ? `Pause: ${ambientSound.label}` : `Play: ${ambientSound.label}`}
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs font-medium transition ${
-                  ambientPlaying
-                    ? "border-accent text-accent"
-                    : "border-hairline text-ink-muted hover:border-accent hover:text-accent"
-                } ${ambientAttention ? "ambient-attention" : ""}`}
-              >
-                <Volume2 size={13} />
-                {ambientPlaying ? "Ambient on" : "Ambient sound"}
-              </button>
-            )}
-
-            <button
-              onClick={() => setSettingsOpen(true)}
-              aria-label="Reading settings"
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-muted hover:border-accent hover:text-accent"
-            >
-              <Settings2 size={13} />
-            </button>
-
-            <button
-              onClick={toggleFullscreen}
-              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen reading mode"}
-              title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen reading mode"}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-muted hover:border-accent hover:text-accent"
-            >
-              {isFullscreen ? <Minimize size={13} /> : <Maximize size={13} />}
-            </button>
           </div>
         </div>
-      </div>
   
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 pt-14 sm:px-6 lg:grid-cols-[1fr_auto_1fr]">
