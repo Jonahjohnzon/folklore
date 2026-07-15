@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { BookService } from "@/app/services/BookService";
-import { ChapterService } from "@/app/services/ChapterService";
 import ChapterPage from "./Body";
 
 type Props = { params: Promise<{ slug: string; chapterId: string }> };
@@ -9,16 +8,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, chapterId } = await params;
 
   try {
-    const [{ data: bookData }, { data: chapterData }] = await Promise.all([
-      BookService.getBySlug(slug),
-      ChapterService.getPublicBySlug(slug, chapterId),
-    ]);
-
+    const { data: bookData } = await BookService.getBySlug(slug);
     const book = bookData.book;
-    const chapter = chapterData.chapter;
 
-    const title = `${chapter.title} — ${book.title}`;
-    const description = `Chapter ${chapter.orderIndex} of ${book.title}, by ${book.author.penName}. Read it free on TipaTale.`;
+    const title = `${book.title} — Chapter`;
+    const description = `Read ${book.title}, by ${book.author.penName}, free on TipaTale.`;
     const url = `https://tipatale.com/book/${slug}/chapter/${chapterId}`;
     const image = book.coverUrl || "/opengraph.png";
 
