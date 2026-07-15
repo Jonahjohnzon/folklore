@@ -31,7 +31,7 @@ export function AccountTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) 
       setTimeout(() => setStatus("idle"), 2000);
     } catch (err: any) {
       setStatus("error");
-      setError(err?.response?.data?.message ?? "Couldn't update your email.");
+      setError(err?.message ?? "Couldn't update your email.");
     }
   };
 

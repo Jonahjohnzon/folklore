@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -57,14 +58,14 @@ export function PasswordTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean)
       setTimeout(() => setStatus("idle"), 2000);
     } catch (err: any) {
       setStatus("error");
-      setError(err?.response?.data?.message ?? "Current password is incorrect.");
+      setError(err?.message ?? "Current password is incorrect.");
     }
   };
 
   return (
     <div>
       <h3 className="font-display text-xl font-semibold text-ink">Password</h3>
-      <p className="mt-1 font-sans text-sm text-ink-muted">Choose a password you don't use anywhere else.</p>
+      <p className="mt-1 font-sans text-sm text-ink-muted">Choose a password you don&apos;t use anywhere else.</p>
 
       <div className="mt-6">
         <FieldLabel>Current password</FieldLabel>
