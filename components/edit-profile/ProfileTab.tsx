@@ -53,6 +53,7 @@ export function ProfileTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) 
   const handleSave = async () => {
     setStatus("saving");
     setError(null);
+    
     try {
       if (avatarFile) {
         await UserService.uploadAvatar(username, avatarFile);

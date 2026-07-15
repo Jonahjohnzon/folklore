@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { withAuth } from "@/app/api/auth/withAuth";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { User } from "@/app/api/lib/models/User";

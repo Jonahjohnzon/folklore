@@ -19,6 +19,7 @@ export const updateUserSchema = z.object({
   matureContentEnabled: z.boolean().optional(),
   preferences: z.record(z.string(), z.unknown()).optional(),
   avatarPublicId:z.string().nullable().optional(),
+  websiteUrl:z.string().url().nullable().optional(),
 });
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
