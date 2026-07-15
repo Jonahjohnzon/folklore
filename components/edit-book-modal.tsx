@@ -11,6 +11,9 @@ const GENRES = [
   "Adventure", "Thriller", "Historical", "Slice of Life", "LitRPG", "Poetry",
 ];
 
+const MAX_COVER_BYTES = 1 * 1024 * 1024; // 1MB
+const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 export function EditBookModal({
   book,
   onClose,
@@ -36,6 +39,7 @@ export function EditBookModal({
   const [saving, setSaving] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coverWarning, setCoverWarning] = useState<string | null>(null);
 
   function toggleTag(g: string) {
     setTags((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : prev.length < 5 ? [...prev, g] : prev));
@@ -43,7 +47,18 @@ export function EditBookModal({
 
   async function handleCoverSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
+
+    if (!ALLOWED_COVER_TYPES.includes(file.type)) {
+      setCoverWarning("Use a JPG, PNG, or WEBP image.");
+      return;
+    }
+    if (file.size > MAX_COVER_BYTES) {
+      setCoverWarning(`That image is ${(file.size / 1024 / 1024).toFixed(1)}MB — max is 1MB.`);
+      return;
+    }
+    setCoverWarning(null);
 
     setCoverPreview(URL.createObjectURL(file));
     setUploadingCover(true);
@@ -120,6 +135,12 @@ export function EditBookModal({
             </div>
           )}
 
+          {coverWarning && (
+            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 font-sans text-sm text-amber-800">
+              {coverWarning}
+            </div>
+          )}
+
           <div className="mt-4 flex flex-col gap-4 pb-4">
             {/* Cover */}
             <div className="flex items-center gap-4">
@@ -154,7 +175,7 @@ export function EditBookModal({
               </button>
               <div>
                 <p className="font-sans text-sm font-semibold text-ink">Cover</p>
-                <p className="font-sans text-xs text-ink-muted">JPG, PNG, or WEBP. Max 8MB.</p>
+                <p className="font-sans text-xs text-ink-muted">JPG, PNG, or WEBP. Max 1MB.</p>
               </div>
             </div>
 

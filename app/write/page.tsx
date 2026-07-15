@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -40,7 +41,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 export default function NewBookPage() {
   const router = useRouter();
   const coverInputRef = useRef<HTMLInputElement>(null);
-  const MAX_COVER_BYTES = 8 * 1024 * 1024;
+  const MAX_COVER_BYTES = 1 * 1024 * 1024;
   const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -71,7 +72,7 @@ export default function NewBookPage() {
     return;
       }
       if (file.size > MAX_COVER_BYTES) {
-        setCoverWarning(`That image is ${(file.size / 1024 / 1024).toFixed(1)}MB — max is 8MB.`);
+        setCoverWarning(`That image is ${(file.size / 1024 / 1024).toFixed(1)}MB — max is 1MB.`);
         return;
       }
     setCoverWarning(null);

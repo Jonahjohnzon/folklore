@@ -12,7 +12,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const MAX_BYTES = 8 * 1024 * 1024;
+const MAX_BYTES = 1 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 function uploadBuffer(buffer: Buffer, folder: string): Promise<{ secure_url: string; public_id: string }> {
@@ -45,7 +45,7 @@ export const POST = withAuth(async (req, ctx) => {
       throw new ValidationError("Unsupported image type", { cover: ["Use JPG, PNG, or WEBP"] });
     }
     if (file.size > MAX_BYTES) {
-      throw new ValidationError("image too large", { cover: ["Max size is 8MB"] });
+      throw new ValidationError("image too large", { cover: ["Max size is 1MB"] });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());

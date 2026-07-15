@@ -10,6 +10,9 @@ export interface CloudinaryUploadResult {
   publicId: string;
 }
 
+const MAX_UPLOAD_BYTES = 1 * 1024 * 1024; // 1MB
+const ALLOWED_UPLOAD_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 /**
  * Uploads a file directly to Cloudinary from the browser using a
  * short-lived signature minted by our own backend (POST /api/pages/uploads/sign,
@@ -23,6 +26,14 @@ export async function uploadImageToCloudinary(
   file: File,
   folder: string
 ): Promise<CloudinaryUploadResult> {
+  if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
+    throw new Error("Use a JPG, PNG, or WEBP image.");
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error(
+      `That image is ${(file.size / 1024 / 1024).toFixed(1)}MB — max is 1MB.`
+    );
+  }
 
   const compressed = await compressImage(file);
 
