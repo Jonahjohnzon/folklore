@@ -27,7 +27,7 @@ export const POST = withAdmin(async (req,ctx) => {
       type: "admin_warning",
       bookId: book._id,
       message: `Warning regarding "${book.title}": ${message.trim()}`,
-      link: `/book/${book._id}`,
+      link: `/book/${book.slug}`,
       // no `email` field → in-app notification only
     });
 
