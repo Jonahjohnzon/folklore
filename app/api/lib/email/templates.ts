@@ -327,6 +327,44 @@ export function verifyEmailTemplate({ displayName, verifyUrl }: { displayName: s
 
 
 // app/api/lib/email/templates.ts — add
+function emailShell({
+  heading,
+  body,
+  buttonText,
+  buttonUrl,
+  footnote,
+}: {
+  heading: string;
+  body: string;
+  buttonText: string;
+  buttonUrl: string;
+  footnote: string;
+}) {
+  return `
+    <div style="max-width: 480px; margin: 0 auto; padding: 40px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <h1 style="font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 16px;">
+        ${heading}
+      </h1>
+      <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0 0 28px;">
+        ${body}
+      </p>
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="border-radius: 9999px; background-color: #7c3aed;">
+            <a href="${buttonUrl}"
+               style="display: inline-block; padding: 12px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 9999px;">
+              ${buttonText}
+            </a>
+          </td>
+        </tr>
+      </table>
+      <p style="font-size: 12px; color: #9ca3af; margin: 28px 0 0; line-height: 1.5;">
+        ${footnote}
+      </p>
+    </div>
+  `;
+}
+
 export function resetPasswordTemplate({
   displayName,
   resetUrl,
@@ -336,11 +374,31 @@ export function resetPasswordTemplate({
 }) {
   const subject = "Reset your password";
   const text = `Hi ${displayName},\n\nWe received a request to reset your password. This link expires in 30 minutes:\n${resetUrl}\n\nIf you didn't request this, you can safely ignore this email.`;
-  const html = `
-    <p>Hi ${displayName},</p>
-    <p>We received a request to reset your password. This link expires in 30 minutes:</p>
-    <p><a href="${resetUrl}">Reset your password</a></p>
-    <p>If you didn't request this, you can safely ignore this email — your password won't change.</p>
-  `;
+  const html = emailShell({
+    heading: `Hi ${displayName},`,
+    body: "We received a request to reset your password. Click below to choose a new one.",
+    buttonText: "Reset password",
+    buttonUrl: resetUrl,
+    footnote: "This link expires in 30 minutes. If you didn't request this, you can safely ignore this email — your password won't change.",
+  });
+  return { subject, html, text };
+}
+
+export function verifyEmailChangeTemplate({
+  displayName,
+  verifyUrl,
+}: {
+  displayName: string;
+  verifyUrl: string;
+}) {
+  const subject = "Confirm your new email";
+  const text = `Hi ${displayName},\n\nConfirm your new email address to complete the change:\n${verifyUrl}\n\nThis link expires in 1 hour.`;
+  const html = emailShell({
+    heading: `Hi ${displayName},`,
+    body: "Confirm your new email address to complete the change.",
+    buttonText: "Verify email",
+    buttonUrl: verifyUrl,
+    footnote: "This link expires in 1 hour. If you didn't request this, you can safely ignore this email.",
+  });
   return { subject, html, text };
 }
