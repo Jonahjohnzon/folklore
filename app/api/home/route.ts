@@ -12,7 +12,7 @@ import { ReadingProgress } from "@/app/api/lib/models/ReadingProgress";
 import { Types } from "mongoose";
 
 const VISIBLE = ["ongoing", "completed", "hiatus"];
-const RAIL_SIZE = 15;
+const RAIL_SIZE = 16;
 
 function serializeBook(b: any) {
   const author = b.authorId as { penName?: string; username: string } | null;
