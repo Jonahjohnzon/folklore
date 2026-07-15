@@ -34,7 +34,7 @@ export const POST = withAuth(async (req) => {
         type: "new_follower",
         actorId: req.user.sub,
         message: `${actorName} started following you`,
-        link: `/${follower?.username ?? ""}`,
+        link: `/u/${follower?.username ?? ""}`,
         // no `email` field -> in-app notification only, no email sent
       });
     }
