@@ -67,48 +67,50 @@ export const GET = withAuth(async (req, ctx) => {
         { upsert: true }
       );
     }
+      if (userId) {
+        const now = new Date();
 
-    if (userId) {
-      const now = new Date();
-      const existingProgress = await ReadingProgress.findOne({ userId, chapterId: chapter._id })
-        .select("_id")
-        .lean();
-      const isFirstReadOfChapter = !existingProgress;
+        if (!isOwnBook) {
+          const existingProgress = await ReadingProgress.findOne({ userId, chapterId: chapter._id })
+            .select("_id")
+            .lean();
+          const isFirstReadOfChapter = !existingProgress;
 
-      await ReadingProgress.findOneAndUpdate(
-        { userId, chapterId: chapter._id },
-        {
-          $set: {
-            bookId: book._id,
-            chapterOrderIndex: chapter.orderIndex,
-            chapterTitle: chapter.title,
-            bookTitle: book.title,
-            bookSlug: book.slug,
-            bookCoverUrl: book.coverUrl ?? null,
-            totalChapters: book.totalChapters ?? 0,
-            lastReadAt: now,
-          },
-          $setOnInsert: { progressPct: 0, completed: false },
-        },
-        { upsert: true }
-      );
+          await ReadingProgress.findOneAndUpdate(
+            { userId, chapterId: chapter._id },
+            {
+              $set: {
+                bookId: book._id,
+                chapterOrderIndex: chapter.orderIndex,
+                chapterTitle: chapter.title,
+                bookTitle: book.title,
+                bookSlug: book.slug,
+                bookCoverUrl: book.coverUrl ?? null,
+                totalChapters: book.totalChapters ?? 0,
+                lastReadAt: now,
+              },
+              $setOnInsert: { progressPct: 0, completed: false },
+            },
+            { upsert: true }
+          );
 
-      const existingEntry = await LibraryEntry.findOne({ userId, bookId: book._id });
-      if (!existingEntry) {
-        await LibraryEntry.create({ userId, bookId: book._id, status: "reading", addedAt: now, lastActivityAt: now });
-      } else {
-        existingEntry.lastActivityAt = now;
-        if (existingEntry.status === "want_to_read") {
-          existingEntry.status = "reading";
+          // Don't credit an author reading/previewing their own book.
+          if (isFirstReadOfChapter) {
+            await BadgeAwardService.recordChapterRead(userId);
+          }
         }
-        await existingEntry.save();
-      }
 
-      // Don't credit an author reading/previewing their own book.
-      if (isFirstReadOfChapter && !isOwnBook) {
-        await BadgeAwardService.recordChapterRead(userId);
+        const existingEntry = await LibraryEntry.findOne({ userId, bookId: book._id });
+        if (!existingEntry) {
+          await LibraryEntry.create({ userId, bookId: book._id, status: "reading", addedAt: now, lastActivityAt: now });
+        } else {
+          existingEntry.lastActivityAt = now;
+          if (existingEntry.status === "want_to_read") {
+            existingEntry.status = "reading";
+          }
+          await existingEntry.save();
+        }
       }
-    }
 
     return ok({
       chapter: {
