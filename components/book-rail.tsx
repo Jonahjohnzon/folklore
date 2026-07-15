@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Book } from "@/lib/types";
 import { BookCard } from "./book-card";
 
@@ -22,11 +22,13 @@ export function BookRail({
   pattern?: "default" | "big-stacked";
 }) {
   const railRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const updateScrollState = useCallback(() => {
     const el = railRef.current;
     if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
   }, []);
 
@@ -112,6 +114,16 @@ export function BookRail({
                 </div>
               ))}
         </div>
+
+        {canScrollLeft && (
+          <button
+            onClick={() => scrollByAmount("left")}
+            aria-label="Scroll left"
+            className="absolute left-2 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-surface p-2 text-ink shadow-md transition hover:text-accent sm:flex"
+          >
+            <ChevronLeft size={18} />
+          </button>
+        )}
 
         {canScrollRight && (
           <button
