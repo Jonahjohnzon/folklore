@@ -127,6 +127,7 @@ export async function loginOrRegisterWithGoogle(identity: {
       termsAcceptedAt: new Date(),
       matureContentEnabled: false,
       status: "active",
+      emailVerified: true,
       // dateOfBirth intentionally omitted — collect this post-signup if you enforce a min age
     });
   }
