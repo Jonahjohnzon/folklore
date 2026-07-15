@@ -8,6 +8,7 @@ import { RouteProgressBar } from "@/components/route-progress-bar";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-toploader";
 import { Kalam } from "next/font/google";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 
 
 const SITE_NAME = "TipaTale";
@@ -139,6 +140,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
                 <StoreHydrator />
         <ThemeProvider>{children}</ThemeProvider>
+        <CookieConsentBanner />
       </body>
     </html>
   );
