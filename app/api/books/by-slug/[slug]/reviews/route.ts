@@ -27,7 +27,7 @@ export const GET = optionalAuth(async (req, ctx) => {
       reviews: reviews.map((r) => {
         const u = r.userId as any;
         return {
-          id: String(r._id),
+          _id: String(r._id),
           userId: String(u._id),
           username: u.username,
           displayName: u.displayName ?? null,

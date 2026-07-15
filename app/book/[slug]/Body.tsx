@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -51,6 +53,8 @@ export default function BookDetailPage() {
   const { _id: userId, authChecked } = useSnapshot(store);
   const CHAPTERS_PER_PAGE = 7;
   const [chapterPage, setChapterPage] = useState(1);
+  const [deleting, setDeleting] = useState(false);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +72,17 @@ export default function BookDetailPage() {
         setBook(bookRes.data.book);
         setChapters(chaptersRes.data.chapters);
         setIsAuthor(chaptersRes.data.isAuthor);
-        setReviews(reviewsRes.data.reviews);
+        // The API returns _id on each review; earlier code stored these
+        // as-is, so `id` was undefined for every review except the one
+        // just submitted in this session. That's what caused
+        // DELETE /api/pages/reviews/undefined. Normalize here so every
+        // review in state always has a real string id.
+        setReviews(
+          reviewsRes.data.reviews.map((r: any) => ({
+            ...r,
+            id: String(r.id ?? r._id),
+          }))
+        );
       })
       .catch((err) => {
         if (cancelled) return;
@@ -85,7 +99,7 @@ export default function BookDetailPage() {
   }, [params.slug]);
 
   useEffect(() => {
-  setChapterPage(1);
+    setChapterPage(1);
   }, [params.slug]);
 
 
@@ -131,20 +145,50 @@ export default function BookDetailPage() {
 
   async function handleSubmitReview(e: React.FormEvent) {
     e.preventDefault();
-    if (!book || myRating === 0) return;
+    if (!book || myRating === 0 || !myBody.trim()) return;
     setSubmitting(true);
     try {
-      const { data } = await ReviewService.submit(book.slug, myRating, myBody);
+      const { data } = await ReviewService.submit(book.slug, myRating, myBody.trim());
+      // Normalize the id to a string ONCE up front — the API returns a raw
+      // ObjectId here, and comparing that against the string ids already
+      // stored in state (see the `id: String(...)` below) always fails,
+      // silently. That left duplicate/stale review rows behind after every
+      // submit or delete.
+      const newId = String((data.review as any)._id);
       setReviews((prev) => {
-        const withoutMine = prev.filter((r) => r.id !== data.review._id);
+        const withoutMine = prev.filter((r) => r.id !== newId);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return [{ ...data.review, id: String(data.review._id) } as any, ...withoutMine];
+        return [{ ...data.review, id: newId } as any, ...withoutMine];
       });
-      setMyBody("");
     } catch {
       // surface via a toast if you have one — omitted here
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  const myReview = reviews.find((r) => r.userId === userId) ?? null;
+
+  useEffect(() => {
+    if (myReview) {
+      setMyRating(myReview.rating);
+      setMyBody(myReview.body);
+    }
+  }, [myReview?.id]);
+
+
+  async function handleDeleteReview() {
+    if (!myReview || deleting) return;
+    setDeleting(true);
+    try {
+      await ReviewService.remove(myReview.id);
+      setReviews((prev) => prev.filter((r) => r.id !== myReview.id));
+      setMyRating(0);
+      setMyBody("");
+    } catch {
+      // ignore — could surface a toast
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -196,10 +240,10 @@ export default function BookDetailPage() {
   }
 
   const totalChapterPages = Math.max(1, Math.ceil(chapters.length / CHAPTERS_PER_PAGE));
-    const pagedChapters = chapters.slice(
-      (chapterPage - 1) * CHAPTERS_PER_PAGE,
-      chapterPage * CHAPTERS_PER_PAGE
-    );
+  const pagedChapters = chapters.slice(
+    (chapterPage - 1) * CHAPTERS_PER_PAGE,
+    chapterPage * CHAPTERS_PER_PAGE
+  );
 
   if (loading) {
     return (
@@ -307,7 +351,7 @@ export default function BookDetailPage() {
               className="mt-5 flex items-center gap-3 rounded-xl border border-hairline bg-surface p-3"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <Avatar avatarUrl={book.author.avatarUrl || null} name={book.author.penName} size={40} />
+              <Avatar avatarUrl={book.author.avatarUrl || null} name={book.author.penName} size={40} />
 
               <div>
                 <p className="font-sans text-sm font-semibold text-ink">{book.author.penName}</p>
@@ -422,41 +466,41 @@ export default function BookDetailPage() {
             </div>
 
             {chapters.length > CHAPTERS_PER_PAGE && (
-                  <div className="mt-3 flex items-center justify-center gap-1">
-                    <button
-                      onClick={() => setChapterPage((p) => Math.max(1, p - 1))}
-                      disabled={chapterPage === 1}
-                      className="rounded-full border border-hairline px-3 py-1.5 font-sans text-xs font-medium text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
-                    >
-                      Prev
-                    </button>
+              <div className="mt-3 flex items-center justify-center gap-1">
+                <button
+                  onClick={() => setChapterPage((p) => Math.max(1, p - 1))}
+                  disabled={chapterPage === 1}
+                  className="rounded-full border border-hairline px-3 py-1.5 font-sans text-xs font-medium text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
+                >
+                  Prev
+                </button>
 
-                    {Array.from({ length: totalChapterPages }).map((_, i) => {
-                      const page = i + 1;
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setChapterPage(page)}
-                          className={`h-8 w-8 rounded-full font-sans text-xs font-medium transition ${
-                            page === chapterPage
-                              ? "bg-accent text-accent-ink"
-                              : "border border-hairline text-ink-muted hover:border-accent hover:text-accent"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
-
+                {Array.from({ length: totalChapterPages }).map((_, i) => {
+                  const page = i + 1;
+                  return (
                     <button
-                      onClick={() => setChapterPage((p) => Math.min(totalChapterPages, p + 1))}
-                      disabled={chapterPage === totalChapterPages}
-                      className="rounded-full border border-hairline px-3 py-1.5 font-sans text-xs font-medium text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
+                      key={page}
+                      onClick={() => setChapterPage(page)}
+                      className={`h-8 w-8 rounded-full font-sans text-xs font-medium transition ${
+                        page === chapterPage
+                          ? "bg-accent text-accent-ink"
+                          : "border border-hairline text-ink-muted hover:border-accent hover:text-accent"
+                      }`}
                     >
-                      Next
+                      {page}
                     </button>
-                  </div>
-                )}
+                  );
+                })}
+
+                <button
+                  onClick={() => setChapterPage((p) => Math.min(totalChapterPages, p + 1))}
+                  disabled={chapterPage === totalChapterPages}
+                  className="rounded-full border border-hairline px-3 py-1.5 font-sans text-xs font-medium text-ink-muted transition hover:border-accent hover:text-accent disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            )}
 
             {/* Reviews */}
             <h2 className="mt-10 font-display text-xl font-semibold text-ink">Reader reviews</h2>
@@ -475,15 +519,28 @@ export default function BookDetailPage() {
                   onChange={(e) => setMyBody(e.target.value)}
                   placeholder="Share what you thought…"
                   rows={3}
+                  required
                   className="mt-2 w-full resize-none rounded-lg border border-hairline bg-transparent px-3 py-2 font-sans text-sm text-ink"
                 />
-                <button
-                  type="submit"
-                  disabled={submitting || myRating === 0}
-                  className="mt-2 rounded-full bg-accent px-4 py-2 font-sans text-sm font-semibold text-accent-ink disabled:opacity-50"
-                >
-                  {submitting ? "Posting…" : "Post review"}
-                </button>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={submitting || myRating === 0 || !myBody.trim()}
+                    className="rounded-full bg-accent px-4 py-2 font-sans text-sm font-semibold text-accent-ink disabled:opacity-50"
+                  >
+                    {submitting ? "Saving…" : myReview ? "Update review" : "Post review"}
+                  </button>
+                  {myReview && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteReview}
+                      disabled={deleting}
+                      className="rounded-full border border-hairline px-4 py-2 font-sans text-sm font-medium text-ink-muted transition hover:border-red-400 hover:text-red-600 disabled:opacity-50"
+                    >
+                      {deleting ? "Deleting…" : "Delete"}
+                    </button>
+                  )}
+                </div>
               </form>
             )}
 

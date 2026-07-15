@@ -59,6 +59,11 @@ export const POST = withAuth(async (req, ctx) => {
       throw new ValidationError("Rating must be an integer 1-5");
     }
 
+    const trimmedBody = typeof body === "string" ? body.trim() : "";
+    if (!trimmedBody) {
+      throw new ValidationError("Review text is required");
+    }
+
     const book = await Book.findOne({ slug }).select("_id authorId title slug").lean();
     if (!book) throw new NotFoundError("Book not found");
 
@@ -68,13 +73,11 @@ export const POST = withAuth(async (req, ctx) => {
     }
 
     const hasReadChapter = await ReadingProgress.exists({ userId: req.user.sub, bookId: book._id });
-
-    // Distinguish create vs update — only notify + only count as "new" the first time.
     const wasExisting = await Review.exists({ bookId: book._id, userId: req.user.sub });
 
     const review = await Review.findOneAndUpdate(
       { bookId: book._id, userId: req.user.sub },
-      { $set: { rating, body: body?.trim() || undefined, verifiedReader: hasReadChapter !== null } },
+      { $set: { rating, body: trimmedBody, verifiedReader: hasReadChapter !== null } },
       { upsert: true, new: true }
     );
 

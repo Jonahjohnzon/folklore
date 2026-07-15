@@ -5,6 +5,7 @@ import { Review, ReviewVote } from "@/app/api/lib/models/Reviews";
 import { hasEliteBadge } from "@/app/api/lib/reviews/badge-gate";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ForbiddenError, ValidationError } from "@/app/api/lib/db/errors";
+import { recalculateBookRating } from "@/app/api/lib/reviews/recalculate-rating";
 
 type VoteField = "helpfulVotes" | "unhelpfulVotes";
 
@@ -49,3 +50,7 @@ export const POST = withAuth(async (req, ctx) => {
     return fail(error);
   }
 });
+
+
+
+

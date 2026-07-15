@@ -72,6 +72,7 @@ export interface PublicReview {
   body: string;
   helpfulVotes: number;
   unhelpfulVotes:number;
+  userId:string
 }
 
 export interface PublicBook {

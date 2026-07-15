@@ -4,7 +4,7 @@ import ApiClient from "@/app/ApiCore";
 const api = new ApiClient();
 
 export interface ReviewDTO {
-  _id: string;
+  _id: string;          // was `_id` — GET route actually sends `id`
   userId: string;
   username: string;
   displayName?: string | null;
@@ -28,6 +28,8 @@ export const ReviewService = {
   getForBook: (slug: string) => api.get<Envelope<{ reviews: ReviewDTO[] }>>(`/api/pages/books/${slug}/reviews`),
   submit: (slug: string, rating: number, body: string) =>
     api.post<Envelope<{ review: ReviewDTO }>>(`/api/pages/books/${slug}/reviews`, { rating, body }),
+  remove: (reviewId: string) =>
+    api.delete<Envelope<{ deleted: boolean }>>(`/api/pages/reviews/${reviewId}`),
   vote: (reviewId: string, vote: "helpful" | "unhelpful") =>
     api.post<Envelope<{ helpfulVotes: number; unhelpfulVotes: number }>>(`/api/pages/reviews/${reviewId}/vote`, { vote }),
   getEligibility: () => api.get<Envelope<{ eligible: boolean }>>("/api/pages/reviews/eligibility"),
