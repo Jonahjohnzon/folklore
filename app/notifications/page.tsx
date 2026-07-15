@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCheck, Loader2, Trash2, X, Inbox } from "lucide-react";
 import { NotificationService, type NotificationItem } from "@/app/services/NotificationService";
+import { hydrateStore } from "../store/StoreHydrator";
 
 const NOTIFICATION_ICONS: Record<string, string> = {
   comment: "💬",
@@ -87,11 +88,12 @@ export default function NotificationsPage() {
     }
   }
 
-  function handleItemClick(item: NotificationItem) {
+  async function handleItemClick(item: NotificationItem) {
     if (item.read) return;
     NotificationService.markRead(item.id);
     setUnreadCount((c) => Math.max(0, c - 1));
     setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, read: true } : i)));
+    await hydrateStore()
   }
 
   async function handleMarkAllRead() {
@@ -101,12 +103,13 @@ export default function NotificationsPage() {
       setUnreadCount(0);
       setItems((prev) => prev.map((i) => ({ ...i, read: true })));
       showToast("Marked all as read");
+      await hydrateStore()
     } finally {
       setMarkingAll(false);
     }
   }
 
-  function handleDelete(e: React.MouseEvent, item: NotificationItem) {
+ async function handleDelete(e: React.MouseEvent, item: NotificationItem) {
     e.preventDefault();
     e.stopPropagation();
     setRemovingIds((prev) => new Set(prev).add(item.id));
@@ -120,9 +123,10 @@ export default function NotificationsPage() {
       });
       if (!item.read) setUnreadCount((c) => Math.max(0, c - 1));
     }, 220);
+    await hydrateStore()
   }
 
-  function handleClearAllClick() {
+ async  function handleClearAllClick() {
     if (!confirmingClear) {
       setConfirmingClear(true);
       confirmTimeout.current = setTimeout(() => setConfirmingClear(false), 3500);
@@ -136,6 +140,7 @@ export default function NotificationsPage() {
       .then(() => showToast("Notifications cleared"))
       .catch(() => showToast("Couldn't clear notifications"))
       .finally(() => setClearing(false));
+     await hydrateStore()
     setTimeout(() => {
       setItems([]);
       setUnreadCount(0);
