@@ -56,7 +56,8 @@ export interface IUser {
   authProviders: string[];
   emailVerificationTokenHash:string | null;
   emailVerificationExpires:Date | null;
-  emailVerificationLastSentAt:Date
+  emailVerificationLastSentAt:Date;
+  websiteUrl:string
 }
 
 // ── Schema ────────────────────────────────────────────────────
@@ -72,7 +73,7 @@ const UserSchema = new Schema<IUser>(
     displayName: { type: String },
     avatarUrl: { type: String },
     bio: { type: String },
-
+    websiteUrl: {type: String },
     activeMode: {
       type: String,
       enum: ["reader", "creator"] satisfies UserMode[],
