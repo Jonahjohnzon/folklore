@@ -30,8 +30,6 @@ export default function ProfilePage() {
 
   const isOwnProfile = snap.authChecked && snap.username === params.username;
 
-  
-
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -61,10 +59,20 @@ export default function ProfilePage() {
     };
   }, [profile, params.username]);
 
-  
+  // Called by ProfileActions -> FollowButton after a successful follow/unfollow
+  const handleFollowChange = (isNowFollowing: boolean) => {
+    setProfile((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        isFollowing: isNowFollowing,
+        followerCount: Math.max(0, (prev.followerCount ?? 0) + (isNowFollowing ? 1 : -1)),
+      };
+    });
+  };
 
   if (loading) {
-   return <ProfileSkeleton />;
+    return <ProfileSkeleton />;
   }
 
   if (notFound || !profile) {
@@ -86,7 +94,6 @@ export default function ProfilePage() {
   const isCreator = profile.creatorStatus === "active";
   const displayName = profile.displayName || profile.username;
 
-
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 ">
       <button
@@ -94,7 +101,6 @@ export default function ProfilePage() {
         className="flex items-center gap-1.5 cursor-pointer rounded-full border border-hairline bg-bg px-3 py-3 font-sans text-xs font-medium text-ink-muted shadow-sm transition hover:border-accent hover:text-accent"
       >
         <Home size={20} />
-        
       </button>
 
       <div className="mt-6 flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
@@ -137,12 +143,13 @@ export default function ProfilePage() {
                 profile={profile}
                 initialFollowing={profile.isFollowing ?? false}
                 initialBlocked={profile.isBlocked ?? false}
+                onFollowChange={handleFollowChange}
               />
             )}
           </div>
 
           {profile.bio && <p className="mt-3 font-sans text-sm text-ink-muted">{profile.bio}</p>}
-            {profile.badges.length > 0 && (
+          {profile.badges.length > 0 && (
             <div className="mt-4">
               <BadgeShelf badges={profile.badges} role="chip" />
             </div>

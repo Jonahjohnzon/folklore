@@ -2,7 +2,9 @@
 import { withAuth } from "@/app/api/auth/withAuth";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Follow } from "@/app/api/lib/models/Follow";
+import { User } from "@/app/api/lib/models/User";
 import { ok, fail } from "@/app/api/response";
+import { dispatchNotification } from "@/app/api/lib/notifications/dispatch";
 
 // POST — follow a book or author
 export const POST = withAuth(async (req) => {
@@ -20,6 +22,23 @@ export const POST = withAuth(async (req) => {
 
     // upsert avoids duplicate-key errors on double-clicks
     await Follow.findOneAndUpdate(doc, doc, { upsert: true });
+
+    // --- notification dispatch (site-only, no email) ---
+    // only fires for author follows, and never for following yourself
+    if (targetType === "author" && String(targetId) !== String(req.user.sub)) {
+      const follower = await User.findById(req.user.sub).select("name username").lean();
+      const actorName = follower?.username || "Someone";
+
+      await dispatchNotification({
+        userId: targetId,
+        type: "new_follower",
+        actorId: req.user.sub,
+        message: `${actorName} started following you`,
+        link: `/${follower?.username ?? ""}`,
+        // no `email` field -> in-app notification only, no email sent
+      });
+    }
+
     return ok({ following: true });
   } catch (error) {
     return fail(error);

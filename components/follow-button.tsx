@@ -1,4 +1,3 @@
-// components/follow-button.tsx
 "use client";
 
 import { useState } from "react";
@@ -7,7 +6,7 @@ import { FollowService, type FollowTargetType } from "@/app/services/FollowServi
 
 interface FollowButtonProps {
   targetType: FollowTargetType;
-  targetId: string|undefined;
+  targetId: string | undefined;
   initialFollowing: boolean;
   onChange?: (following: boolean) => void;
   size?: "sm" | "md";
@@ -18,14 +17,13 @@ export function FollowButton({ targetType, targetId, initialFollowing, onChange,
   const [pending, setPending] = useState(false);
 
   async function handleClick() {
-    if (pending) return;
+    if (pending || !targetId) return;
 
     // optimistic update — flip immediately, roll back on failure
     const next = !following;
     setFollowing(next);
     setPending(true);
-    if(!targetId)
-        return
+
     try {
       if (next) {
         await FollowService.follow(targetType, targetId);
