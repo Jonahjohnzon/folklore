@@ -41,8 +41,8 @@ export function ProfileTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) 
       setError("Please choose an image file.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be under 5MB.");
+    if (file.size > 1 * 1024 * 1024) {
+      setError("Image must be under 1MB.");
       return;
     }
     setAvatarFile(file);
@@ -58,15 +58,12 @@ export function ProfileTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) 
       if (avatarFile) {
         await UserService.uploadAvatar(username, avatarFile);
        }
-      const res = await UserService.updateMe({
+       await UserService.updateMe({
         displayName,
         bio,
         websiteUrl,
       });
-      store.displayName = res.data.user.displayName;
-      store.username = res.data.user.username;
-      store.bio = res.data.user.bio;
-      store.websiteUrl = res.data.user.websiteUrl;
+
       await hydrateStore()
       setAvatarFile(null);
       setStatus("saved");

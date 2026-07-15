@@ -8,6 +8,7 @@ import { AccountTab } from "./edit-profile/AccountTab";
 import { PasswordTab } from "./edit-profile/PasswordTab";
 import { NotificationsTab } from "./edit-profile/NotificationsTab";
 import { DangerZoneTab } from "./edit-profile/DangerZoneTab";
+import { ConfirmDialog } from "./confirm-dialog";
 
 type TabId = "profile" | "account" | "password" | "notifications" | "privacy" | "danger";
 
@@ -18,6 +19,9 @@ const TABS: { id: TabId; label: string; icon: typeof User }[] = [
   { id: "notifications", label: "Notifications", icon: Bell },
   // { id: "danger", label: "Deactivate & delete", icon: TriangleAlert },
 ];
+
+// A pending action waiting on confirmation: either "close" or switching to a specific tab
+type PendingAction = { type: "close" } | { type: "switchTab"; tab: TabId } | null;
 
 export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
   const [active, setActive] = useState<TabId>("profile");
@@ -30,6 +34,7 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
     privacy: false,
     danger: false,
   });
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
 
   useEffect(() => {
     const original = document.body.style.overflow;
@@ -45,15 +50,33 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
   const anyDirty = Object.values(dirty).some(Boolean);
 
   const handleClose = () => {
-    if (anyDirty && !window.confirm("You have unsaved changes. Discard them?")) return;
+    if (anyDirty) {
+      setPendingAction({ type: "close" });
+      return;
+    }
     onClose();
   };
 
   const handleTabChange = (tab: TabId) => {
     if (tab === active) return;
-    if (dirty[active] && !window.confirm("You have unsaved changes on this tab. Switch anyway?")) return;
+    if (dirty[active]) {
+      setPendingAction({ type: "switchTab", tab });
+      return;
+    }
     setActive(tab);
   };
+
+  const confirmPendingAction = () => {
+    if (!pendingAction) return;
+    if (pendingAction.type === "close") {
+      onClose();
+    } else {
+      setActive(pendingAction.tab);
+    }
+    setPendingAction(null);
+  };
+
+  const cancelPendingAction = () => setPendingAction(null);
 
   const content = (
     <div className="fixed inset-0 z-50 flex flex-col bg-bg sm:flex-row">
@@ -145,6 +168,20 @@ export function EditProfileFullscreen({ onClose }: { onClose: () => void }) {
           {active === "danger" && <DangerZoneTab onAccountDeleted={onClose} />}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingAction !== null}
+        title={pendingAction?.type === "close" ? "Discard unsaved changes?" : "Switch tabs without saving?"}
+        description={
+          pendingAction?.type === "close"
+            ? "You have unsaved changes. Closing now will discard them."
+            : "You have unsaved changes on this tab. Switching away will discard them."
+        }
+        confirmLabel="Discard"
+        cancelLabel="Keep editing"
+        onConfirm={confirmPendingAction}
+        onCancel={cancelPendingAction}
+      />
     </div>
   );
 
