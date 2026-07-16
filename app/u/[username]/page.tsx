@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-
+import { MessageButton } from "@/components/chat/message-button";
+import { Library } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
@@ -139,6 +140,8 @@ useEffect(() => {
                 )}
               </div>
             ) : (
+              <div className="flex items-center gap-2">
+              <MessageButton username={profile.username} />
               <ProfileActions
                 username={profile.username}
                 profile={profile}
@@ -146,6 +149,7 @@ useEffect(() => {
                 initialBlocked={profile.isBlocked ?? false}
                 onFollowChange={handleFollowChange}
               />
+            </div>
             )}
           </div>
 
@@ -188,7 +192,19 @@ useEffect(() => {
         </div>
       </div>
 
-      {isCreator && !worksLoading && <ProfileWorksGrid works={works} />}
+      {isCreator ? (
+        !worksLoading && <ProfileWorksGrid works={works} />
+      ) : (
+        <div className="mt-10 flex flex-col items-center gap-3 rounded-xl border border-dashed border-hairline px-6 py-12 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-bg">
+            <Library size={24} className="text-ink-muted" />
+          </div>
+          <p className="font-sans text-sm font-medium text-ink">Just here for the stories</p>
+          <p className="max-w-xs font-sans text-xs text-ink-muted">
+            This reader hasn&apos;t published anything — but they&apos;re out there reading, rating, and following their favorite authors.
+          </p>
+        </div>
+      )}
       {isCreator && worksLoading && (
         <div className="mt-8 grid grid-cols-3 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (

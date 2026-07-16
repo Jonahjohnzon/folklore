@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { X, Heart, CornerDownRight, Loader2, ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { CommentService, type ParagraphCommentDTO } from "@/app/services/CommentService";
 import { Avatar } from "@/components/avatar";
+import Link from "next/link";
 
 const PAGE_SIZE = 10;
 
@@ -77,15 +78,19 @@ function CommentRow({
       setDeleting(false);
     }
   }
-
+  const profileHref = `/u/${comment.username}`;
   return (
     <div className={isReply ? "ml-8 mt-2.5" : ""}>
       <div className="rounded-xl border border-hairline bg-bg p-3">
         <div className="flex items-center gap-2">
-          <Avatar avatarUrl={comment.avatarUrl} name={comment.username} size={28} />
+           <Link href={profileHref} className="shrink-0">
+            <Avatar avatarUrl={comment.avatarUrl} name={comment.username} size={28} />
+          </Link>
          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <p className="truncate font-sans text-sm font-semibold text-ink">{comment.username}</p>
+              <Link href={profileHref} className="truncate font-sans text-sm font-semibold text-ink hover:text-accent hover:underline">
+                {comment.username}
+              </Link>
               {comment.isAuthor && (
                 <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-accent">
                   Author

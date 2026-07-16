@@ -1,6 +1,8 @@
+// components/comment-item.tsx
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MessageCircle, Heart } from "lucide-react";
 import { CommentComposer } from "@/components/comment-composer";
 import { CommentService, type CommentDTO } from "@/app/services/CommentService";
@@ -40,6 +42,10 @@ export function CommentItem({
   const [repliesHasMore, setRepliesHasMore] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [repliesCount, setRepliesCount] = useState(comment.repliesCount);
+
+  const displayName = comment.user?.name ?? "Reader";
+  // ⚠️ assumes CommentDTO's `user` includes `username` — add it server-side if it doesn't yet
+  const profileHref = comment.user?.name ? `/u/${comment.user.name}` : null;
 
   async function handleToggleLike() {
     if (likePending) return;
@@ -90,11 +96,23 @@ export function CommentItem({
   return (
     <div className={`comment-enter flex gap-3 ${!isReply ? "border border-hairline bg-surface" : " bg-accent-ink"} p-3 rounded-lg`}
     id={`comment-${comment._id}`}>
-      <Avatar name={comment.user?.name ?? "Reader"} url={comment.user?.avatarUrl ?? null} />
+      {profileHref ? (
+        <Link href={profileHref} className="shrink-0">
+          <Avatar name={displayName} url={comment.user?.avatarUrl ?? null} />
+        </Link>
+      ) : (
+        <Avatar name={displayName} url={comment.user?.avatarUrl ?? null} />
+      )}
 
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-        <span className="font-sans text-sm font-semibold text-ink">{comment.user?.name ?? "Reader"}</span>
+        {profileHref ? (
+          <Link href={profileHref} className="font-sans text-sm font-semibold text-ink hover:text-accent hover:underline">
+            {displayName}
+          </Link>
+        ) : (
+          <span className="font-sans text-sm font-semibold text-ink">{displayName}</span>
+        )}
         {comment.isAuthor && (
           <span className="rounded-full bg-accent/15 px-1.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-accent">
             Author
@@ -131,7 +149,7 @@ export function CommentItem({
         {replying && (
           <div className="mt-2">
             <CommentComposer
-              placeholder={`Reply to ${comment.user?.name ?? "this comment"}…`}
+              placeholder={`Reply to ${displayName}…`}
               submitLabel="Reply"
               autoFocus
               onSubmit={handlePostReply}

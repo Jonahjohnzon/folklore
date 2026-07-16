@@ -69,14 +69,19 @@ function WorkCover({ book }: { book: BookDTO }) {
 }
 
 export function ProfileWorksGrid({ works }: { works: BookDTO[] }) {
-  if (works.length === 0) {
-    return (
-      <div className="mt-10 rounded-xl border border-dashed border-hairline px-6 py-12 text-center">
-        <BookOpen className="mx-auto text-ink-muted" size={22} />
-        <p className="mt-3 font-sans text-sm text-ink-muted">No published works yet.</p>
+if (works.length === 0) {
+  return (
+    <div className="mt-10 flex flex-col items-center gap-3 rounded-xl border border-dashed border-hairline px-6 py-12 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-bg">
+        <BookOpen size={24} className="text-ink-muted" />
       </div>
-    );
-  }
+      <p className="font-sans text-sm font-medium text-ink">No published works yet</p>
+      <p className="max-w-xs font-sans text-xs text-ink-muted">
+        Once this creator publishes a story, it&apos;ll show up here.
+      </p>
+    </div>
+  );
+}
 
   return (
     <div className="mt-10">
