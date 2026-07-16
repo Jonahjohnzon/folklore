@@ -46,7 +46,7 @@ const WRITE_TABS = [
 
 const TOOLS = [
   { label: "Outline builder", href: "https://www.writinglab.io/outline-generator" },
-  { label: "Name generator", href: "https://sudowrite.com/brainstorm/book-title-generators" },
+  { label: "Image size compressor", href: "https://www.iloveimg.com/" },
   { label: "Grammar check", href: "https://www.grammarly.com/" },
 ];
 
