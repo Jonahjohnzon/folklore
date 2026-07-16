@@ -135,5 +135,13 @@ export const ChapterService = {
   getUnlockStatus(chapterId: string) {
     return api.get<{ data: { unlocked: boolean } }>(`/api/chapters/${chapterId}/unlock`);
   },
+    delete: (chapterId: string) =>
+    api.delete<{ data: { deleted: boolean; totalChapters: number } }>(
+      `/api/creator/chapters/${chapterId}`
+    ),
+  move: (chapterId: string, direction: "up" | "down") =>
+    api.post<{
+      data: { moved: boolean; swapped?: { id: string; orderIndex: number }[] };
+    }>(`/api/creator/chapters/${chapterId}/move`, { direction }),
  
 };

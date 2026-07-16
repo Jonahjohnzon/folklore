@@ -164,7 +164,14 @@ async function handleRestore() {
       <div className="mt-6 rounded-2xl border border-hairline bg-surface p-5">
         <h2 className="font-display text-lg font-semibold text-ink">Chapters</h2>
         <div className="mt-4">
-          <ChapterPerformanceTable bookId={book._id} chapters={chapters} />
+          <ChapterPerformanceTable
+            bookId={book._id}
+            chapters={chapters}
+            onChaptersChange={setChapters}
+            onTotalChaptersChange={(total) =>
+              setBook((prev) => (prev ? { ...prev, totalChapters: total } : prev))
+            }
+          />
         </div>
       </div>
 
