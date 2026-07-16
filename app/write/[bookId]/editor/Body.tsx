@@ -2,7 +2,17 @@
 import { getSheetSurfaceStyle, SheetOpeningRule } from "@/lib/sheet-surface";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Save, UploadCloud, FileUp, Loader2, CheckCircle2, FilePlus } from "lucide-react";
+import {
+  Save,
+  UploadCloud,
+  FileUp,
+  Loader2,
+  CheckCircle2,
+  FilePlus,
+  BookCheck,
+  PartyPopper,
+  AlertTriangle,
+} from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -31,6 +41,30 @@ import { ChapterService } from "@/app/services/ChapterService";
 const TOAST_DURATION_MS = 3500;
 
 type ToastKind = "saved" | "published";
+
+// Shared popup shell: bottom sheet on mobile, centered card from sm and up.
+// Clicking the dimmed backdrop closes it, clicking the card itself doesn't.
+function ModalBackdrop({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-60 flex items-end justify-center bg-ink/50 backdrop-blur-sm sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-t-2xl bg-surface p-5 shadow-xl animate-in slide-in-from-bottom duration-200 sm:rounded-2xl sm:p-6 sm:zoom-in-95 sm:fade-in"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function ChapterEditorPage({ params }: { params: { bookId: string } }) {
   const searchParams = useSearchParams();
@@ -64,10 +98,22 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Tracks whether the chapter has edits since the last successful save/publish.
+  // Drives the "discard changes?" popup and the browser's native leave-warning.
+  const [isDirty, setIsDirty] = useState(false);
+  const suppressDirtyRef = useRef(false); // true while we're programmatically loading content
+
   // Obvious success feedback — a toast that pops up after a save/publish
   // completes, plus its own timer so a later action can cancel/replace it.
   const [toast, setToast] = useState<ToastKind | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // "Mark book complete" flow
+  const [completingBook, setCompletingBook] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+
+  // "Discard unsaved changes?" flow (shown before Next chapter, when dirty)
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -126,13 +172,40 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
           .replace(/<\/font>/gi, "");
       },
     },
-    onUpdate: ({ editor }) => updateWordCount(editor.getText()),
+    onUpdate: ({ editor }) => {
+      updateWordCount(editor.getText());
+      if (!suppressDirtyRef.current) setIsDirty(true);
+    },
   });
 
+  // Actually navigates to a fresh chapter — bypassed by the discard-changes
+  // check below unless the user confirms (or there's nothing to lose).
   function handleNextChapter() {
-
-  window.location.href = window.location.pathname;
+    window.location.href = window.location.pathname;
   }
+
+  // Gate for the "Next chapter" button: only interrupt with a popup if the
+  // current chapter has unsaved edits.
+  function handleNextChapterClick() {
+    if (isDirty) {
+      setShowDiscardModal(true);
+    } else {
+      handleNextChapter();
+    }
+  }
+
+  // Native browser warning for actual tab close / refresh / URL-bar navigation.
+  // Browsers don't allow a custom-styled dialog here for security reasons —
+  // this is the one spot that can't be a designed popup.
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   // Load the book so the header shows its real title instead of a placeholder.
   useEffect(() => {
@@ -159,6 +232,7 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
     if (!existingChapterId || !editor) return;
     let cancelled = false;
     setLoadingChapter(true);
+    suppressDirtyRef.current = true;
     ChapterService.get(params.bookId, existingChapterId)
       .then(({ data }) => {
         if (cancelled) return;
@@ -170,6 +244,7 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
         setChapterCoverPreview(chapter.coverUrl ?? null);
         editor.commands.setContent(chapter.content || "<p></p>");
         updateWordCount(editor.getText());
+        setIsDirty(false);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -178,12 +253,38 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
       })
       .finally(() => {
         if (!cancelled) setLoadingChapter(false);
+        suppressDirtyRef.current = false;
       });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingChapterId, editor]);
+
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setTitle(e.target.value);
+    setIsDirty(true);
+  }
+
+  function handleAccessChange(next: ChapterAccess) {
+    setAccess(next);
+    setIsDirty(true);
+  }
+
+  function handleCoinsChange(next: number) {
+    setCoins(next);
+    setIsDirty(true);
+  }
+
+  function handleSoundSelect(id: string | null) {
+    setSelectedSoundId(id);
+    setIsDirty(true);
+  }
+
+  function handleSoundClear() {
+    setSelectedSoundId(null);
+    setIsDirty(true);
+  }
 
   function handleChapterCoverSelect(file: File) {
     setChapterCoverFile(file);
@@ -284,6 +385,7 @@ async function handleLocksChange(next: CreatorLocks) {
       const id = await persistChapter();
       // if (id) await uploadPendingCoverIfAny(id);
       setLastSavedAt(new Date());
+      setIsDirty(false);
       showToast("saved");
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Couldn't save the draft.");
@@ -308,11 +410,59 @@ async function handleLocksChange(next: CreatorLocks) {
         await ChapterService.publish(params.bookId, id);
       }
       setLastSavedAt(new Date());
+      setIsDirty(false);
       showToast("published");
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Couldn't publish the chapter.");
     } finally {
       setPublishing(false);
+    }
+  }
+
+  // Save from inside the discard-changes popup, then continue on to the next chapter.
+  async function handleSaveAndContinue() {
+    if (!editor || saving || publishing) return;
+    const validationError = validateChapter();
+    if (validationError) {
+      setSaveError(validationError);
+      setShowDiscardModal(false);
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await persistChapter();
+      setLastSavedAt(new Date());
+      setIsDirty(false);
+      showToast("saved");
+      setShowDiscardModal(false);
+      handleNextChapter();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Couldn't save the draft.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleDiscardAndContinue() {
+    setShowDiscardModal(false);
+    setIsDirty(false);
+    handleNextChapter();
+  }
+
+  // --- Mark the whole book as complete ---
+  async function handleMarkComplete() {
+    if (completingBook || book?.status === "completed") return;
+    setCompletingBook(true);
+    setSaveError(null);
+    try {
+      const { data } = await BookService.update(params.bookId, { status: "completed" });
+      setBook(data.book);
+      setShowCompleteModal(true);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Couldn't mark the book as complete.");
+    } finally {
+      setCompletingBook(false);
     }
   }
 
@@ -346,6 +496,7 @@ async function handleLocksChange(next: CreatorLocks) {
 
       editor.commands.setContent(html || "<p></p>");
       updateWordCount(editor.getText());
+      setIsDirty(true);
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Couldn't read that file.");
     } finally {
@@ -419,6 +570,72 @@ async function handleLocksChange(next: CreatorLocks) {
         </div>
       )}
 
+      {/* "Book marked complete" congratulations popup */}
+      {showCompleteModal && (
+        <ModalBackdrop onClose={() => setShowCompleteModal(false)}>
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+              <PartyPopper size={28} className="text-emerald-600" />
+            </div>
+            <h2 className="font-display text-lg font-bold text-ink sm:text-xl">Congratulations! 🎉</h2>
+            <p className="mt-1.5 font-sans text-sm text-ink-muted">
+              {`"${book?.title ?? "Your book"}" is now marked as complete. Readers will see it as finished.`}
+            </p>
+            <div className="mt-5 flex w-full flex-col-reverse gap-2 sm:flex-row">
+              <button
+                onClick={() => setShowCompleteModal(false)}
+                className="w-full rounded-full border border-hairline bg-bg px-4 py-2.5 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent sm:flex-1"
+              >
+                Keep editing
+              </button>
+              <button
+                onClick={() => (window.location.href = "/dashboard")}
+                className="w-full rounded-full bg-accent px-4 py-2.5 font-sans text-sm font-semibold text-accent-ink shadow-sm transition hover:opacity-90 sm:flex-1"
+              >
+                Go to dashboard
+              </button>
+            </div>
+          </div>
+        </ModalBackdrop>
+      )}
+
+      {/* "Discard unsaved changes?" popup — shown before leaving the chapter via Next chapter */}
+      {showDiscardModal && (
+        <ModalBackdrop onClose={() => setShowDiscardModal(false)}>
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+              <AlertTriangle size={26} className="text-amber-600" />
+            </div>
+            <h2 className="font-display text-lg font-bold text-ink sm:text-xl">Discard unsaved changes?</h2>
+            <p className="mt-1.5 font-sans text-sm text-ink-muted">
+              You have unsaved edits on this chapter. Leaving now without saving will discard them.
+            </p>
+            <div className="mt-5 flex w-full flex-col gap-2">
+              <button
+                onClick={handleSaveAndContinue}
+                disabled={saving}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 font-sans text-sm font-semibold text-accent-ink shadow-sm transition hover:opacity-90 disabled:opacity-50"
+              >
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                Save &amp; continue
+              </button>
+              <button
+                onClick={handleDiscardAndContinue}
+                className="w-full rounded-full border border-red-300 bg-red-50 px-4 py-2.5 font-sans text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-100"
+              >
+                Discard changes
+              </button>
+              <button
+                onClick={() => setShowDiscardModal(false)}
+                className="w-full rounded-full px-4 py-2.5 font-sans text-sm font-medium text-ink-muted transition hover:text-ink"
+              >
+                Keep editing
+              </button>
+            </div>
+          </div>
+        </ModalBackdrop>
+      )}
+
       {/* Header: title stacks above the action row on mobile, sits side-by-side on larger screens */}
       <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -451,7 +668,18 @@ async function handleLocksChange(next: CreatorLocks) {
             <span className="hidden sm:inline">{importing ? "Importing…" : "Import file"}</span>
           </button>
           <button
-            onClick={handleNextChapter}
+            onClick={handleMarkComplete}
+            disabled={completingBook || book?.status === "completed"}
+            aria-label="Mark book complete"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent disabled:opacity-50 sm:px-4"
+          >
+            {completingBook ? <Loader2 size={14} className="animate-spin" /> : <BookCheck size={14} />}
+            <span className="hidden sm:inline">
+              {book?.status === "completed" ? "Completed" : "Mark book complete"}
+            </span>
+          </button>
+          <button
+            onClick={handleNextChapterClick}
             aria-label="Next chapter"
             className="flex shrink-0 items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-2 font-sans text-sm font-medium text-ink shadow-sm transition hover:border-accent sm:px-4"
           >
@@ -506,7 +734,7 @@ async function handleLocksChange(next: CreatorLocks) {
 
            <input
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={handleTitleChange}
             placeholder="Chapter title"
             className="w-full bg-transparent px-4 pt-4 font-display text-xl font-semibold text-ink placeholder:text-ink-muted/50 focus:outline-none sm:px-5 sm:pt-5 sm:text-2xl"
            />
@@ -528,11 +756,11 @@ async function handleLocksChange(next: CreatorLocks) {
 
         <ChapterSidebar
           access={access}
-          onAccessChange={setAccess}
+          onAccessChange={handleAccessChange}
           coins={coins}
-          onCoinsChange={setCoins}
+          onCoinsChange={handleCoinsChange}
           selectedSoundId={selectedSoundId}
-          onClearSound={() => setSelectedSoundId(null)}
+          onClearSound={handleSoundClear}
           onOpenSoundPicker={() => setSoundPickerOpen(true)}
           coverPreview={chapterCoverPreview}
           onCoverSelect={handleChapterCoverSelect}
@@ -547,7 +775,7 @@ async function handleLocksChange(next: CreatorLocks) {
       <SoundPickerModal
         open={soundPickerOpen}
         selectedSoundId={selectedSoundId}
-        onSelect={setSelectedSoundId}
+        onSelect={handleSoundSelect}
         onClose={() => setSoundPickerOpen(false)}
       />
     </main>
