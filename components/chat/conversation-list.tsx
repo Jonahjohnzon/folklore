@@ -22,7 +22,7 @@ export function ConversationList({ activeId }: { activeId?: string }) {
 
     const interval = setInterval(() => {
       ChatService.getConversations().then(({ data }) => !cancelled && setConversations(data.conversations));
-    }, 15000);
+    }, 40000);
 
     return () => {
       cancelled = true;
