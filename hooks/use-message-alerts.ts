@@ -1,10 +1,10 @@
 // hooks/use-message-alerts.ts
 "use client";
 
-import { useEffect,  useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useSnapshot } from "valtio";
 import { store } from "@/app/store/userStore";
-import { ChatService } from "@/app/services/ChatService";
+import { ChatService, type ConversationDTO } from "@/app/services/ChatService";
 
 export interface IncomingMessageAlert {
   conversationId: string;
