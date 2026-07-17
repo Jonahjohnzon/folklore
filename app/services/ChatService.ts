@@ -51,4 +51,6 @@ export const ChatService = {
 
   clearAllChats: () =>
     api.post<{ data: { cleared: number } }>("/api/pages/chat/conversations/clear-all"),
+  getUnreadCount: () =>
+    api.get<{ data: { unreadCount: number } }>("/api/pages/chat/unread-count"),
 };

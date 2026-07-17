@@ -6,6 +6,7 @@ import { useSnapshot } from "valtio";
 import { SearchBox } from "./search-dropdown";
 import { NotificationBell } from "./notification-bell";
 import { useRouter } from "nextjs-toploader/app";
+import { MessageBell } from "@/components/chat/message-bell";
 import {
   Search,
   Menu,
@@ -556,7 +557,7 @@ export function Navbar() {
 
           <WriteMenu />
           <AccountMenu />
-
+          {!isLoading && isLoggedIn && <MessageBell />}
           {!isLoading && isLoggedIn && <NotificationBell />}
 
           <MobileMenu />

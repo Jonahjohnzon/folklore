@@ -8,7 +8,9 @@ import { RouteProgressBar } from "@/components/route-progress-bar";
 import { Suspense } from "react";
 import NextTopLoader from "nextjs-toploader";
 import { Kalam } from "next/font/google";
-import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import { MessageToastListener } from "@/components/chat/message-toast-listener";
+import { NotificationPermissionPrompt } from "@/components/chat/notification-permission-prompt";
+import { MessageAlertsMount } from "@/components/chat/message-alerts-mount";
 
 
 const SITE_NAME = "TipaTale";
@@ -126,6 +128,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>
+        <MessageAlertsMount />
+        <MessageToastListener />
+        <NotificationPermissionPrompt />
         <NextTopLoader
           color="var(--accent)"
           initialPosition={0.15}
