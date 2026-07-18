@@ -3,6 +3,11 @@ import { withAuth } from "@/app/api/auth/withAuth";
 import { ok, fail } from "@/app/api/response";
 import { ValidationError } from "@/app/api/lib/db/errors";
 import { v2 as cloudinary } from "cloudinary";
+import sharp from "sharp";
+import { compressCoverImage } from "@/app/api/lib/images/compress";
+
+// sharp needs the Node runtime, not edge
+export const runtime = "nodejs";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,6 +17,10 @@ cloudinary.config({
 
 const MAX_BYTES = 1 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+// Cap dimensions and re-encode as webp to keep uploads small and consistent,
+
+
 
 function uploadBuffer(buffer: Buffer, folder: string): Promise<{ secure_url: string; public_id: string }> {
   return new Promise((resolve, reject) => {
@@ -40,7 +49,15 @@ export const POST = withAuth(async (req) => {
       throw new ValidationError("Image too large", { cover: ["Max size is 1MB"] });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const rawBuffer = Buffer.from(await file.arrayBuffer());
+
+    let buffer: Buffer;
+    try {
+      buffer = await compressCoverImage(rawBuffer);
+    } catch {
+      throw new ValidationError("Could not process image", { cover: ["File may be corrupt or unsupported"] });
+    }
+
     const result = await uploadBuffer(buffer, `books/staging/${req.user.sub}`);
 
     return ok({ coverUrl: result.secure_url, coverPublicId: result.public_id });

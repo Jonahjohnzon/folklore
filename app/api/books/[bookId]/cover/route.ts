@@ -4,7 +4,10 @@ import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Book } from "@/app/api/lib/models/Book";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ForbiddenError, ValidationError } from "@/app/api/lib/db/errors";
+import { compressCoverImage } from "@/app/api/lib/images/compress";
 import { v2 as cloudinary } from "cloudinary";
+
+export const runtime = "nodejs"; // sharp needs Node, not Edge
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -48,7 +51,15 @@ export const POST = withAuth(async (req, ctx) => {
       throw new ValidationError("image too large", { cover: ["Max size is 1MB"] });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const rawBuffer = Buffer.from(await file.arrayBuffer());
+
+    let buffer: Buffer;
+    try {
+      buffer = await compressCoverImage(rawBuffer);
+    } catch {
+      throw new ValidationError("Could not process image", { cover: ["File may be corrupt or unsupported"] });
+    }
+
     const result = await uploadBuffer(buffer, `books/${book._id}/cover`);
 
     const oldPublicId = book.coverPublicId;
