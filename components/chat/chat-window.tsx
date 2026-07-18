@@ -157,7 +157,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           <button
             onClick={() => router.back()}
             aria-label="Go back"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted transition hover:bg-bg"
+            className="flex h-8 w-8 sm:hidden shrink-0 items-center justify-center rounded-full text-ink-muted transition hover:bg-bg"
           >
             <ArrowLeft size={17} />
           </button>
