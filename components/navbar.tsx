@@ -517,10 +517,13 @@ export function Navbar() {
   const isLoggedIn = snap.hydrated && !!snap._id;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline bg-surface/90 backdrop-blur supports-backdrop-filter:bg-surface/75">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink">
-         <Image src="/logo.png" alt="TipaTale" width={62} height={62} priority />
+    <header className="sticky top-0 z-40 w-full overflow-x-clip border-b border-hairline bg-surface/90 backdrop-blur supports-backdrop-filter:bg-surface/75">
+      <div className="mx-auto flex h-16 max-w-7xl min-w-0 items-center gap-2 px-3 sm:gap-3 sm:px-6">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink"
+        >
+          <Image src="/logo.png" alt="TipaTale" width={44} height={44} priority className="sm:h-[62px] sm:w-[62px]" />
         </Link>
 
         <nav className="ml-2 hidden items-center gap-5 lg:flex">
@@ -539,21 +542,24 @@ export function Navbar() {
           <SearchBox />
         </div>
 
-        <div className="ml-auto flex items-center gap-2 md:ml-3">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 md:ml-3">
           <button
             onClick={() => setSearchOpen((s) => !s)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-muted md:hidden"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-hairline text-ink-muted md:hidden"
             aria-label="Search"
           >
             <Search size={16} />
           </button>
 
-          {/* Coin balance and notifications only mean something once you're
-              signed in — hiding them for logged-out visitors instead of
-              showing a "0" balance or an empty, meaningless bell. */}
-          {!isLoading && isLoggedIn && <CoinDisplay balance={snap.coinBalance} />}
+          {!isLoading && isLoggedIn && (
+            <div className="hidden sm:block">
+              <CoinDisplay balance={snap.coinBalance} />
+            </div>
+          )}
 
-          <ThemeSwitcher />
+          <div className="hidden sm:block">
+            <ThemeSwitcher />
+          </div>
 
           <WriteMenu />
           <AccountMenu />
