@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import {
-  Coins, Check, ShieldCheck, CreditCard, Bitcoin, Landmark,
+  Coins, Check, ShieldCheck, CreditCard, Bitcoin, Landmark, Globe,
   ArrowUpRight, ArrowDownRight, Info, ArrowLeft, Loader2, Clock,
 } from "lucide-react";
 import {
@@ -13,15 +13,16 @@ import {
   type CoinPackage, type PaystackCurrency,
 } from "@/lib/coin-packages";
 import { formatMoney, formatPerCoin } from "@/lib/currency";
-import { startCoinCheckout, startCryptoCheckout, goToCheckout, CheckoutError } from "@/lib/services/coinCheckout";
+import {
+  startCoinCheckout, startFlutterwaveCheckout, startCryptoCheckout,
+  goToCheckout, CheckoutError,
+} from "@/lib/services/coinCheckout";
 
-type PaymentMethod = "paystack" | "crypto";
+type PaymentMethod = "paystack" | "flutterwave" | "crypto";
 
 const PENDING_POLL_INTERVAL_MS = 4000;
 const PENDING_POLL_MAX_ATTEMPTS = 20;
 
-// Fallback shown before /api/coins/currencies responds (or if it fails) —
-// NGN is the one currency we know is always configured.
 const DEFAULT_CURRENCIES = SUPPORTED_CURRENCIES.filter((c) => c.code === "NGN");
 
 // Module scope — this is static config, not per-render state.
@@ -46,8 +47,6 @@ export default function CoinsPage() {
   );
 }
 
-// Lightweight skeleton shown before the client can read search params —
-// mirrors the page's basic shape so there's no jarring layout shift.
 function CoinsPageFallback() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -95,7 +94,6 @@ function CoinsPageContent() {
         CoinService.getTransactions(),
       ]);
       setBalance(balRes.data.coinBalance);
-
       setActivity(actRes.data.filter((item) => item.status !== "pending"));
       return balRes.data.coinBalance;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -109,33 +107,33 @@ function CoinsPageContent() {
     loadWallet();
   }, [loadWallet]);
 
-  // Only offer currencies the backend can actually settle — avoids sending
-  // people into a checkout that 500s because a Paystack sub-account isn't set up yet.
+  // Refetch whenever the payment method changes — Paystack and Flutterwave
+  // don't necessarily support the same currency set.
   useEffect(() => {
+    if (method === "crypto") return; // crypto has no currency picker
+
     let cancelled = false;
 
-    fetch("/api/coins/currencies")
+    fetch(`/api/coins/currencies?method=${method}`)
       .then((r) => r.json())
       .then((json) => {
         if (cancelled) return;
-        if (json.success && json.data?.currencies?.length) {
-          setAvailableCurrencies(json.data.currencies);
-          // If the currently selected currency isn't actually available, fall back to the first one that is.
-          setCurrency((prev) =>
-            json.data.currencies.some((c: { code: PaystackCurrency }) => c.code === prev)
-              ? prev
-              : json.data.currencies[0].code
-          );
-        }
+        const currencies = json.success ? json.data?.currencies ?? [] : [];
+        setAvailableCurrencies(currencies.length ? currencies : DEFAULT_CURRENCIES);
+        setCurrency((prev) =>
+          currencies.some((c: { code: PaystackCurrency }) => c.code === prev)
+            ? prev
+            : (currencies[0]?.code ?? "NGN")
+        );
       })
       .catch(() => {
-        // keep the NGN-only fallback
+        setAvailableCurrencies(DEFAULT_CURRENCIES);
       });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [method]);
 
   useEffect(() => {
     if (!awaitingCryptoConfirmation) return;
@@ -161,9 +159,7 @@ function CoinsPageContent() {
 
   const bestValueId = bestValuePackageId(currency);
   const selectedPackage = COIN_PACKAGES.find((p) => p.id === selectedPackageId)!;
-  const maxCostPerCoin = Math.max(
-    ...COIN_PACKAGES.map((p) => costPerCoin(p, currency))
-  );
+  const maxCostPerCoin = Math.max(...COIN_PACKAGES.map((p) => costPerCoin(p, currency)));
   const currencyMeta =
     SUPPORTED_CURRENCIES.find((c) => c.code === currency) ?? SUPPORTED_CURRENCIES[0];
 
@@ -174,14 +170,17 @@ function CoinsPageContent() {
     try {
       if (method === "paystack") {
         const { authorizationUrl } = await startCoinCheckout({
-          packageId: selectedPackageId,
-          email: email.trim(),
-          currency,
+          packageId: selectedPackageId, email: email.trim(), currency,
+        });
+        goToCheckout(authorizationUrl);
+      } else if (method === "flutterwave") {
+        const { authorizationUrl } = await startFlutterwaveCheckout({
+          packageId: selectedPackageId, email: email.trim(), currency,
         });
         goToCheckout(authorizationUrl);
       } else {
-        // const { paymentUrl } = await startCryptoCheckout({ packageId: selectedPackageId, email: email.trim() });
-        // goToCheckout(paymentUrl);
+        const { paymentUrl } = await startCryptoCheckout({ packageId: selectedPackageId, email: email.trim() });
+        goToCheckout(paymentUrl);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -190,7 +189,9 @@ function CoinsPageContent() {
     }
   }
 
-  const price = formatMoney(priceFor(selectedPackage, currency), currency);
+  const price = method === "crypto"
+    ? formatMoney(priceFor(selectedPackage, "USD"), "USD")
+    : formatMoney(priceFor(selectedPackage, currency), currency);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -241,17 +242,18 @@ function CoinsPageContent() {
       <section className="mb-6 rounded-2xl border border-hairline bg-surface-raised p-5 shadow-sm">
         <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Pay with</p>
         <div className="flex flex-wrap gap-2">
-          <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Card / bank transfer / mobile money" />
+          <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Paystack" />
+          <MethodButton active={method === "flutterwave"} onClick={() => setMethod("flutterwave")} icon={Globe} label="Flutterwave" />
           <MethodButton
             active={false}
             disabled
             onClick={() => {}}
             icon={Bitcoin}
-            label="Crypto ($) — Coming soon"
+            label="Crypto — Coming soon"
           />
         </div>
 
-        {method === "paystack" && availableCurrencies.length > 1 && (
+        {(method === "paystack" || method === "flutterwave") && availableCurrencies.length > 1 && (
           <div className="mt-4 border-t border-hairline pt-4">
             <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Currency</p>
             <div className="flex flex-wrap gap-2">
@@ -270,6 +272,12 @@ function CoinsPageContent() {
               ))}
             </div>
           </div>
+        )}
+
+        {(method === "paystack" || method === "flutterwave") && availableCurrencies.length === 0 && (
+          <p className="mt-3 font-sans text-xs text-ink-muted">
+            This payment method isn&apos;t set up yet — try a different one.
+          </p>
         )}
 
         {method === "crypto" && (
@@ -318,7 +326,7 @@ function CoinsPageContent() {
           <div className="flex flex-col items-end gap-2">
             <button
               onClick={handleBuyClick}
-              disabled={isCheckingOut}
+              disabled={isCheckingOut || ((method === "paystack" || method === "flutterwave") && availableCurrencies.length === 0)}
               className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-sans text-sm font-semibold text-accent-ink shadow-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Coins size={16} />
@@ -398,11 +406,7 @@ function CoinsPageContent() {
 }
 
 function MethodButton({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-  disabled,
+  active, onClick, icon: Icon, label, disabled,
 }: {
   active: boolean;
   onClick: () => void;

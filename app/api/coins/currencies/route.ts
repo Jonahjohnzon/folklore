@@ -1,9 +1,7 @@
 import { SUPPORTED_CURRENCIES, type PaystackCurrency } from "@/lib/coin-packages";
 import { ok } from "@/app/api/response";
 
-// Mirrors the map in the checkout route — a currency only counts as "available"
-// if its secret key is actually set.
-const CONFIGURED: Record<PaystackCurrency, boolean> = {
+const PAYSTACK_CONFIGURED: Record<PaystackCurrency, boolean> = {
   NGN: !!process.env.PAYSTACK_SECRET_KEY,
   GHS: !!process.env.PAYSTACK_SECRET_KEY_GHS,
   ZAR: !!process.env.PAYSTACK_SECRET_KEY_ZAR,
@@ -11,7 +9,19 @@ const CONFIGURED: Record<PaystackCurrency, boolean> = {
   USD: !!process.env.PAYSTACK_SECRET_KEY_USD,
 };
 
-export const GET = async () => {
-  const available = SUPPORTED_CURRENCIES.filter((c) => CONFIGURED[c.code]);
-  return ok({ currencies: available });
+// Flutterwave uses one account for every currency, so once it's configured
+// at all, every currency we price packages in is fair game.
+const FLUTTERWAVE_CONFIGURED = !!process.env.FLUTTERWAVE_SECRET_KEY;
+
+export const GET = async (req: Request) => {
+  const method = new URL(req.url).searchParams.get("method") ?? "paystack";
+
+  const currencies =
+    method === "flutterwave"
+      ? FLUTTERWAVE_CONFIGURED
+        ? SUPPORTED_CURRENCIES
+        : []
+      : SUPPORTED_CURRENCIES.filter((c) => PAYSTACK_CONFIGURED[c.code]);
+
+  return ok({ currencies });
 };

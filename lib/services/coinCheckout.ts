@@ -8,8 +8,8 @@ export interface StartCheckoutParams {
 
 export class CheckoutError extends Error {}
 
-export async function startCoinCheckout(params: StartCheckoutParams) {
-  const res = await fetch("/api/coins/checkout", {
+async function postCheckout(url: string, params: StartCheckoutParams) {
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
@@ -17,6 +17,14 @@ export async function startCoinCheckout(params: StartCheckoutParams) {
   const json = await res.json();
   if (!json.success) throw new CheckoutError(json.error?.message ?? "Could not start checkout");
   return json.data as { authorizationUrl: string; reference: string };
+}
+
+export function startCoinCheckout(params: StartCheckoutParams) {
+  return postCheckout("/api/coins/checkout", params);
+}
+
+export function startFlutterwaveCheckout(params: StartCheckoutParams) {
+  return postCheckout("/api/coins/checkout/flutterwave", params);
 }
 
 export async function startCryptoCheckout(params: StartCheckoutParams) {
