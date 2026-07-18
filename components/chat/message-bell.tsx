@@ -56,7 +56,11 @@ export function MessageBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-hairline bg-surface-raised shadow-xl">
+        // Mobile: fixed, full-width sheet pinned just under the sticky header (h-16),
+        // so a 320px panel never overflows past the screen edge regardless of where
+        // the bell icon sits in the header row. From `sm` up, reverts to a normal
+        // anchored dropdown under the button.
+        <div className="fixed inset-x-3 top-18 z-50 overflow-hidden rounded-xl border border-hairline bg-surface-raised shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80">
           <div className="flex items-center justify-between border-b border-hairline px-3.5 py-2.5">
             <span className="font-sans text-sm font-semibold text-ink">Messages</span>
             <Link

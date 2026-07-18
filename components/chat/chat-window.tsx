@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Send, Loader2, MoreVertical, Eraser } from "lucide-react";
+import { ArrowLeft, Send, Loader2, MoreVertical, Eraser, Home } from "lucide-react";
 import { useSnapshot } from "valtio";
 import { store } from "@/app/store/userStore";
 import { ChatService, type MessageDTO, type ConversationDTO } from "@/app/services/ChatService";
@@ -152,6 +152,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     <div className="flex h-full flex-1 flex-col">
       <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-3">
         <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            aria-label="Go to home"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted transition hover:bg-bg"
+          >
+            <Home size={17} />
+          </Link>
           <Link href="/messages" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-bg lg:hidden">
             <ArrowLeft size={17} className="text-ink-muted" />
           </Link>

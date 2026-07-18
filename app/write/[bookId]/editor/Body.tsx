@@ -2,6 +2,7 @@
 import { getSheetSurfaceStyle, SheetOpeningRule } from "@/lib/sheet-surface";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   Save,
   UploadCloud,
@@ -12,6 +13,7 @@ import {
   BookCheck,
   PartyPopper,
   AlertTriangle,
+  Home,
 } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -638,13 +640,22 @@ async function handleLocksChange(next: CreatorLocks) {
 
       {/* Header: title stacks above the action row on mobile, sits side-by-side on larger screens */}
       <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-sans text-xs font-medium uppercase tracking-wide text-accent">
-            {book?.title ?? "Loading…"}
-          </p>
-          <h1 className="mt-0.5 font-display text-xl font-bold text-ink sm:text-2xl">
-            {chapterId ? "Edit chapter" : "New chapter"}
-          </h1>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            aria-label="Go to home"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-hairline bg-bg text-ink-muted shadow-sm transition hover:border-accent hover:text-accent"
+          >
+            <Home size={16} />
+          </Link>
+          <div>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-accent">
+              {book?.title ?? "Loading…"}
+            </p>
+            <h1 className="mt-0.5 font-display text-xl font-bold text-ink sm:text-2xl">
+              {chapterId ? "Edit chapter" : "New chapter"}
+            </h1>
+          </div>
         </div>
 
         {/* Action row: horizontally scrollable on narrow screens instead of wrapping/overflowing,
