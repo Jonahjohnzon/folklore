@@ -38,7 +38,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <main>
+    <main className=" overflow-x-hidden">
       <ScrollToTop />
       <Navbar />
       <EmailVerificationBanner/>

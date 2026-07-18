@@ -457,9 +457,9 @@ function MobileMenu() {
             </>
           )}
 
-          <DropdownItem href="/write" onClick={() => setOpen(false)} icon={PenSquare} variant="accent">
+          {isCreator && <DropdownItem href="/write" onClick={() => setOpen(false)} icon={PenSquare} variant="accent">
             Start writing
-          </DropdownItem>
+          </DropdownItem>}
           <DropdownItem href="/library" onClick={() => setOpen(false)} icon={Library}>
             My library
           </DropdownItem>
