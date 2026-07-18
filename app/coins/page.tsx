@@ -7,11 +7,12 @@ import {
   Coins, Check, ShieldCheck, CreditCard, Bitcoin, Landmark,
   ArrowUpRight, ArrowDownRight, Info, ArrowLeft, Loader2, Clock,
 } from "lucide-react";
-import { formatNaira, formatUsd, formatNairaPerCoin, formatUsdPerCoin } from "@/lib/currency";
 import {
-  COIN_PACKAGES, totalCoins, bonusPercent, costPerCoinNaira, costPerCoinUsd,
-  bestValuePackageId, type CoinPackage,
+  COIN_PACKAGES, totalCoins, bonusPercent, costPerCoin,
+  bestValuePackageId, priceFor, SUPPORTED_CURRENCIES,
+  type CoinPackage, type PaystackCurrency,
 } from "@/lib/coin-packages";
+import { formatMoney, formatPerCoin } from "@/lib/currency";
 import { startCoinCheckout, startCryptoCheckout, goToCheckout, CheckoutError } from "@/lib/services/coinCheckout";
 
 type PaymentMethod = "paystack" | "crypto";
@@ -69,7 +70,7 @@ function CoinsPageContent() {
   const [activity, setActivity] = useState<CoinActivityItem[] | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState(COIN_PACKAGES[1].id);
   const [method, setMethod] = useState<PaymentMethod>("paystack");
-  const currency: "NGN" | "USD" = method === "paystack" ? "NGN" : "USD";
+  const [currency, setCurrency] = useState<PaystackCurrency>("NGN");
 
   const [email, setEmail] = useState("");
   const [balance, setBalance] = useState<number | null>(null);
@@ -89,7 +90,7 @@ function CoinsPageContent() {
         CoinService.getTransactions(),
       ]);
       setBalance(balRes.data.coinBalance);
-      
+
       setActivity(actRes.data.filter((item) => item.status !== "pending"));
       return balRes.data.coinBalance;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,8 +129,9 @@ function CoinsPageContent() {
   const bestValueId = bestValuePackageId(currency);
   const selectedPackage = COIN_PACKAGES.find((p) => p.id === selectedPackageId)!;
   const maxCostPerCoin = Math.max(
-    ...COIN_PACKAGES.map((p) => (currency === "NGN" ? costPerCoinNaira(p) : costPerCoinUsd(p)))
+    ...COIN_PACKAGES.map((p) => costPerCoin(p, currency))
   );
+  const currencyMeta = SUPPORTED_CURRENCIES.find((c) => c.code === currency)!;
 
   async function handleBuyClick() {
     setCheckoutError(null);
@@ -137,7 +139,11 @@ function CoinsPageContent() {
     setIsCheckingOut(true);
     try {
       if (method === "paystack") {
-        const { authorizationUrl } = await startCoinCheckout({ packageId: selectedPackageId, email: email.trim() });
+        const { authorizationUrl } = await startCoinCheckout({
+          packageId: selectedPackageId,
+          email: email.trim(),
+          currency,
+        });
         goToCheckout(authorizationUrl);
       } else {
         // const { paymentUrl } = await startCryptoCheckout({ packageId: selectedPackageId, email: email.trim() });
@@ -150,7 +156,7 @@ function CoinsPageContent() {
     }
   }
 
-  const price = currency === "NGN" ? formatNaira(selectedPackage.nairaPrice) : formatUsd(selectedPackage.usdPrice);
+  const price = formatMoney(priceFor(selectedPackage, currency), currency);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -201,7 +207,7 @@ function CoinsPageContent() {
       <section className="mb-6 rounded-2xl border border-hairline bg-surface-raised p-5 shadow-sm">
         <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Pay with</p>
         <div className="flex flex-wrap gap-2">
-          <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Card / bank transfer / mobile money (₦)" />
+          <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Card / bank transfer / mobile money" />
           <MethodButton
             active={false}
             disabled
@@ -210,6 +216,28 @@ function CoinsPageContent() {
             label="Crypto ($) — Coming soon"
           />
         </div>
+
+        {method === "paystack" && (
+          <div className="mt-4 border-t border-hairline pt-4">
+            <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Currency</p>
+            <div className="flex flex-wrap gap-2">
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <button
+                  key={c.code}
+                  onClick={() => setCurrency(c.code)}
+                  className={`rounded-full border px-3 py-1.5 font-sans text-xs font-medium transition ${
+                    currency === c.code
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-hairline text-ink-muted hover:border-accent/50 hover:text-ink"
+                  }`}
+                >
+                  {c.symbol} {c.code}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {method === "crypto" && (
           <p className="mt-2.5 flex items-center gap-1.5 font-sans text-xs text-ink-muted">
             <Clock size={12} /> Crypto payments confirm on-chain — coins are credited a few minutes after payment.
@@ -221,7 +249,7 @@ function CoinsPageContent() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display sm:text-xl  font-semibold text-ink">Choose a pack</h2>
           <p className="hidden sm:flex items-center gap-1.5 font-sans text-xs text-ink-muted">
-            <Info size={13} /> Bars show value — longer means more coins per {currency === "NGN" ? "₦" : "$"}.
+            <Info size={13} /> Bars show value — longer means more coins per {currencyMeta.symbol}.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -269,7 +297,7 @@ function CoinsPageContent() {
         <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-hairline pt-4 font-sans text-xs text-ink-muted">
           <span className="flex items-center gap-1.5"><ShieldCheck size={13} /> Secure checkout</span>
           <span className="flex items-center gap-1.5"><Coins size={13} /> Coins never expire</span>
-          <span className="flex items-center gap-1.5"><Landmark size={13} /> Prices in {currency === "NGN" ? "Naira (₦)" : "US Dollars ($)"}</span>
+          <span className="flex items-center gap-1.5"><Landmark size={13} /> Prices in {currencyMeta.label} ({currencyMeta.symbol})</span>
         </div>
       </section>
 
@@ -368,15 +396,15 @@ function MethodButton({
 function PackageCard({
   pkg, index, currency, isBestValue, isSelected, maxCostPerCoin, onSelect,
 }: {
-  pkg: CoinPackage; index: number; currency: "NGN" | "USD";
+  pkg: CoinPackage; index: number; currency: PaystackCurrency;
   isBestValue: boolean; isSelected: boolean; maxCostPerCoin: number; onSelect: () => void;
 }) {
   const bonus = bonusPercent(pkg);
-  const cpc = currency === "NGN" ? costPerCoinNaira(pkg) : costPerCoinUsd(pkg);
+  const cpc = costPerCoin(pkg, currency);
   const barPercent = Math.max(8, 100 - (cpc / maxCostPerCoin) * 100);
   const coinIconSize = 16 + index * 3;
-  const priceLabel = currency === "NGN" ? formatNaira(pkg.nairaPrice) : formatUsd(pkg.usdPrice);
-  const perCoinLabel = currency === "NGN" ? formatNairaPerCoin(cpc) : formatUsdPerCoin(cpc);
+  const priceLabel = formatMoney(priceFor(pkg, currency), currency);
+  const perCoinLabel = formatPerCoin(cpc, currency);
 
   return (
     <button onClick={onSelect} className={`relative flex flex-col items-center gap-2.5 rounded-xl border p-4 text-center transition ${isSelected ? "border-accent bg-accent/5 shadow-sm" : "border-hairline bg-surface-raised hover:border-accent/40"}`}>

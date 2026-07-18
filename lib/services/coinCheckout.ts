@@ -1,6 +1,9 @@
+import type { PaystackCurrency } from "@/lib/coin-packages";
+
 export interface StartCheckoutParams {
   packageId: string;
   email: string;
+  currency?: PaystackCurrency;
 }
 
 export class CheckoutError extends Error {}
