@@ -1,6 +1,6 @@
 import { withAuth } from "@/app/api/auth/withAuth";
 import { cryptoCheckoutProvider } from "@/app/api/lib/services/cryptoCheckout";
-import { COIN_PACKAGES, totalCoins } from "@/lib/coin-packages"; // ← add totalCoins
+import { COIN_PACKAGES, totalCoins, priceFor } from "@/lib/coin-packages";
 import { ok, fail } from "@/app/api/response";
 
 export const POST = withAuth(async (req) => {
@@ -13,8 +13,8 @@ export const POST = withAuth(async (req) => {
     const result = await cryptoCheckoutProvider.startCheckout({
       userId: req.user.sub,
       packageId,
-      usdAmount: pkg.usdPrice,
-      coins: totalCoins(pkg), // ← add this line
+      usdAmount: priceFor(pkg, "USD"),
+      coins: totalCoins(pkg),
       reference,
     });
 
