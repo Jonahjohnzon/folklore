@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { MessageCircle, Loader2, Eraser } from "lucide-react";
+import { MessageCircle, Loader2, Eraser, Home } from "lucide-react";
 import { ChatService, type ConversationDTO } from "@/app/services/ChatService";
 import { Avatar } from "@/components/avatar";
 import { formatRelativeDate } from "@/lib/format";
@@ -43,6 +43,7 @@ export function ConversationList({ activeId }: { activeId?: string }) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
+
       {conversations.length > 0 && (
         <div className="flex justify-end border-b border-hairline px-4 py-2">
           <button

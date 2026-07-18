@@ -3,7 +3,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Send, Loader2, MoreVertical, Eraser, Home } from "lucide-react";
+import { ArrowLeft, Send, Loader2, MoreVertical, Eraser } from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
 import { useSnapshot } from "valtio";
 import { store } from "@/app/store/userStore";
 import { ChatService, type MessageDTO, type ConversationDTO } from "@/app/services/ChatService";
@@ -17,6 +18,7 @@ function formatTime(iso: string) {
 export function ChatWindow({ conversationId }: { conversationId: string }) {
   const snap = useSnapshot(store);
   const myId = snap._id; // ⚠️ adjust to your userStore's actual id field
+  const router = useRouter();
 
   const [messages, setMessages] = useState<MessageDTO[]>([]);
   const [otherUser, setOtherUser] = useState<ConversationDTO["otherUser"]>(null);
@@ -152,16 +154,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     <div className="flex h-full flex-1 flex-col">
       <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-3">
         <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            aria-label="Go to home"
+          <button
+            onClick={() => router.back()}
+            aria-label="Go back"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted transition hover:bg-bg"
           >
-            <Home size={17} />
-          </Link>
-          <Link href="/messages" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-bg lg:hidden">
-            <ArrowLeft size={17} className="text-ink-muted" />
-          </Link>
+            <ArrowLeft size={17} />
+          </button>
           {otherUser ? (
             <Link href={`/profile/${otherUser.username}`} className="flex items-center gap-2.5">
               <Avatar avatarUrl={otherUser.avatarUrl} name={displayName} size={36} />
