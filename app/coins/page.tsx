@@ -20,6 +20,10 @@ type PaymentMethod = "paystack" | "crypto";
 const PENDING_POLL_INTERVAL_MS = 4000;
 const PENDING_POLL_MAX_ATTEMPTS = 20;
 
+// Fallback shown before /api/coins/currencies responds (or if it fails) —
+// NGN is the one currency we know is always configured.
+const DEFAULT_CURRENCIES = SUPPORTED_CURRENCIES.filter((c) => c.code === "NGN");
+
 // Module scope — this is static config, not per-render state.
 // Keyed off the *actual* type flowing through `activity`, so there's
 // no mismatch between this and item.status.
@@ -71,6 +75,7 @@ function CoinsPageContent() {
   const [selectedPackageId, setSelectedPackageId] = useState(COIN_PACKAGES[1].id);
   const [method, setMethod] = useState<PaymentMethod>("paystack");
   const [currency, setCurrency] = useState<PaystackCurrency>("NGN");
+  const [availableCurrencies, setAvailableCurrencies] = useState(DEFAULT_CURRENCIES);
 
   const [email, setEmail] = useState("");
   const [balance, setBalance] = useState<number | null>(null);
@@ -104,6 +109,34 @@ function CoinsPageContent() {
     loadWallet();
   }, [loadWallet]);
 
+  // Only offer currencies the backend can actually settle — avoids sending
+  // people into a checkout that 500s because a Paystack sub-account isn't set up yet.
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/coins/currencies")
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (json.success && json.data?.currencies?.length) {
+          setAvailableCurrencies(json.data.currencies);
+          // If the currently selected currency isn't actually available, fall back to the first one that is.
+          setCurrency((prev) =>
+            json.data.currencies.some((c: { code: PaystackCurrency }) => c.code === prev)
+              ? prev
+              : json.data.currencies[0].code
+          );
+        }
+      })
+      .catch(() => {
+        // keep the NGN-only fallback
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     if (!awaitingCryptoConfirmation) return;
 
@@ -131,7 +164,8 @@ function CoinsPageContent() {
   const maxCostPerCoin = Math.max(
     ...COIN_PACKAGES.map((p) => costPerCoin(p, currency))
   );
-  const currencyMeta = SUPPORTED_CURRENCIES.find((c) => c.code === currency)!;
+  const currencyMeta =
+    SUPPORTED_CURRENCIES.find((c) => c.code === currency) ?? SUPPORTED_CURRENCIES[0];
 
   async function handleBuyClick() {
     setCheckoutError(null);
@@ -217,11 +251,11 @@ function CoinsPageContent() {
           />
         </div>
 
-        {method === "paystack" && (
+        {method === "paystack" && availableCurrencies.length > 1 && (
           <div className="mt-4 border-t border-hairline pt-4">
             <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Currency</p>
             <div className="flex flex-wrap gap-2">
-              {SUPPORTED_CURRENCIES.map((c) => (
+              {availableCurrencies.map((c) => (
                 <button
                   key={c.code}
                   onClick={() => setCurrency(c.code)}
