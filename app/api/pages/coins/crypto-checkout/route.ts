@@ -1,6 +1,6 @@
 import { withAuth } from "@/app/api/auth/withAuth";
 import { cryptoCheckoutProvider } from "@/app/api/lib/services/cryptoCheckout";
-import { COIN_PACKAGES, totalCoins } from "@/lib/coin-packages";
+import { COIN_PACKAGES, totalCoins, priceFor } from "@/lib/coin-packages";
 import { ok, fail } from "@/app/api/response";
 
 export const POST = withAuth(async (req) => {
@@ -13,7 +13,7 @@ export const POST = withAuth(async (req) => {
     const result = await cryptoCheckoutProvider.startCheckout({
       userId: req.user.sub,
       packageId,
-      usdAmount: pkg.usdPrice,
+      usdAmount: priceFor(pkg, "USD"),
       coins: totalCoins(pkg), // includes bonusCoins — matches what gets credited on webhook
       reference,
     });

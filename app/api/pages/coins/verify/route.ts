@@ -2,14 +2,21 @@ import { withAuth } from "@/app/api/auth/withAuth";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Transaction } from "@/app/api/lib/models/Transaction";
 import { User, IUser } from "@/app/api/lib/models/User";
-import { COIN_PACKAGES, totalCoins } from "@/lib/coin-packages";
-import { formatNaira } from "@/lib/currency";
+import { COIN_PACKAGES, totalCoins, type PaystackCurrency } from "@/lib/coin-packages";
+import { formatMoney } from "@/lib/currency";
 import { ok, fail } from "@/app/api/response";
+
+// txn.currency is whatever was stored at checkout time — fall back to NGN
+// for any older transactions written before multi-currency support existed.
+function amountLabelFor(txn: { amount?: number; currency?: string }): string {
+  const currency = (txn.currency as PaystackCurrency) ?? "NGN";
+  return formatMoney(txn.amount ?? 0, currency);
+}
 
 export const GET = withAuth(async (req) => {
   try {
     const reference = new URL(req.url).searchParams.get("reference");
-    
+
     if (!reference) return fail(new Error("Missing reference"));
     console.log(reference)
     await connectToDatabase();
@@ -26,7 +33,7 @@ export const GET = withAuth(async (req) => {
         coinsCredited: txn.coins,
         newBalance: (user as IUser)?.coinBalance ?? txn.balanceAfter,
         packageLabel: pkg ? `${totalCoins(pkg).toLocaleString()} coins` : "Coins",
-        amountLabel: txn.currency === "NGN" ? formatNaira(txn.amount ?? 0) : `$${txn.amount}`,
+        amountLabel: amountLabelFor(txn),
         reference,
       });
     }
@@ -65,7 +72,7 @@ export const GET = withAuth(async (req) => {
         coinsCredited: txn.coins,
         newBalance: (user as IUser)?.coinBalance ?? 0,
         packageLabel: pkg ? `${totalCoins(pkg).toLocaleString()} coins` : "Coins",
-        amountLabel: txn.currency === "NGN" ? formatNaira(txn.amount ?? 0) : `$${txn.amount}`,
+        amountLabel: amountLabelFor(txn),
         reference,
       });
     }
