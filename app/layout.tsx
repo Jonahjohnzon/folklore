@@ -16,16 +16,16 @@ import { MessageAlertsMount } from "@/components/chat/message-alerts-mount";
 const SITE_NAME = "TipaTale";
 const SITE_URL = "https://tipatale.com";
 const DESCRIPTION =
-  "Read and write serialized fiction — romance, fantasy, thrillers, and more. Discover new stories, support the authors you love, and publish your own on TipaTale.";
+  "TipaTale is a free platform to read and write stories online — romance, fantasy, teen fiction, and fanfiction updated daily by a global community of writers. Follow your favorite series chapter by chapter, discover new authors, or start publishing your own serialized story in minutes, on web or mobile.";
 const kalam = Kalam({ subsets: ["latin"], weight: ["700"], variable: "--font-heading" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 
-  title: {
-    default: `${SITE_NAME} — Read and Write Stories Online`,
-    template: `%s | ${SITE_NAME}`,
-  },
+ title: {
+  default: `${SITE_NAME} — Read Free Stories & Publish Your Own Fiction Online`,
+  template: `%s | ${SITE_NAME}`,
+},
   description: DESCRIPTION,
 
   applicationName: SITE_NAME,
