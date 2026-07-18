@@ -1,13 +1,16 @@
 import { Schema, model, models, Types, Model } from "mongoose";
 import type { BookStatus } from "../types";
 
+const DEFAULT_COVER_URL =
+  "https://res.cloudinary.com/luzebox/image/upload/v1784358538/default/default_1_2_pdnzhz.png";
+
 export interface IBook {
   _id: Types.ObjectId;
   authorId: Types.ObjectId;
   title: string;
   slug: string;
   description?: string;
-  coverUrl?: string;
+  coverUrl: string;
   language: string;
   status: BookStatus;
   matureContent: boolean;
@@ -30,7 +33,7 @@ const BookSchema = new Schema<IBook>(
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     description: { type: String },
-    coverUrl: { type: String },
+    coverUrl: { type: String, default: DEFAULT_COVER_URL },
     coverPublicId: { type: String, default: null },
     language: { type: String, default: "en" },
     status: {
