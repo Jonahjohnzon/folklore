@@ -13,14 +13,6 @@ export interface CloudinaryUploadResult {
 const MAX_UPLOAD_BYTES = 1 * 1024 * 1024; // 1MB
 const ALLOWED_UPLOAD_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export type UploadImageType = "avatar" | "cover";
-
-/** Compression presets tuned to how each image type is actually displayed. */
-const COMPRESS_PRESETS: Record<UploadImageType, { maxWidth: number; maxHeight: number; quality: number }> = {
-  avatar: { maxWidth: 400, maxHeight: 400, quality: 0.8 },
-  cover: { maxWidth: 600, maxHeight: 1000, quality: 0.8 },
-};
-
 /**
  * Uploads a file directly to Cloudinary from the browser using a
  * short-lived signature minted by our own backend (POST /api/pages/uploads/sign,
@@ -29,10 +21,10 @@ const COMPRESS_PRESETS: Record<UploadImageType, { maxWidth: number; maxHeight: n
  * unsigned upload_preset is involved, so a folder can't be uploaded to
  * by anyone who just reads the preset name out of devtools.
  */
+// updated uploadImageToCloudinary
 export async function uploadImageToCloudinary(
   file: File,
-  folder: string,
-  type: UploadImageType = "cover"
+  folder: string
 ): Promise<CloudinaryUploadResult> {
   if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
     throw new Error("Use a JPG, PNG, or WEBP image.");
@@ -43,7 +35,7 @@ export async function uploadImageToCloudinary(
     );
   }
 
-  const compressed = await compressImage(file, COMPRESS_PRESETS[type]);
+  const compressed = await compressImage(file);
 
   const { data } = await api.post<{ success: boolean; data: SignedUploadParams }>(
     "/api/pages/sign",

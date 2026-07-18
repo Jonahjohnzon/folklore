@@ -1,5 +1,4 @@
 // lib/image-compress.ts
-"use client";
 
 interface CompressOptions {
   maxWidth?: number;
@@ -9,8 +8,9 @@ interface CompressOptions {
 
 export async function compressImage(
   file: File,
-  { maxWidth = 600, maxHeight = 1000, quality = 0.8 }: CompressOptions = {}
+  { maxWidth = 600, maxHeight = 1000, quality = 0.6 }: CompressOptions = {}
 ): Promise<File> {
+  // Skip compression for already-small files or non-standard types (e.g. gif — canvas would kill animation)
   if (file.size < 200_000 || file.type === "image/gif") return file;
 
   const bitmap = await createImageBitmap(file);
@@ -26,10 +26,9 @@ export async function compressImage(
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
+  if (!ctx) return file; // fall back to original if canvas unavailable
 
   ctx.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
 
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, "image/jpeg", quality)
@@ -37,6 +36,7 @@ export async function compressImage(
 
   if (!blob) return file;
 
+  // Preserve original filename but the new mime/extension
   const newName = file.name.replace(/\.\w+$/, "") + ".jpg";
   return new File([blob], newName, { type: "image/jpeg" });
 }
