@@ -436,6 +436,12 @@ function MobileMenu() {
           ) : isLoggedIn ? (
             <>
               <AccountHeader snap={snap} />
+
+              <div className="my-1.5 flex items-center justify-between rounded-lg bg-bg px-2.5 py-2">
+                <span className="font-sans text-xs font-medium text-ink-muted">Coin balance</span>
+                <CoinDisplay balance={snap.coinBalance} />
+              </div>
+
               <DropdownDivider />
               <DropdownItem href={`/u/${snap.username}`} onClick={() => setOpen(false)} icon={LayoutDashboard}>
                 My profile
@@ -457,34 +463,31 @@ function MobileMenu() {
             </>
           )}
 
-          {isCreator && <DropdownItem href="/write" onClick={() => setOpen(false)} icon={PenSquare} variant="accent">
-            Start writing
-          </DropdownItem>}
+          {isCreator && (
+            <DropdownItem href="/write" onClick={() => setOpen(false)} icon={PenSquare} variant="accent">
+              Start writing
+            </DropdownItem>
+          )}
           <DropdownItem href="/library" onClick={() => setOpen(false)} icon={Library}>
             My library
           </DropdownItem>
 
           {!isLoading && (
             <>
-            {isCreator ? (
-              <DropdownItem href="/dashboard" onClick={() => setOpen(false)} icon={PenSquare}>
-                Creator dashboard
-              </DropdownItem>
-            ) : (
-              <DropdownItem
-                href={isLoggedIn ? "/creator/apply" : "/sign-in?redirect=/creator/apply"}
-                onClick={() => setOpen(false)}
-                icon={Sparkles}
-                variant="gold"
-              >
-                Become a creator
-              </DropdownItem>
-            )}
-              {/* {!isCreator && (
-                <DropdownItem href="/premium" onClick={() => setOpen(false)} icon={Sparkles} variant="gold">
-                  Try Premium
+              {isCreator ? (
+                <DropdownItem href="/dashboard" onClick={() => setOpen(false)} icon={PenSquare}>
+                  Creator dashboard
                 </DropdownItem>
-              )} */}
+              ) : (
+                <DropdownItem
+                  href={isLoggedIn ? "/creator/apply" : "/sign-in?redirect=/creator/apply"}
+                  onClick={() => setOpen(false)}
+                  icon={Sparkles}
+                  variant="gold"
+                >
+                  Become a creator
+                </DropdownItem>
+              )}
             </>
           )}
 
@@ -509,7 +512,6 @@ function MobileMenu() {
     </div>
   );
 }
-
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const snap = useSnapshot(store);
@@ -552,14 +554,12 @@ export function Navbar() {
           </button>
 
           {!isLoading && isLoggedIn && (
-            <div className="hidden sm:block">
+            <div className="hidden lg:block">
               <CoinDisplay balance={snap.coinBalance} />
             </div>
           )}
 
-          <div className="hidden sm:block">
-            <ThemeSwitcher />
-          </div>
+          <ThemeSwitcher />
 
           <WriteMenu />
           <AccountMenu />
