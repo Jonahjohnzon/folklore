@@ -1,8 +1,9 @@
 // components/chat/message-bubble.tsx
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { MoreVertical, Pencil, Trash2, Check, X } from "lucide-react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
+import { MoreVertical, Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
 
 export function MessageBubble({
   mine,
@@ -10,6 +11,7 @@ export function MessageBubble({
   time,
   deleted,
   edited,
+  deleting = false,
   onEdit,
   onDelete,
 }: {
@@ -18,21 +20,55 @@ export function MessageBubble({
   time: string;
   deleted: boolean;
   edited: boolean;
+  deleting?: boolean;
   onEdit: (newBody: string) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; openUp: boolean } | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(body);
   const [saving, setSaving] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const MENU_WIDTH = 128; // matches w-32
+  const MENU_HEIGHT_ESTIMATE = 84; // ~2 items, adjusted after mount if needed
+
+  useLayoutEffect(() => {
+    if (!menuOpen || !menuButtonRef.current) return;
+    const rect = menuButtonRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < MENU_HEIGHT_ESTIMATE + 8;
+    setMenuPos({
+      top: openUp ? rect.top - 4 : rect.bottom + 4,
+      left: Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8),
+      openUp,
+    });
+  }, [menuOpen]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+      const target = e.target as Node;
+      if (menuRef.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setMenuOpen(false);
     }
-    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleScroll() {
+      setMenuOpen(false);
+    }
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      // capture:true catches scroll on any ancestor scrollable container, not just window
+      window.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", handleScroll);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, [menuOpen]);
 
   async function handleSaveEdit() {
@@ -66,41 +102,57 @@ export function MessageBubble({
       {mine && !editing && (
         <div ref={menuRef} className="relative">
           <button
+            ref={menuButtonRef}
             onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Message options"
-            className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted opacity-0 transition hover:bg-bg group-hover:opacity-100"
+            aria-label={deleting ? "Deleting message…" : "Message options"}
+            disabled={deleting}
+            className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted opacity-0 transition hover:bg-bg group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-100"
           >
-            <MoreVertical size={14} />
+            {deleting ? <Loader2 size={14} className="animate-spin" /> : <MoreVertical size={14} />}
           </button>
-          {menuOpen && (
-            <div className="absolute bottom-full right-0 z-10 mb-1 w-32 overflow-hidden rounded-xl border border-hairline bg-surface shadow-lg">
-              <button
-                onClick={() => {
-                  setEditing(true);
-                  setMenuOpen(false);
+          {menuOpen &&
+            !deleting &&
+            menuPos &&
+            createPortal(
+              <div
+                ref={dropdownRef}
+                style={{
+                  position: "fixed",
+                  top: menuPos.openUp ? undefined : menuPos.top,
+                  bottom: menuPos.openUp ? window.innerHeight - menuPos.top : undefined,
+                  left: menuPos.left,
+                  width: MENU_WIDTH,
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2 font-sans text-xs text-ink transition hover:bg-bg"
+                className="z-50 overflow-hidden rounded-xl border border-hairline bg-surface shadow-lg"
               >
-                <Pencil size={12} /> Edit
-              </button>
-              <button
-                onClick={() => {
-                  onDelete();
-                  setMenuOpen(false);
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2 font-sans text-xs text-red-600 transition hover:bg-red-50"
-              >
-                <Trash2 size={12} /> Delete
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={() => {
+                    setEditing(true);
+                    setMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 font-sans text-xs text-ink transition hover:bg-bg"
+                >
+                  <Pencil size={12} /> Edit
+                </button>
+                <button
+                  onClick={() => {
+                    onDelete();
+                    setMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 font-sans text-xs text-red-600 transition hover:bg-red-50"
+                >
+                  <Trash2 size={12} /> Delete
+                </button>
+              </div>,
+              document.body
+            )}
         </div>
       )}
 
       <div
-        className={`max-w-[78%] rounded-2xl px-3.5 py-2 font-sans text-sm leading-relaxed sm:max-w-[65%] ${
+        className={`max-w-[78%] rounded-2xl px-3.5 py-2 font-sans text-sm leading-relaxed transition-opacity sm:max-w-[65%] ${
           mine ? "rounded-br-md bg-accent text-accent-ink" : "rounded-bl-md border border-hairline bg-surface text-ink"
-        }`}
+        } ${deleting ? "opacity-50" : "opacity-100"}`}
       >
         {editing ? (
           <div className="flex flex-col gap-1.5">

@@ -25,6 +25,13 @@ const MessageSchema = new Schema<IMessage>(
 );
 
 MessageSchema.index({ conversationId: 1, createdAt: -1 });
-
+MessageSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    if (ret.deleted) {
+      ret.body = ""; // or "[deleted]"
+    }
+    return ret;
+  },
+});
 export const Message =
   (models.Message as Model<IMessage>) ?? model<IMessage>("Message", MessageSchema);

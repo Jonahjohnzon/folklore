@@ -63,13 +63,13 @@ export const DELETE = withAuth(async (req, ctx) => {
     const myId = req.user.sub;
 
     const message = await Message.findById(messageId);
+    
     if (!message) throw new NotFoundError("Message not found");
     if (String(message.senderId) !== myId) throw new ForbiddenError("You can only delete your own messages");
 
     message.deleted = true;
-    message.body = "";
     await message.save();
-
+  
     const conversation = await Conversation.findById(message.conversationId);
     if (conversation?.lastMessage && String(conversation.lastMessage.senderId) === myId) {
       const isLatest =

@@ -116,7 +116,7 @@ const THEME_INIT_SCRIPT = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className=" scrollbar-thin scrollbar-thumb-accent scrollbar-track-transparent">
+    <html lang="en" suppressHydrationWarning className=" scrollbar-thin scrollbar-thumb-accent scrollbar-track-transparent overflow-x-hidden">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />

@@ -27,6 +27,8 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -74,7 +76,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         ChatService.markRead(conversationId);
         requestAnimationFrame(() => scrollToBottom(true));
       }
-    }, 5000);
+    }, 25000);
     return () => clearInterval(interval);
   }, [conversationId, messages, scrollToBottom]);
 
@@ -115,15 +117,33 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   }
 
   async function handleDeleteMessage(messageId: string) {
-    await ChatService.deleteMessage(messageId);
-    setMessages((prev) => prev.map((m) => (m._id === messageId ? { ...m, deleted: true, body: "" } : m)));
+    if (deletingId) return; // avoid overlapping deletes / double-clicks
+    setDeletingId(messageId);
+    try {
+      await ChatService.deleteMessage(messageId);
+      setMessages((prev) => prev.map((m) => (m._id === messageId ? { ...m, deleted: true, body: "" } : m)));
+    } catch (err) {
+      console.error(err);
+      // optionally surface a toast/error state here
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function handleClearChat() {
-    await ChatService.clearChat(conversationId);
-    setMessages([]);
-    setHasMore(false);
-    setConfirmClear(false);
+    if (clearing) return;
+    setClearing(true);
+    try {
+      await ChatService.clearChat(conversationId);
+      setMessages([]);
+      setHasMore(false);
+      setConfirmClear(false);
+    } catch (err) {
+      console.error(err);
+      // optionally surface a toast/error state here
+    } finally {
+      setClearing(false);
+    }
   }
 
   const displayName = otherUser?.displayName ?? "Chat";
@@ -202,6 +222,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 time={formatTime(m.createdAt)}
                 deleted={m.deleted}
                 edited={!!m.editedAt}
+                deleting={deletingId === m._id}
                 onEdit={(newBody) => handleEditMessage(m._id, newBody)}
                 onDelete={() => handleDeleteMessage(m._id)}
               />
@@ -245,15 +266,18 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => setConfirmClear(false)}
-                className="rounded-full border border-hairline px-4 py-2 font-sans text-sm font-medium text-ink hover:border-accent hover:text-accent"
+                disabled={clearing}
+                className="rounded-full border border-hairline px-4 py-2 font-sans text-sm font-medium text-ink hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleClearChat}
-                className="rounded-full bg-red-600 px-4 py-2 font-sans text-sm font-semibold text-white hover:opacity-90"
+                disabled={clearing}
+                className="flex items-center justify-center gap-1.5 rounded-full bg-red-600 px-4 py-2 font-sans text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Clear
+                {clearing && <Loader2 size={14} className="animate-spin" />}
+                {clearing ? "Clearing…" : "Clear"}
               </button>
             </div>
           </div>
