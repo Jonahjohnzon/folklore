@@ -4,12 +4,13 @@ import { Tag } from "@/app/api/lib/models/Tag";
 import { User } from "@/app/api/lib/models/User";
 import { ok, fail } from "@/app/api/response";
 import { withAuth } from "../../auth/withAuth";
+import { optionalAuth } from "../../auth/optionalAuth";
 
 const MIN_INTERESTS = 3;
 const MAX_INTERESTS = 10;
 
 // GET: options to show on the picker screen — most-used genre/mood tags
-export const GET = withAuth(async () => {
+export const GET = optionalAuth(async () => {
   try {
     await connectToDatabase();
     const tags = await Tag.find({ category: { $in: ["genre", "mood"] } })
