@@ -47,6 +47,7 @@ function PaymentThankYouContent() {
   const searchParams = useSearchParams();
 
   const reference = searchParams.get("reference") ?? searchParams.get("trxref");
+  const transactionId = searchParams.get("transaction_id"); // only present on Flutterwave redirects
 
   const [state, setState] = useState<VerifyState>("checking");
   const [result, setResult] = useState<VerifyResult | null>(null);
@@ -62,7 +63,7 @@ function PaymentThankYouContent() {
 
     async function verify() {
       try {
-        const res = await CoinService.verifyPayment(reference!);
+        const res = await CoinService.verifyPayment(reference!, transactionId);
         if (cancelled) return;
 
         if (res.success && res.data.status === "completed") {
@@ -86,7 +87,7 @@ function PaymentThankYouContent() {
 
     verify();
     return () => { cancelled = true; };
-  }, [reference, pollCount]);
+  }, [reference, transactionId, pollCount]);
 
   useEffect(() => {
     if (state !== "pending" && state !== "checking") return;

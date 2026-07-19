@@ -11,7 +11,7 @@ export type TransactionType =
 
 export type TransactionStatus = "pending" | "completed" | "failed" | "reversed";
 
-export type PaymentMethod = "paystack" | "crypto" | null;
+export type PaymentMethod = "paystack" | "crypto" | "flutterwave" | null;
 
 // ── Interface ─────────────────────────────────────────────────
 export interface ITransaction {
@@ -31,7 +31,7 @@ export interface ITransaction {
   paymentMethod: PaymentMethod;
   packageId?: string;
   amount?: number;        // major currency unit charged (e.g. naira or dollars)
-  currency?: "NGN" | "USD";
+  currency?: "NGN"| "GHS" | "ZAR" | "KES" | "USD" ;
   providerReference?: string; // Paystack reference / crypto tx hash or invoice id
 
   // spend-specific
@@ -78,12 +78,12 @@ const TransactionSchema = new Schema<ITransaction>(
 
     paymentMethod: {
       type: String,
-      enum: ["paystack", "crypto", null],
-      default: null,
+      enum: ["paystack", "crypto", "flutterwave", null],
+      default: null, 
     },
     packageId: { type: String },
     amount: { type: Number },
-    currency: { type: String, enum: ["NGN", "USD"] },
+    currency: { type: String, enum: ["NGN", "GHS", "ZAR", "KES", "USD"] },
     providerReference: { type: String },
 
     chapterId: { type: Schema.Types.ObjectId, ref: "Chapter" },

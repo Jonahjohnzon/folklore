@@ -5,7 +5,7 @@ import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import {
   Coins, Check, ShieldCheck, CreditCard, Bitcoin, Landmark, Globe,
-  ArrowUpRight, ArrowDownRight, Info, ArrowLeft, Loader2, Clock,
+  ArrowUpRight, ArrowDownRight, Info, ArrowLeft, Loader2, Clock, MousePointerClick,
 } from "lucide-react";
 import {
   COIN_PACKAGES, totalCoins, bonusPercent, costPerCoin,
@@ -72,8 +72,8 @@ function CoinsPageContent() {
 
   const [activity, setActivity] = useState<CoinActivityItem[] | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState(COIN_PACKAGES[1].id);
-  const [method, setMethod] = useState<PaymentMethod>("paystack");
-  const [currency, setCurrency] = useState<PaystackCurrency>("NGN");
+  const [method, setMethod] = useState<PaymentMethod>("flutterwave");
+  const [currency, setCurrency] = useState<PaystackCurrency | null>(null);
   const [availableCurrencies, setAvailableCurrencies] = useState(DEFAULT_CURRENCIES);
 
   const [email, setEmail] = useState("");
@@ -110,7 +110,10 @@ function CoinsPageContent() {
   // Refetch whenever the payment method changes — Paystack and Flutterwave
   // don't necessarily support the same currency set.
   useEffect(() => {
-    if (method === "crypto") return; // crypto has no currency picker
+    if (method === "crypto") {
+      setCurrency(null);
+      return; // crypto has no currency picker
+    }
 
     let cancelled = false;
 
@@ -120,14 +123,20 @@ function CoinsPageContent() {
         if (cancelled) return;
         const currencies = json.success ? json.data?.currencies ?? [] : [];
         setAvailableCurrencies(currencies.length ? currencies : DEFAULT_CURRENCIES);
-        setCurrency((prev) =>
-          currencies.some((c: { code: PaystackCurrency }) => c.code === prev)
-            ? prev
-            : (currencies[0]?.code ?? "NGN")
-        );
+
+        // Only one option? Nothing to actually choose, so pick it automatically.
+        // More than one? Require an explicit pick — unless the current selection
+        // is still valid for this method, in which case keep it.
+        setCurrency((prev) => {
+          const list = currencies.length ? currencies : DEFAULT_CURRENCIES;
+          if (list.length === 1) return list[0].code;
+          if (prev && list.some((c: { code: PaystackCurrency }) => c.code === prev)) return prev;
+          return null;
+        });
       })
       .catch(() => {
         setAvailableCurrencies(DEFAULT_CURRENCIES);
+        setCurrency(DEFAULT_CURRENCIES.length === 1 ? DEFAULT_CURRENCIES[0].code : null);
       });
 
     return () => {
@@ -157,11 +166,22 @@ function CoinsPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingCryptoConfirmation]);
 
-  const bestValueId = bestValuePackageId(currency);
+  // True whenever this method has a real currency choice to make and the
+  // person hasn't made it yet — gates the package grid, email, and buy button.
+  const needsCurrencyChoice =
+    (method === "paystack" || method === "flutterwave") &&
+    availableCurrencies.length > 1 &&
+    currency === null;
+
+  const noCurrencyConfigured =
+    (method === "paystack" || method === "flutterwave") && availableCurrencies.length === 0;
+
+  const effectiveCurrency: PaystackCurrency = currency ?? "NGN";
+  const bestValueId = bestValuePackageId(effectiveCurrency);
   const selectedPackage = COIN_PACKAGES.find((p) => p.id === selectedPackageId)!;
-  const maxCostPerCoin = Math.max(...COIN_PACKAGES.map((p) => costPerCoin(p, currency)));
+  const maxCostPerCoin = Math.max(...COIN_PACKAGES.map((p) => costPerCoin(p, effectiveCurrency)));
   const currencyMeta =
-    SUPPORTED_CURRENCIES.find((c) => c.code === currency) ?? SUPPORTED_CURRENCIES[0];
+    SUPPORTED_CURRENCIES.find((c) => c.code === effectiveCurrency) ?? SUPPORTED_CURRENCIES[0];
 
   async function handleBuyClick() {
     setCheckoutError(null);
@@ -170,12 +190,12 @@ function CoinsPageContent() {
     try {
       if (method === "paystack") {
         const { authorizationUrl } = await startCoinCheckout({
-          packageId: selectedPackageId, email: email.trim(), currency,
+          packageId: selectedPackageId, email: email.trim(), currency: effectiveCurrency,
         });
         goToCheckout(authorizationUrl);
       } else if (method === "flutterwave") {
         const { authorizationUrl } = await startFlutterwaveCheckout({
-          packageId: selectedPackageId, email: email.trim(), currency,
+          packageId: selectedPackageId, email: email.trim(), currency: effectiveCurrency,
         });
         goToCheckout(authorizationUrl);
       } else {
@@ -191,7 +211,7 @@ function CoinsPageContent() {
 
   const price = method === "crypto"
     ? formatMoney(priceFor(selectedPackage, "USD"), "USD")
-    : formatMoney(priceFor(selectedPackage, currency), currency);
+    : formatMoney(priceFor(selectedPackage, effectiveCurrency), effectiveCurrency);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -242,8 +262,8 @@ function CoinsPageContent() {
       <section className="mb-6 rounded-2xl border border-hairline bg-surface-raised p-5 shadow-sm">
         <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Pay with</p>
         <div className="flex flex-wrap gap-2">
-          <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Paystack" />
           <MethodButton active={method === "flutterwave"} onClick={() => setMethod("flutterwave")} icon={Globe} label="Flutterwave" />
+          <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Paystack" />
           <MethodButton
             active={false}
             disabled
@@ -255,7 +275,9 @@ function CoinsPageContent() {
 
         {(method === "paystack" || method === "flutterwave") && availableCurrencies.length > 1 && (
           <div className="mt-4 border-t border-hairline pt-4">
-            <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Currency</p>
+            <p className="mb-2 flex items-center gap-1.5 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">
+              Currency {currency === null && <span className="normal-case text-accent">— choose one to continue</span>}
+            </p>
             <div className="flex flex-wrap gap-2">
               {availableCurrencies.map((c) => (
                 <button
@@ -274,7 +296,7 @@ function CoinsPageContent() {
           </div>
         )}
 
-        {(method === "paystack" || method === "flutterwave") && availableCurrencies.length === 0 && (
+        {noCurrencyConfigured && (
           <p className="mt-3 font-sans text-xs text-ink-muted">
             This payment method isn&apos;t set up yet — try a different one.
           </p>
@@ -294,20 +316,29 @@ function CoinsPageContent() {
             <Info size={13} /> Bars show value — longer means more coins per {currencyMeta.symbol}.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {COIN_PACKAGES.map((pkg, i) => (
-            <PackageCard
-              key={pkg.id}
-              pkg={pkg}
-              index={i}
-              currency={currency}
-              isBestValue={pkg.id === bestValueId}
-              isSelected={pkg.id === selectedPackageId}
-              maxCostPerCoin={maxCostPerCoin}
-              onSelect={() => setSelectedPackageId(pkg.id)}
-            />
-          ))}
-        </div>
+
+        {needsCurrencyChoice ? (
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-hairline bg-surface-raised px-6 py-10 text-center">
+            <MousePointerClick size={22} className="text-ink-muted" />
+            <p className="font-sans text-sm font-medium text-ink">Pick a currency above first</p>
+            <p className="font-sans text-xs text-ink-muted">Prices depend on which currency you&apos;re paying in.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {COIN_PACKAGES.map((pkg, i) => (
+              <PackageCard
+                key={pkg.id}
+                pkg={pkg}
+                index={i}
+                currency={effectiveCurrency}
+                isBestValue={pkg.id === bestValueId}
+                isSelected={pkg.id === selectedPackageId}
+                maxCostPerCoin={maxCostPerCoin}
+                onSelect={() => setSelectedPackageId(pkg.id)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mb-10 rounded-2xl border border-hairline bg-surface-raised p-5 shadow-sm">
@@ -319,18 +350,23 @@ function CoinsPageContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-56 rounded-lg border border-hairline bg-surface px-3 py-1.5 font-sans text-sm text-ink outline-none focus:border-accent"
+              disabled={needsCurrencyChoice}
+              className="w-56 rounded-lg border border-hairline bg-surface px-3 py-1.5 font-sans text-sm text-ink outline-none focus:border-accent disabled:cursor-not-allowed disabled:opacity-50"
             />
           </label>
 
           <div className="flex flex-col items-end gap-2">
             <button
               onClick={handleBuyClick}
-              disabled={isCheckingOut || ((method === "paystack" || method === "flutterwave") && availableCurrencies.length === 0)}
+              disabled={isCheckingOut || needsCurrencyChoice || noCurrencyConfigured}
               className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-sans text-sm font-semibold text-accent-ink shadow-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Coins size={16} />
-              {isCheckingOut ? "Redirecting to checkout…" : `Buy ${totalCoins(selectedPackage).toLocaleString()} coins — ${price}`}
+              {isCheckingOut
+                ? "Redirecting to checkout…"
+                : needsCurrencyChoice
+                ? "Choose a currency to continue"
+                : `Buy ${totalCoins(selectedPackage).toLocaleString()} coins — ${price}`}
             </button>
             {checkoutError && <p className="max-w-56 text-right font-sans text-xs text-red-600">{checkoutError}</p>}
           </div>
@@ -339,7 +375,9 @@ function CoinsPageContent() {
         <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-hairline pt-4 font-sans text-xs text-ink-muted">
           <span className="flex items-center gap-1.5"><ShieldCheck size={13} /> Secure checkout</span>
           <span className="flex items-center gap-1.5"><Coins size={13} /> Coins never expire</span>
-          <span className="flex items-center gap-1.5"><Landmark size={13} /> Prices in {currencyMeta.label} ({currencyMeta.symbol})</span>
+          {!needsCurrencyChoice && (
+            <span className="flex items-center gap-1.5"><Landmark size={13} /> Prices in {currencyMeta.label} ({currencyMeta.symbol})</span>
+          )}
         </div>
       </section>
 

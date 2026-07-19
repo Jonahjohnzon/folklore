@@ -99,7 +99,7 @@ export function ProfileTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) 
           >
             Change photo
           </button>
-          <p className="mt-1.5 font-sans text-xs text-ink-muted">JPG or PNG, up to 5MB.</p>
+          <p className="mt-1.5 font-sans text-xs text-ink-muted">JPG or PNG, up to 1MB.</p>
         </div>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarPick} className="hidden" />
       </div>

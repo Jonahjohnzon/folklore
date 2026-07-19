@@ -23,7 +23,7 @@ export interface CoinPackage {
 export const COIN_PACKAGES: CoinPackage[] = [
   {
     id: "starter", coins: 100, bonusCoins: 0,
-    prices: { NGN: 1000, GHS: 11, ZAR: 17, KES: 130, USD: 0.99 },
+    prices: { NGN: 1000, GHS: 11, ZAR: 17, KES: 130, USD: 1.00 },
   },
   {
     id: "popular", coins: 550, bonusCoins: 50, popular: true,
