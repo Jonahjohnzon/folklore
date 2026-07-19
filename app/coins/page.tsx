@@ -262,8 +262,8 @@ function CoinsPageContent() {
       <section className="mb-6 rounded-2xl border border-hairline bg-surface-raised p-5 shadow-sm">
         <p className="mb-2 font-sans text-xs font-medium uppercase tracking-wide text-ink-muted">Pay with</p>
         <div className="flex flex-wrap gap-2">
-          <MethodButton active={method === "flutterwave"} onClick={() => setMethod("flutterwave")} icon={Globe} label="Flutterwave" />
-          <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={CreditCard} label="Paystack" />
+          <MethodButton active={method === "flutterwave"} onClick={() => setMethod("flutterwave")} icon={CreditCard} label="Flutterwave" />
+          <MethodButton active={method === "paystack"} onClick={() => setMethod("paystack")} icon={Globe} label="Paystack — Unavailable" disabled />
           <MethodButton
             active={false}
             disabled

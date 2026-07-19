@@ -1,11 +1,12 @@
 export type PaystackCurrency = "NGN" | "GHS" | "ZAR" | "KES" | "USD";
 
 export const SUPPORTED_CURRENCIES: { code: PaystackCurrency; label: string; symbol: string }[] = [
+  { code: "USD", label: "US Dollar", symbol: "$" },
   { code: "NGN", label: "Nigerian Naira", symbol: "₦" },
   { code: "GHS", label: "Ghanaian Cedi", symbol: "GH₵" },
   { code: "ZAR", label: "South African Rand", symbol: "R" },
   { code: "KES", label: "Kenyan Shilling", symbol: "KSh" },
-  { code: "USD", label: "US Dollar", symbol: "$" },
+ 
 ];
 
 export interface CoinPackage {
