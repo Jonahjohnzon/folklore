@@ -101,9 +101,8 @@ export const CommentService = {
     ),
 
   getChapterComments(chapterId: string, page = 1, limit = 2) {
-    return api.get<{data:PaginatedComments}>(`/api/chapters/${chapterId}/comments`, {
-      params: { page, limit },
-    });
+    return api.get<{data:PaginatedComments}>(`/api/chapters/${chapterId}/comments`, { page, limit },
+    );
   },
  
   postComment(chapterId: string, content: string, parentId?: string | null) {
