@@ -29,26 +29,27 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-
+  const pageRef = useRef(1);
   // Computed once at mount, not via effect — this is an initial value, not a sync.
   const [targetId] = useState(getTargetIdFromHash);
   const resolvedRef = useRef(false);
 
-  async function load(pageToLoad: number) {
-    if (pageToLoad === 1) setLoading(true);
-    else setLoadingMore(true);
+ async function load(pageToLoad: number) {
+  if (pageToLoad === 1) setLoading(true);
+  else setLoadingMore(true);
 
-    try {
-     const { data } = await CommentService.getChapterComments(chapterId, pageToLoad, 2);
-      setComments((prev) => (pageToLoad === 1 ? data.comments ?? [] : [...prev, ...(data.comments ?? [])]));
-      setTotal(data.total);
-      setHasMore(data.hasMore);
-      setPage(pageToLoad);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
+  try {
+    const { data } = await CommentService.getChapterComments(chapterId, pageToLoad, 2);
+    setComments((prev) => (pageToLoad === 1 ? data.comments ?? [] : [...prev, ...(data.comments ?? [])]));
+    setTotal(data.total);
+    setHasMore(data.hasMore);
+    setPage(pageToLoad);
+    pageRef.current = pageToLoad; // keep ref in sync
+  } finally {
+    setLoading(false);
+    setLoadingMore(false);
   }
+}
 
   useEffect(() => {
     resolvedRef.current = false;
@@ -124,7 +125,10 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
 
         {!loading && hasMore && !locating && (
           <button
-          onClick={() => load(page + 1)}
+          onClick={() => {
+          if (loadingMore || loading) return; 
+          load(pageRef.current + 1);
+        }}
           disabled={loadingMore}
           className="self-start font-sans text-sm font-semibold text-accent transition-opacity duration-150 hover:underline disabled:opacity-50"
         >
