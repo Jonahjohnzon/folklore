@@ -114,7 +114,7 @@ export const CommentService = {
  
   getCommentReplies(commentId: string, page = 1, limit = 2) {
     return api.get<{data:PaginatedComments}>(`/api/comments/${commentId}/replies`, {
-      params: { page, limit },
+       page, limit 
     });
   },
  
