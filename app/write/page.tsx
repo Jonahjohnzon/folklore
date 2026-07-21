@@ -4,9 +4,11 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "nextjs-toploader/app";
+import { useSnapshot } from "valtio";
 import { ImagePlus, ChevronRight, Check, ArrowLeft, Loader2 } from "lucide-react";
 import type { BookStatus } from "@/lib/types";
 import { BookService } from "@/app/services/BookService";
+import { store } from "@/app/store/userStore";
 
 const GENRES = [
   "Fantasy", "Romance", "Sci-Fi", "Mystery", "Horror", "Drama",
@@ -14,6 +16,7 @@ const GENRES = [
 ];
 
 // Presets map onto BookTheme's actual hex fields (bgColor/textColor/accentColor/linkColor).
+
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -40,6 +43,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 
 export default function NewBookPage() {
   const router = useRouter();
+  const snap = useSnapshot(store);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const MAX_COVER_BYTES = 1 * 1024 * 1024;
   const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -124,6 +128,32 @@ export default function NewBookPage() {
   }
 
   const canContinue = title.trim().length > 0 && selectedGenres.length > 0;
+
+   if (!snap.authChecked) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={20} className="animate-spin text-ink-muted" />
+      </main>
+    );
+  }
+
+  if (!snap._id) {
+    router.replace("/sign-in");
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={20} className="animate-spin text-ink-muted" />
+      </main>
+    );
+  }
+
+  if (snap.creatorStatus !== "active") {
+    router.replace("/creator/apply");
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={20} className="animate-spin text-ink-muted" />
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">

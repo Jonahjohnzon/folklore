@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Home,
 } from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -28,7 +29,8 @@ import {Table} from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
-
+import { useSnapshot } from "valtio";
+import { store } from "@/app/store/userStore";
 import type { ChapterAccess } from "@/lib/types";
 import { SHEET_THEMES, DEFAULT_SHEET_THEME_ID } from "@/lib/sheet-themes";
 import EditorToolbar from "@/components/editor/EditorToolbar";
@@ -71,7 +73,8 @@ function ModalBackdrop({
 export default function ChapterEditorPage({ params }: { params: { bookId: string } }) {
   const searchParams = useSearchParams();
   const existingChapterId = searchParams.get("chapterId");
-
+  const router = useRouter();
+  const snap = useSnapshot(store);
   const [book, setBook] = useState<Book | null>(null);
   const [chapterId, setChapterId] = useState<string | null>(existingChapterId);
   const [loadingChapter, setLoadingChapter] = useState(Boolean(existingChapterId));
@@ -554,6 +557,32 @@ async function handleLocksChange(next: CreatorLocks) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+   if (!snap.authChecked) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={20} className="animate-spin text-ink-muted" />
+      </main>
+    );
+  }
+
+  if (!snap._id) {
+    router.replace("/sign-in");
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={20} className="animate-spin text-ink-muted" />
+      </main>
+    );
+  }
+
+  if (snap.creatorStatus !== "active") {
+    router.replace("/creator/apply");
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={20} className="animate-spin text-ink-muted" />
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-375 px-3 py-4 sm:px-6 sm:py-6">

@@ -45,7 +45,6 @@ export default function BookManagePage() {
     let cancelled = false;
     DashboardService.getBookManage(params.bookId)
       .then(({ data }) => {
-        console.log(data)
         if (cancelled) return;
         
         setBook(data.book);
