@@ -42,7 +42,7 @@ export const GET = withAuth(async (req, ctx) => {
   const [total, comments] = await Promise.all([
     Comment.countDocuments(filter),
     Comment.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })  
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("userId", "name username avatarUrl")
