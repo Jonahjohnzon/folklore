@@ -26,6 +26,7 @@ import { SHEET_THEMES } from "@/lib/sheet-themes";
 import { getSheetSurfaceStyle } from "@/lib/sheet-surface";
 import { RecommendedSidebar } from "./recommended-sidebar";
 import { ChapterShareRail } from "./chapter-share-rail";
+import { ScrollToTop } from "./scroll-to-top";
 
 
 const FONTS: { id: string; label: string; stack: string }[] = [
@@ -38,7 +39,7 @@ const FONTS: { id: string; label: string; stack: string }[] = [
 const PAGE_TURN_SOUND = PAGE_SOUNDS.find((s) => s.id === "page-turn") ?? null;
 
 export function ChapterReader({
- bookSlug, bookId, bookTitle, chapter, theme, prevId, nextId,
+ bookSlug, bookId, bookTitle, chapter, theme, prevId, nextId,highlightCommentId
 }: {
   bookSlug: string;
   bookId: string;
@@ -47,6 +48,7 @@ export function ChapterReader({
   theme: PublicChapterTheme | null;
   prevId?: string;
   nextId?: string;
+  highlightCommentId?: string | null;
 }) {
   const router = useRouter();
   const presentation = useMemo(() => getChapterPresentation(theme), [theme]);
@@ -318,7 +320,7 @@ export function ChapterReader({
 
   return (
     <main ref={containerRef} className="relative bg-bg pb-24 [&:fullscreen]:overflow-y-auto [&:fullscreen]:pb-12">
-
+      {highlightCommentId||<ScrollToTop/>}
       {PAGE_TURN_SOUND && <audio ref={pageTurnAudioRef} src={PAGE_TURN_SOUND.url} className="hidden" />}
       {/* key forces the element to remount (and load the new src cleanly)
           when the reader switches ambient sounds mid-session, rather than
