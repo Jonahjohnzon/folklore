@@ -89,56 +89,56 @@
 
 /* Wisteria — deep violet/orchid, dark reading mode */
 [data-theme="wisteria"] {
-  --bg: #1e1728;
-  --surface: #271f33;
-  --surface-raised: #302640;
-  --ink: #f0e8f5;
-  --ink-muted: #a596b8;
-  --accent: #bd8fe0;
-  --accent-ink: #1e1728;
-  --hairline: #3a2f4a;
-  --gold: #cba468;
+  --bg: #1c1526;
+  --surface: #251c31;
+  --surface-raised: #2f243d;
+  --ink: #ede6f2;
+  --ink-muted: #9c8bb0;
+  --accent: #a878d4;
+  --accent-ink: #1c1526;
+  --hairline: #382a4a;
+  --gold: #c9a668;
   --danger: #e0716b;
 }
 
-/* Rosewood — deep mauve/wine, dark reading mode (unchanged) */
+/* Rosewood — warm brown-wine, dark reading mode */
 [data-theme="rosewood"] {
-  --bg: #1c1114;
-  --surface: #26161b;
-  --surface-raised: #2f1c22;
-  --ink: #f0e4e6;
-  --ink-muted: #a8828c;
-  --accent: #b5546b;
-  --accent-ink: #1c1114;
-  --hairline: #3a2229;
-  --gold: #c9976f;
+  --bg: #1e1410;
+  --surface: #291b15;
+  --surface-raised: #33221a;
+  --ink: #f2e6db;
+  --ink-muted: #b09380;
+  --accent: #c26b4a;
+  --accent-ink: #1e1410;
+  --hairline: #45301f;
+  --gold: #cc9a5f;
   --danger: #d1554f;
 }
 
-/* Blossom — dark rose-black with bright pink accent, dark reading mode */
+/* Blossom — dusty rose-grey (lighter, warmer), dark reading mode */
 [data-theme="blossom"] {
-  --bg: #201216;
-  --surface: #2b191e;
-  --surface-raised: #341f25;
-  --ink: #f5e6ea;
-  --ink-muted: #b08a94;
-  --accent: #e386a3;
-  --accent-ink: #201216;
-  --hairline: #402730;
+  --bg: #2a1c22;
+  --surface: #35242c;
+  --surface-raised: #402c35;
+  --ink: #f7e9ee;
+  --ink-muted: #bd93a1;
+  --accent: #ec6f9a;
+  --accent-ink: #2a1c22;
+  --hairline: #4a3038;
   --gold: #d4a05f;
   --danger: #d1554f;
 }
 
-/* Lilac — deep indigo-violet with periwinkle accent, dark reading mode */
+/* Lilac — cool blue-violet, dark reading mode */
 [data-theme="lilac"] {
-  --bg: #161829;
-  --surface: #1e2035;
-  --surface-raised: #262842;
-  --ink: #e8e8f7;
-  --ink-muted: #8f8fb8;
-  --accent: #8f97e8;
-  --accent-ink: #161829;
-  --hairline: #2e2f4d;
+  --bg: #131726;
+  --surface: #1a1f33;
+  --surface-raised: #21273f;
+  --ink: #e6e9f7;
+  --ink-muted: #838cb8;
+  --accent: #6b8ff0;
+  --accent-ink: #131726;
+  --hairline: #262d4d;
   --gold: #c2a668;
   --danger: #dd7a7a;
 }
