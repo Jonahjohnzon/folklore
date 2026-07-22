@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: "How TipaTale collects, uses, and protects your information.",
 };
 
-const LAST_UPDATED = "July 10, 2026";
+const LAST_UPDATED = "July 22, 2026";
 
 const SECTIONS = [
   { id: "overview", title: "1. Overview" },
@@ -33,7 +33,8 @@ export default function PrivacyPage() {
         <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-ink-muted">
           This Privacy Policy explains how TipaTale (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or
           &ldquo;our&rdquo;) collects, uses, discloses, and protects information when you use
-          TipaTale (the &ldquo;Service&rdquo;). It should be read together with our{" "}
+          TipaTale (the &ldquo;Service&rdquo;), including our website and our mobile
+          applications. It should be read together with our{" "}
           <a href="/terms" className="text-accent hover:underline">Terms of Service</a>.
         </p>
       </div>
@@ -62,9 +63,9 @@ export default function PrivacyPage() {
             <h2 className="font-display text-xl font-bold text-ink">1. Overview</h2>
             <p className="mt-3">
               TipaTale is a platform for reading and publishing serialized fiction. To operate
-              the Service — including accounts, Coins, and Creator payouts — we need to collect
-              and process certain information about you. This policy explains what we collect,
-              why, and the choices available to you.
+              the Service — including accounts, Coins, Creator payouts, and notifications — we
+              need to collect and process certain information about you. This policy explains
+              what we collect, why, and the choices available to you.
             </p>
           </section>
 
@@ -81,12 +82,14 @@ export default function PrivacyPage() {
             <ul className="mt-2 list-disc space-y-1.5 pl-5">
               <li>Usage data: pages viewed, chapters read, reading progress, time spent, clicks, and search queries within the Service.</li>
               <li>Device and log data: IP address, browser type, operating system, device identifiers, and approximate location derived from IP address.</li>
+              <li>Push notification tokens: if you enable notifications on our mobile app, we collect a device push token to deliver alerts about comment replies, updates to books you follow, and account activity. You can disable this anytime in your device&rsquo;s notification settings.</li>
               <li>Cookies and similar technologies, described in Section 6.</li>
             </ul>
             <p className="mt-4 font-semibold text-ink">Information from third parties:</p>
             <ul className="mt-2 list-disc space-y-1.5 pl-5">
-              <li>If you sign up or log in using a third-party account (such as Google or Apple), we receive basic profile information from that provider as permitted by your settings with them.</li>
-              <li>Payment processors and app stores share limited transaction data with us (e.g. confirmation that a purchase succeeded), but not your full card number.</li>
+              <li>If you sign up or log in using Google Sign-In, we receive your name, email address, and profile photo as permitted by your Google account settings.</li>
+              <li>If you sign up or log in using another third-party account (such as Apple), we receive basic profile information from that provider as permitted by your settings with them.</li>
+              <li>Payment processors and app stores (including Google Play and Apple) share limited transaction data with us (e.g. confirmation that a purchase succeeded), but not your full card number.</li>
             </ul>
           </section>
 
@@ -95,6 +98,7 @@ export default function PrivacyPage() {
             <ul className="mt-3 list-disc space-y-1.5 pl-5">
               <li>To provide, maintain, and improve the Service, including personalized recommendations;</li>
               <li>To process Coin purchases and calculate and issue Creator payouts;</li>
+              <li>To deliver push notifications about activity relevant to you, such as comment replies, new chapters from books you follow, and account or security alerts;</li>
               <li>To communicate with you, including service updates, security alerts, and support responses;</li>
               <li>To detect, investigate, and prevent fraud, abuse, coin manipulation, and violations of our Terms;</li>
               <li>To comply with legal obligations, including tax reporting for Creator earnings where required;</li>
@@ -107,7 +111,8 @@ export default function PrivacyPage() {
             <p className="mt-3">We do not sell your personal information. We share information only in these circumstances:</p>
             <ul className="mt-3 list-disc space-y-1.5 pl-5">
               <li><strong className="text-ink">Public by design:</strong> your username, pen name, published stories, comments, and public profile are visible to other users, since TipaTale is a public reading platform.</li>
-              <li><strong className="text-ink">Service providers:</strong> payment processors, cloud hosting, email delivery, and analytics vendors who process data on our behalf under contractual confidentiality and security obligations.</li>
+              <li><strong className="text-ink">Service providers:</strong> payment processors, cloud hosting, push notification delivery (such as Expo&rsquo;s notification service), email delivery, and analytics vendors who process data on our behalf under contractual confidentiality and security obligations.</li>
+              <li><strong className="text-ink">Authentication providers:</strong> Google, to verify your identity when you use Google Sign-In.</li>
               <li><strong className="text-ink">Legal reasons:</strong> when required to comply with law, enforce our Terms, or protect the rights, property, or safety of TipaTale, our users, or the public.</li>
               <li><strong className="text-ink">Business transfers:</strong> in connection with a merger, acquisition, or sale of assets, subject to standard confidentiality protections.</li>
             </ul>
@@ -117,10 +122,11 @@ export default function PrivacyPage() {
             <h2 className="font-display text-xl font-bold text-ink">5. Payments & Coins Data</h2>
             <p className="mt-3">
               Coin purchases are processed by third-party payment providers (such as Stripe,
-              Apple, or Google, depending on how you access the Service). We receive confirmation
-              of your purchase and your Coin balance, but do not store your full payment card
-              details. Creator payout information (such as bank details) is collected solely to
-              send you earnings and is handled under appropriate security controls; see our{" "}
+              Apple, or Google Play Billing, depending on how you access the Service). We receive
+              confirmation of your purchase and your Coin balance, but do not store your full
+              payment card details. Creator payout information (such as bank details) is
+              collected solely to send you earnings and is handled under appropriate security
+              controls; see our{" "}
               <a href="/terms#coins" className="text-accent hover:underline">Terms</a> for details
               on how Coins and payouts work.
             </p>
@@ -129,11 +135,13 @@ export default function PrivacyPage() {
           <section id="cookies">
             <h2 className="font-display text-xl font-bold text-ink">6. Cookies & Similar Technologies</h2>
             <p className="mt-3">
-              We use cookies and similar technologies to keep you signed in, remember your
-              preferences (like content filters), understand how the Service is used, and measure
-              the effectiveness of our marketing. You can control cookies through your browser
-              settings; disabling some cookies may affect Service functionality, such as staying
-              logged in.
+              On our website, we use cookies and similar technologies to keep you signed in,
+              remember your preferences (like content filters and reading theme), understand how
+              the Service is used, and measure the effectiveness of our marketing. You can
+              control cookies through your browser settings; disabling some cookies may affect
+              Service functionality, such as staying logged in. Our mobile app uses equivalent
+              on-device storage (rather than browser cookies) for the same purposes, such as
+              remembering your reading theme and session.
             </p>
           </section>
 
@@ -144,7 +152,8 @@ export default function PrivacyPage() {
               reasonable period afterward to comply with legal, tax, and accounting obligations,
               resolve disputes, and enforce our agreements. Published stories and comments may
               remain visible after account deletion if other users have interacted with them,
-              unless you request removal, subject to Section 8.
+              unless you request removal, subject to Section 8. Push notification tokens are
+              deleted when you disable notifications, sign out, or delete your account.
             </p>
           </section>
 
@@ -153,12 +162,12 @@ export default function PrivacyPage() {
             <p className="mt-3">
               Depending on where you live, you may have rights to access, correct, delete, or
               export your personal information, and to object to or restrict certain processing.
-              You can exercise many of these directly from your account settings, or by
-              contacting us at{" "}
+              You can exercise many of these directly from your account settings — including
+              deleting your account entirely — or by contacting us at{" "}
               <a href="mailto:privacy@tipatale.com" className="text-accent hover:underline">privacy@tipatale.com</a>.
               We will respond to verified requests within the timeframe required by applicable
               law. You may also unsubscribe from marketing emails using the link in any such
-              email.
+              email, and disable push notifications at any time in your device settings.
             </p>
           </section>
 
