@@ -11,7 +11,7 @@ import { SignalService } from "@/app/services/SignalService";
 
 export default function ChapterPage() {
   const params = useParams<{ slug: string; chapterId: string }>();
-  const comment = useParams<{ comment: string }>();
+  const {comment} = useParams<{ comment?: string }>();
   const [book, setBook] = useState<PublicBook | null>(null);
   const [chapter, setChapter] = useState<PublicChapterDetail | null>(null);
   const [theme, setTheme] = useState<PublicChapterTheme | null>(null);
