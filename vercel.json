@@ -1,5 +1,9 @@
 {
   "crons": [
-    { "path": "/api/cron/purge-removed-books", "schedule": "0 3 * * *" }
+    { "path": "/api/cron/purge-removed-books", "schedule": "0 3 * * *" },
+    {
+      "path": "/api/cron/generate-recommendations",
+      "schedule": "0 18 * * *"
+    }
   ]
 }
