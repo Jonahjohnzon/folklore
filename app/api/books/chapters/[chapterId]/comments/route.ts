@@ -8,6 +8,7 @@ import { Chapter } from "@/app/api/lib/models/Chapter";
 import { ParagraphComment } from "@/app/api/lib/models/ParagraphComment";
 import { ChapterCommentCount } from "@/app/api/lib/models/ChapterCommentCount";
 import { Book } from "@/app/api/lib/models/Book";
+import { dispatchNotification } from "@/app/api/lib/notifications/dispatch";
 
 const createCommentSchema = z.object({
   paragraphIndex: z.number().int().min(0),
@@ -101,10 +102,12 @@ export const GET = withAuth(async (req, ctx) => {
 });
 
 // POST /api/books/chapters/:chapterId/comments
+
+
 export const POST = withAuth(async (req, ctx) => {
   try {
     const { chapterId } = await ctx.params;
-    if (!chapterId) return fail("Invalid chapter id");
+  if (!chapterId || Array.isArray(chapterId)) return fail("Invalid chapter id");
 
     const json = await req.json().catch(() => null);
     const parsed = createCommentSchema.safeParse(json);
@@ -121,8 +124,9 @@ export const POST = withAuth(async (req, ctx) => {
     const chapter = await Chapter.findById(chapterId).select("bookId").lean();
     if (!chapter) return fail("Chapter not found");
 
+   let parent: { chapterId: Types.ObjectId; paragraphIndex: number; userId: Types.ObjectId } | null = null;
     if (parentId) {
-      const parent = await ParagraphComment.findById(parentId).select("chapterId paragraphIndex").lean();
+      parent = await ParagraphComment.findById(parentId).select("chapterId paragraphIndex userId").lean();
       if (!parent || parent.chapterId.toString() !== chapterId || parent.paragraphIndex !== paragraphIndex) {
         return fail("Parent comment not found for this paragraph");
       }
@@ -137,8 +141,6 @@ export const POST = withAuth(async (req, ctx) => {
       parentId: parentId || undefined,
     });
 
-    // Populate before returning so the client immediately has username/avatar
-    // without a follow-up fetch.
     comment = await comment.populate("userId", "username avatarUrl");
 
     if (!parentId) {
@@ -147,6 +149,29 @@ export const POST = withAuth(async (req, ctx) => {
         { $inc: { [`counts.${paragraphIndex}`]: 1 } },
         { upsert: true }
       );
+    }
+
+    const book = await Book.findById(chapter.bookId).select("slug title authorId").lean();
+    if (book) {
+      const appLink = `/book/${book.slug}/chapter/${chapterId}#paragraph-${paragraphIndex}`;
+      const actorName = (comment.userId as any)?.username ?? "Someone";
+
+      const recipientId = parent ? String(parent.userId) : String(book.authorId);
+
+      if (recipientId && recipientId !== String(userId)) {
+        await dispatchNotification({
+          userId: recipientId,
+          type: parent ? "comment_reply" : "new_comment",
+          actorId: userId,
+          bookId: chapter.bookId,
+          chapterId,
+          commentId: comment._id,
+          message: parent
+            ? `${actorName} replied to your comment on ${book.title}`
+            : `${actorName} commented on ${book.title}`,
+          link: appLink,
+        });
+      }
     }
 
     return ok({ comment: serializeComment(comment, userId) }, 201);

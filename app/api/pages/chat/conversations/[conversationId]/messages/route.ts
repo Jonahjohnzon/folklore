@@ -6,6 +6,8 @@ import { Message } from "@/app/api/lib/models/Message";
 import { sendMessageSchema } from "@/app/api/validation/chat.schema";
 import { ok, fail } from "@/app/api/response";
 import { NotFoundError, ForbiddenError, ValidationError } from "@/app/api/lib/db/errors";
+import { waitUntil } from "@vercel/functions";
+import { sendPushToUser } from "@/app/api/lib/notifications/sendPushToUser";
 
 const PAGE_SIZE = 30;
 
@@ -46,6 +48,8 @@ export const GET = withAuth(async (req, ctx) => {
   }
 });
 
+
+
 export const POST = withAuth(async (req, ctx) => {
   try {
     await connectToDatabase();
@@ -74,10 +78,19 @@ export const POST = withAuth(async (req, ctx) => {
     conversation.lastMessageAt = message.createdAt;
     if (otherId) {
       conversation.unreadCounts.set(String(otherId), currentUnread + 1);
-      // sending a new message un-hides the thread for the recipient if they'd cleared it
       conversation.hiddenFor = conversation.hiddenFor.filter((id) => String(id) !== String(otherId));
     }
     await conversation.save();
+
+    if (otherId) {
+      waitUntil(
+        sendPushToUser(String(otherId), {
+          title: "New message",
+          body: parsed.data.body,
+          data: { link: `/messages/${conversationId}` },
+        }).catch((err) => console.error("[push] message notification failed:", err))
+      );
+    }
 
     return ok({
       message: {
