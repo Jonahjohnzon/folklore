@@ -1,4 +1,12 @@
-export type ThemeName = "parchment" | "midnight" | "coppice" | "quartz";
+export type ThemeName =
+  | "parchment"
+  | "midnight"
+  | "coppice"
+  | "quartz"
+  | "wisteria"
+  | "rosewood"
+  | "blossom"
+  | "lilac";
 
 export type ChapterAccess = "free" | "coins" | "purchase" | "subscriber_only";
 export type BookStatus = "draft" | "ongoing" | "completed" | "hiatus" | "removed";

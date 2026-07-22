@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Palette, Moon, TreePine, Gem, ScrollText, Check } from "lucide-react";
 import { useTheme } from "@/context/theme-context";
 import type { ThemeName } from "@/lib/types";
+import { Palette, Moon, TreePine, Gem, ScrollText, Check, Flower2, Wine, Flower, Sparkles } from "lucide-react";
 
 const THEMES: {
   id: ThemeName;
@@ -15,6 +15,10 @@ const THEMES: {
   { id: "midnight", label: "Midnight", swatch: "#121019", icon: Moon },
   { id: "coppice", label: "Coppice", swatch: "#16261e", icon: TreePine },
   { id: "quartz", label: "Quartz", swatch: "#ad3f5c", icon: Gem },
+  { id: "wisteria", label: "Wisteria", swatch: "#221c2c", icon: Flower2 },
+  { id: "rosewood", label: "Rosewood", swatch: "#26161b", icon: Wine },
+  { id: "blossom", label: "Blossom", swatch: "#b4677e", icon: Flower },
+  { id: "lilac", label: "Lilac", swatch: "#8467a8", icon: Sparkles },
 ];
 
 export function ThemeSwitcher() {
@@ -35,7 +39,7 @@ export function ThemeSwitcher() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Change reading theme"
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline cursor-pointer text-ink-muted transition hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline cursor-pointer text-ink-muted transition hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-accent"
       >
         <Palette size={17} />
       </button>
