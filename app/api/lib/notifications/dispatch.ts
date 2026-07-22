@@ -8,6 +8,7 @@ import * as templates from "@/app/api/lib/email/templates";
 import type { INotificationPreference } from "@/app/api/lib/models/NotificationPreference";
 import { sendPushToUsers } from "@/app/api/lib/notifications/sendPushToUser";
 import { sendPushToUser } from "@/app/api/lib/notifications/sendPushToUser";
+import { waitUntil } from "@vercel/functions";
 
 interface DispatchInput {
   userId: Types.ObjectId | string;
@@ -100,11 +101,13 @@ export async function dispatchNotification(input: DispatchInput) {
     });
 
 
-    sendPushToUser(String(input.userId), {
-      title: "Tipatale",
-      body: input.message,
-      data: { link: input.link },
-    }).catch((err) => console.error("[push] dispatchNotification failed:", err));
+  waitUntil(
+  sendPushToUser(String(input.userId), {
+    title: "Tipatale",
+    body: input.message,
+    data: { link: input.link },
+  }).catch((err) => console.error("[push] dispatchNotification failed:", err))
+  );
   }
 
   if (!input.email) return;
