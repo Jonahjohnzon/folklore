@@ -11,7 +11,9 @@ interface PushPayload {
 }
 
 export async function sendPushToUser(userId: string, payload: PushPayload) {
+    
   const devices = await DeviceToken.find({ userId }).select("token").lean();
+   
   if (devices.length === 0) return;
 
   const messages: ExpoPushMessage[] = [];
