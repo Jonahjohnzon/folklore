@@ -37,11 +37,8 @@ export const GET = withAuth(async (req, ctx) => {
     const userId = req.user?.sub;
     const isOwnBook = Boolean(book.authorId && userId && String(book.authorId) === String(userId));
 
-    // --- paywall enforcement ---
-    // This must happen before anything below reads/returns chapter.content.
-    // The book-detail page gates navigation behind the unlock modal, but a
-    // reader can hit this route directly by URL, so the check has to live
-    // here too — never trust the client to have already paid.
+    
+  
     const isPaidChapter = chapter.accessType === "coins" || chapter.accessType === "purchase";
     if (isPaidChapter && !isOwnBook) {
       if (!userId) {
@@ -57,9 +54,6 @@ export const GET = withAuth(async (req, ctx) => {
   await Book.updateOne({ _id: book._id }, { $inc: { totalReads: 1 } });
 }
 
-    // Feeds the creator dashboard's daily-reads chart. Excludes the author's
-    // own reads/previews of their own book, same as the badge-crediting rule
-    // below — an author opening their own chapter shouldn't count as a read.
     if (!isOwnBook) {
       await DailyStat.updateOne(
         { chapterId: chapter._id, date: todayKey() },

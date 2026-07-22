@@ -6,6 +6,8 @@ import { sendEmail } from "@/app/api/lib/email/send";
 import type { NotificationType } from "@/app/api/lib/types";
 import * as templates from "@/app/api/lib/email/templates";
 import type { INotificationPreference } from "@/app/api/lib/models/NotificationPreference";
+import { sendPushToUsers } from "@/app/api/lib/notifications/sendPushToUser";
+import { sendPushToUser } from "@/app/api/lib/notifications/sendPushToUser";
 
 interface DispatchInput {
   userId: Types.ObjectId | string;
@@ -61,6 +63,7 @@ const PREFERENCE_FIELD: Record<NotificationType, PrefField | null> = {
   chapter_unlocked: null,
   admin_warning: null,
   book_deleted: null,
+  chapter_liked_milestone: "notifyNewChapter", 
 };
 
 /**
@@ -95,6 +98,13 @@ export async function dispatchNotification(input: DispatchInput) {
       message: input.message,
       link: input.link,
     });
+
+
+    sendPushToUser(String(input.userId), {
+      title: "Tipatale",
+      body: input.message,
+      data: { link: input.link },
+    }).catch((err) => console.error("[push] dispatchNotification failed:", err));
   }
 
   if (!input.email) return;
@@ -125,6 +135,7 @@ export async function dispatchNotification(input: DispatchInput) {
  * Use for fan-out events — chapter published to followers/library, book
  * completed, announcements, etc.
  */
+
 export async function dispatchBulkNotifications(input: BulkDispatchInput) {
   if (input.userIds.length === 0) return;
 
@@ -158,4 +169,10 @@ export async function dispatchBulkNotifications(input: BulkDispatchInput) {
     })),
     { ordered: false }
   );
+
+  // Push mirrors the same filtered recipient list — already excludes opted-out users.
+  sendPushToUsers(
+    targetIds.map((id) => String(id)),
+    { title: "Tipatale", body: input.message, data: { link: input.link } }
+  ).catch((err) => console.error("[push] dispatchBulkNotifications failed:", err));
 }

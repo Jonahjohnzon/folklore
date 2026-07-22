@@ -4,11 +4,7 @@ import { withAuth } from "@/app/api/auth/withAuth";
 import { ok, fail } from "@/app/api/response";
 import { ParagraphComment } from "@/app/api/lib/models/ParagraphComment";
 
-// POST /api/books/chapters/:chapterId/comments/:commentId/love
-// Toggles: loves if not yet loved, unloves if already loved. Still blocks
-// loving your own comment. Uses the array membership as the source of
-// truth and derives helpfulVotes from lovedBy.length rather than trusting
-// a separately-incremented counter, so the two can never drift apart.
+
 export const POST = withAuth(async (req, ctx) => {
   try {
     const { chapterId, commentId } = await ctx.params;

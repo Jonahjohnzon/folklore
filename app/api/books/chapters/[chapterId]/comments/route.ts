@@ -3,7 +3,6 @@ import { z } from "zod";
 import { Types } from "mongoose";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { withAuth } from "@/app/api/auth/withAuth";
-import { optionalAuth } from "@/app/api/auth/optionalAuth";
 import { ok, fail } from "@/app/api/response";
 import { Chapter } from "@/app/api/lib/models/Chapter";
 import { ParagraphComment } from "@/app/api/lib/models/ParagraphComment";
@@ -40,10 +39,8 @@ function serializeComment(doc: any, viewerId?: string, authorId?: string) {
   };
 }
 
-// GET /api/books/chapters/:chapterId/comments?paragraphIndex=3&skip=0&limit=10
-// Returns TOP-LEVEL comments only, paginated, each with a replyCount so the
-// client can render "View N replies" without fetching the replies themselves.
-export const GET = optionalAuth(async (req, ctx) => {
+
+export const GET = withAuth(async (req, ctx) => {
   try {
     const { chapterId } = await ctx.params;
     if (!chapterId) return fail("Invalid chapter id");

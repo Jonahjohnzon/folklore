@@ -8,7 +8,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ chapter
     const { chapterId } = await params;
     if (!chapterId) return fail("Invalid chapter id");
     const doc = await ChapterCommentCount.findOne({ chapterId }).lean();
-    console.log(doc)
     const counts = (doc?.counts as Record<string, number>) ?? {};
     return ok({ counts });
   } catch (error) {

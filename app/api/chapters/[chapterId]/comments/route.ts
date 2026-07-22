@@ -126,13 +126,9 @@ export const POST = withAuth(async (req, ctx) => {
   if (book) {
     if (parentId && parent) {
       // reply — notify the parent comment's author (unless replying to yourself)
-      // IMPORTANT: link anchors on the PARENT comment id, because the reply itself
-      // is hidden inside a collapsed thread until the parent is expanded. The reply's
-      // own id is passed as `highlight` so the frontend can scroll/flash it once
-      // the thread is expanded.
+
       if (String(parent.userId) !== String(userId)) {
         const appLink = `/book/${book.slug}/chapter/${chapterId}?highlight=${comment._id}#comment-${parentId}`;
-        const fullLink = `https://tipatale.com/book/${book.slug}/chapter/${chapterId}?highlight=${comment._id}#comment-${parentId}`;
 
         await dispatchNotification({
           userId: parent.userId,
@@ -143,22 +139,12 @@ export const POST = withAuth(async (req, ctx) => {
           commentId: comment._id,
           message: `${actorName} replied to your comment`,
           link: appLink,
-          email: {
-            templateName: "commentReplyTemplate",
-            templateArgs: {
-              actorName,
-              bookTitle: book.title,
-              commentExcerpt: content.slice(0, 140),
-              link: fullLink,
-            },
-          },
         });
       }
     } else {
       // top-level comment — notify the book's author (unless commenting on your own book)
       if (String(book.authorId) !== String(userId)) {
         const appLink = `/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
-        const fullLink = `https://tipatale.com/book/${book.slug}/chapter/${chapterId}#comment-${comment._id}`;
 
         await dispatchNotification({
           userId: book.authorId,
@@ -169,15 +155,6 @@ export const POST = withAuth(async (req, ctx) => {
           commentId: comment._id,
           message: `${actorName} commented on ${book.title}`,
           link: appLink,
-          email: {
-            templateName: "newCommentTemplate",
-            templateArgs: {
-              actorName,
-              bookTitle: book.title,
-              commentExcerpt: content.slice(0, 140),
-              link: fullLink,
-            },
-          },
         });
       }
     }

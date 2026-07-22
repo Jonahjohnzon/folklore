@@ -9,8 +9,7 @@ const editCommentSchema = z.object({
   body: z.string().trim().min(1).max(1000),
 });
 
-// PATCH /api/books/chapters/:chapterId/comments/:commentId
-// Owner-only. Body text only — paragraph/parent can't be changed.
+
 export const PATCH = withAuth(async (req, ctx) => {
   try {
     const { chapterId, commentId } = await ctx.params;
@@ -47,12 +46,7 @@ export const PATCH = withAuth(async (req, ctx) => {
   }
 });
 
-// DELETE /api/books/chapters/:chapterId/comments/:commentId
-// Owner-only. Deleting a top-level comment cascades to its replies (a
-// dangling reply thread under a removed parent isn't useful to anyone),
-// and decrements the paragraph's denormalized top-level count. Deleting a
-// reply just removes that one doc — replyCount is computed on read, not
-// stored, so nothing else needs to change server-side for that case.
+
 export const DELETE = withAuth(async (req, ctx) => {
   try {
     const { chapterId, commentId } = await ctx.params;
@@ -74,12 +68,6 @@ export const DELETE = withAuth(async (req, ctx) => {
     if (isTopLevel) {
       await ParagraphComment.deleteMany({ $or: [{ _id: commentId }, { parentId: commentId }] });
 
-      // Aggregation-pipeline update ($set with an expression, not a plain
-      // object) so the "decrement, but never below 0" logic runs as a
-      // single atomic step on the server. A plain `$inc: -1` can't express
-      // a floor, and doing the clamp as a separate follow-up query would
-      // leave a window where a concurrent delete for the same paragraph
-      // could still push the stored value negative between the two steps.
       const field = `counts.${existing.paragraphIndex}`;
       await ChapterCommentCount.updateOne(
         { chapterId },

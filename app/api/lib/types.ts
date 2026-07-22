@@ -93,6 +93,7 @@ export type NotificationType =
   | "chapter_unlocked"
   | "admin_warning"   // new
   | "book_deleted"
+  | "chapter_liked_milestone"
 
 // ── Sound Effects (JSONB shape) ───────────────────────────────
 export interface SoundEffect {

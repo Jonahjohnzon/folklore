@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from "mongoose";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
-import { optionalAuth } from "@/app/api/auth/optionalAuth";
 import { ok, fail } from "@/app/api/response";
 import { ParagraphComment } from "@/app/api/lib/models/ParagraphComment";
 import { withAuth } from "@/app/api/auth/withAuth";
@@ -23,8 +23,7 @@ function serializeReply(doc: any, viewerId?: string) {
   };
 }
 
-// GET /api/books/chapters/:chapterId/comments/:commentId/replies
-// Fetched lazily — only called once the user clicks "View N replies".
+
 export const GET = withAuth(async (req, ctx) => {
   try {
     const { chapterId, commentId } = await ctx.params;
