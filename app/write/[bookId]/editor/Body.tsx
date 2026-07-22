@@ -167,8 +167,7 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
         class: "tiptap-sheet focus:outline-none",
         style: "overflow-wrap: anywhere; word-break: break-word;",
       },
-      // Strip inline styles/classes from pasted HTML (e.g. from Word/Google Docs)
-      // so foreign fonts and colors don't fight the sheet's own formatting.
+    
       transformPastedHTML(html) {
         return html
           .replace(/ style="[^"]*"/gi, "")
@@ -306,7 +305,6 @@ export default function ChapterEditorPage({ params }: { params: { bookId: string
   try {
     await BookService.updateTheme(params.bookId, {
       sheetThemeId: theme.id,
-      textureUrl: theme.textureUrl ?? null,
       bgColor: theme.background,
       textColor: theme.textColor,
       linkColor: theme.borderColor,

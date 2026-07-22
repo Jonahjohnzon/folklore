@@ -147,6 +147,8 @@ html {
 }
 
 
+
+
 body {
   background: var(--bg);
   color: var(--ink);
@@ -229,6 +231,10 @@ body {
   color: var(--accent, #7c3aed);
   text-decoration: underline;
   cursor: pointer;
+}
+
+.tiptap-sheet {
+  font-size: 20px;
 }
 
 /* Scene-break rule */
