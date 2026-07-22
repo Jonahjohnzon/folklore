@@ -15,13 +15,12 @@ interface ReaderContentSheetProps {
   ruleColor: string;
   surfaceStyle: CSSProperties;
   onOpenComments: (index: number) => void;
+  highlightIndex?: number | null; 
 }
 
-// Wattpad-style continuous reader — the whole chapter renders as one long
-// sheet and the page just scrolls. Replaces the old horizontal-swipe
-// pagination, which had recurring measurement/overflow bugs.
 export function ReaderContentSheet({
   blocks, commentCounts, stripFontFamily, fontStack, fontSize, lineHeight, ruleColor, surfaceStyle, onOpenComments,
+  highlightIndex, 
 }: ReaderContentSheetProps) {
   return (
     <div
@@ -39,6 +38,7 @@ export function ReaderContentSheet({
           stripFontFamily={stripFontFamily}
           fontStack={fontStack}
           onOpenComments={onOpenComments}
+          highlighted={highlightIndex === i} 
         />
       ))}
     </div>

@@ -39,7 +39,7 @@ const FONTS: { id: string; label: string; stack: string }[] = [
 const PAGE_TURN_SOUND = PAGE_SOUNDS.find((s) => s.id === "page-turn") ?? null;
 
 export function ChapterReader({
- bookSlug, bookId, bookTitle, chapter, theme, prevId, nextId,highlightCommentId
+ bookSlug, bookId, bookTitle, chapter, theme, prevId, nextId,highlightCommentId,highlightParagraphIndex
 }: {
   bookSlug: string;
   bookId: string;
@@ -49,10 +49,13 @@ export function ChapterReader({
   prevId?: string;
   nextId?: string;
   highlightCommentId?: string | null;
+  highlightParagraphIndex?: number | null;
+
 }) {
   const router = useRouter();
   const presentation = useMemo(() => getChapterPresentation(theme), [theme]);
   const [ambientAttention, setAmbientAttention] = useState(false);
+  const [hasScrolledToHighlight, setHasScrolledToHighlight] = useState(false);
 
   // Sound library — fetched once from the DB-backed catalog rather than a
   // static import, so newly-added admin sounds show up without a redeploy.
@@ -267,6 +270,19 @@ export function ChapterReader({
     }
   }
 
+    useEffect(() => {
+    if (highlightParagraphIndex == null || hasScrolledToHighlight || !mounted) return;
+
+    const frame = requestAnimationFrame(() => {
+      const el = document.getElementById(`paragraph-${highlightParagraphIndex}`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setActiveParagraph(highlightParagraphIndex);
+      setHasScrolledToHighlight(true);
+    });
+    return () => cancelAnimationFrame(frame);
+   }, [highlightParagraphIndex, mounted, hasScrolledToHighlight, blocks]);
+
   const effectiveTheme = useMemo(() => {
     const wantsCustomTheme = mode === "custom" && !presentation.locks.theme;
     if (!wantsCustomTheme) {
@@ -320,7 +336,7 @@ export function ChapterReader({
 
   return (
     <main ref={containerRef} className="relative bg-bg pb-24 [&:fullscreen]:overflow-y-auto [&:fullscreen]:pb-12">
-      {highlightCommentId||<ScrollToTop/>}
+      {(highlightCommentId || highlightParagraphIndex != null) ? null : <ScrollToTop />}
       {PAGE_TURN_SOUND && <audio ref={pageTurnAudioRef} src={PAGE_TURN_SOUND.url} className="hidden" />}
       {/* key forces the element to remount (and load the new src cleanly)
           when the reader switches ambient sounds mid-session, rather than
@@ -437,6 +453,7 @@ export function ChapterReader({
             ruleColor={effectiveTheme.textColor}
             surfaceStyle={getSheetSurfaceStyle(effectiveTheme)}
             onOpenComments={setActiveParagraph}
+            highlightIndex={hasScrolledToHighlight ? highlightParagraphIndex : null}
           />
 
           {isFullscreen && <p className="mt-6 font-sans text-xs text-ink-muted">Press Esc to exit fullscreen.</p>}

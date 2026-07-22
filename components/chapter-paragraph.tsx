@@ -23,6 +23,7 @@ export function ChapterParagraph({
   stripFontFamily,
   fontStack,
   onOpenComments,
+  highlighted,
 }: {
   html: string;
   index: number;
@@ -31,26 +32,22 @@ export function ChapterParagraph({
   stripFontFamily: boolean;
   fontStack: string;
   onOpenComments: (index: number) => void;
+  highlighted?: boolean;
 }) {
   const rendered = stripFontFamily ? removeFontFamily(html) : html;
   const finalHtml = isFirst ? withDropCap(rendered) : rendered;
 
-  // Tap-to-reveal for touch, where there's no hover to rely on. Desktop
-  // visibility is handled entirely by the `group-hover` CSS class below —
-  // no mouseenter/mouseleave state involved, so there's nothing to get
-  // stuck showing a stale paragraph's icon when the pointer moves quickly.
   const [revealed, setRevealed] = useState(false);
 
-  // The stored count can be negative from historical drift (e.g. a paragraph
-  // whose count went below zero before the increment/decrement bug was
-  // fixed server-side). Clamp for display so a real new comment doesn't look
-  // like a no-op just because -1 + 1 = 0, which still fails a `> 0` check.
   const displayCount = Math.max(0, commentCount);
   const iconVisible = displayCount > 0 || revealed;
 
   return (
     <div
-      className="group/para relative -mx-4 mb-0 select-none cursor-pointer rounded-lg px-4 py-0.5 transition active:bg-black/5 hover:bg-black/2.5 sm:-mx-6 sm:px-6 last:mb-0"
+      id={`paragraph-${index}`}
+      className={`group/para relative -mx-4 mb-0 select-none cursor-pointer rounded-lg px-4 py-0.5 transition active:bg-black/5 hover:bg-black/2.5 sm:-mx-6 sm:px-6 last:mb-0 ${
+        highlighted ? "paragraph-highlight" : ""
+      }`}
       onClick={() => setRevealed((r) => !r)}
     >
       <div
@@ -71,6 +68,20 @@ export function ChapterParagraph({
         <MessageCircle size={12} />
         {displayCount > 0 && displayCount}
       </button>
+
+      <style jsx>{`
+        .paragraph-highlight {
+          animation: paragraph-flash 2.5s ease-out;
+        }
+        @keyframes paragraph-flash {
+          0% {
+            background-color: color-mix(in srgb, var(--accent) 18%, transparent);
+          }
+          100% {
+            background-color: transparent;
+          }
+        }
+      `}</style>
     </div>
   );
 }

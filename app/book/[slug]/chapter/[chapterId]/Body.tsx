@@ -11,7 +11,8 @@ import { SignalService } from "@/app/services/SignalService";
 
 export default function ChapterPage() {
   const params = useParams<{ slug: string; chapterId: string }>();
-  const {comment} = useParams<{ comment?: string }>();
+  const [highlightParagraph, setHighlightParagraph] = useState<number | null>(null);
+  const [highlightCommentId, setHighlightCommentId] = useState<string | null>(null);
   const [book, setBook] = useState<PublicBook | null>(null);
   const [chapter, setChapter] = useState<PublicChapterDetail | null>(null);
   const [theme, setTheme] = useState<PublicChapterTheme | null>(null);
@@ -20,6 +21,15 @@ export default function ChapterPage() {
   const [loading, setLoading] = useState(true);
   const [notFoundState, setNotFoundState] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+   useEffect(() => {
+  const hash = window.location.hash;
+  const paragraphMatch = hash.match(/^#paragraph-(\d+)$/);
+  const commentMatch = hash.match(/^#comment-([a-zA-Z0-9]+)$/);
+
+  if (paragraphMatch) setHighlightParagraph(Number(paragraphMatch[1]));
+  else if (commentMatch) setHighlightCommentId(commentMatch[1]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,7 +99,9 @@ export default function ChapterPage() {
       theme={theme}
       prevId={prevId ?? undefined}
       nextId={nextId ?? undefined}
-      highlightCommentId={comment ?? null}
+      highlightCommentId={highlightCommentId}
+      highlightParagraphIndex={highlightParagraph}
+
     />
   );
 }
