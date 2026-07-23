@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { CommentComposer } from "@/components/comment-composer";
 import { CommentItem } from "@/components/comment-item";
 import { CommentService, type CommentDTO } from "@/app/services/CommentService";
@@ -24,7 +24,7 @@ function getTargetIdFromHash(): string | null {
   return match ? match[1] : null;
 }
 
-export function CommentSection({ chapterId }: { chapterId: string }) {
+function CommentSectionBase({ chapterId }: { chapterId: string }) {
   const [comments, setComments] = useState<CommentDTO[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -38,21 +38,21 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
   const [targetId] = useState(getTargetIdFromHash);
   const resolvedRef = useRef(false);
 
- async function load(pageToLoad: number) {
-  if (pageToLoad === 1) setLoading(true);
-  else setLoadingMore(true);
-  try {
-    const { data } = await CommentService.getChapterComments(chapterId, pageToLoad, 2);
-    setComments((prev) => (pageToLoad === 1 ? data.comments ?? [] : [...prev, ...(data.comments ?? [])]));
-    setTotal(data.total);
-    setHasMore(data.hasMore);
-    setPage(pageToLoad);
-    pageRef.current = pageToLoad; // keep ref in sync
-  } finally {
-    setLoading(false);
-    setLoadingMore(false);
-  }
-}
+  const load = useCallback(async (pageToLoad: number) => {
+    if (pageToLoad === 1) setLoading(true);
+    else setLoadingMore(true);
+    try {
+      const { data } = await CommentService.getChapterComments(chapterId, pageToLoad, 2);
+      setComments((prev) => (pageToLoad === 1 ? data.comments ?? [] : [...prev, ...(data.comments ?? [])]));
+      setTotal(data.total);
+      setHasMore(data.hasMore);
+      setPage(pageToLoad);
+      pageRef.current = pageToLoad; // keep ref in sync
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [chapterId]);
 
   useEffect(() => {
     resolvedRef.current = false;
@@ -92,11 +92,16 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [found, targetId, hasMore, loading, loadingMore, page]);
 
-  async function handlePostComment(content: string) {
+  const handlePostComment = useCallback(async (content: string) => {
     const { data } = await CommentService.postComment(chapterId, content, null);
     setComments((prev) => [data.comment, ...prev]);
     setTotal((t) => t + 1);
-  }
+  }, [chapterId]);
+
+  const handleLoadMore = useCallback(() => {
+    if (loadingMore || loading) return;
+    load(pageRef.current + 1);
+  }, [loadingMore, loading, load]);
 
   return (
     <section className="mt-10 border-t border-hairline pt-6">
@@ -122,7 +127,7 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
           <p className="font-sans text-sm text-ink-muted">Be the first to comment.</p>
         )}
 
-         {comments.map((comment) => (
+        {comments.map((comment) => (
           <CommentItem
             key={comment._id}
             comment={comment}
@@ -134,17 +139,14 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
 
         {!loading && hasMore && !locating && (
           <button
-          onClick={() => {
-          if (loadingMore || loading) return; 
-          load(pageRef.current + 1);
-        }}
-          disabled={loadingMore}
-          className="self-start font-sans text-sm font-semibold text-accent transition-opacity duration-150 hover:underline disabled:opacity-50"
-        >
-          <span className="inline-block transition-opacity duration-150">
-            {loadingMore ? "Loading…" : "Load more comments"}
-          </span>
-        </button>
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="self-start font-sans text-sm font-semibold text-accent transition-opacity duration-150 hover:underline disabled:opacity-50"
+          >
+            <span className="inline-block transition-opacity duration-150">
+              {loadingMore ? "Loading…" : "Load more comments"}
+            </span>
+          </button>
         )}
       </div>
 
@@ -165,3 +167,5 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
     </section>
   );
 }
+
+export const CommentSection = memo(CommentSectionBase);

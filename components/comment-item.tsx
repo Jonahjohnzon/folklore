@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import Link from "next/link";
 import { MessageCircle, Heart, Pencil, Trash2, X, Check, ShieldAlert } from "lucide-react";
 import { CommentComposer } from "@/components/comment-composer";
@@ -20,7 +20,7 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
   );
 }
 
-export function CommentItem({
+function CommentItemBase({
   comment,
   chapterId,
   isReply = false,
@@ -63,7 +63,7 @@ export function CommentItem({
   const displayName = comment.user?.name ?? "Reader";
   const profileHref = comment.user?.name ? `/u/${comment.user.name}` : null;
 
-  async function handleToggleLike() {
+  const handleToggleLike = useCallback(async () => {
     if (likePending) return;
     setLikePending(true);
     const prevLiked = liked;
@@ -80,9 +80,9 @@ export function CommentItem({
     } finally {
       setLikePending(false);
     }
-  }
+  }, [likePending, liked, likesCount, comment._id]);
 
-  async function loadReplies(page: number) {
+  const loadReplies = useCallback(async (page: number) => {
     setLoadingReplies(true);
     try {
       const { data } = await CommentService.getCommentReplies(comment._id, page, 2);
@@ -93,23 +93,23 @@ export function CommentItem({
     } finally {
       setLoadingReplies(false);
     }
-  }
+  }, [comment._id]);
 
-  function handleShowReplies() {
+  const handleShowReplies = useCallback(() => {
     setRepliesOpen(true);
     if (!repliesLoaded) loadReplies(1);
-  }
+  }, [repliesLoaded, loadReplies]);
 
-  async function handlePostReply(replyContent: string) {
+  const handlePostReply = useCallback(async (replyContent: string) => {
     const { data } = await CommentService.postComment(chapterId, replyContent, comment._id);
     setReplies((prev) => [...prev, data.comment]);
     setRepliesCount((c) => c + 1);
     setRepliesOpen(true);
     setRepliesLoaded(true);
     setReplying(false);
-  }
+  }, [chapterId, comment._id]);
 
-  async function handleSaveEdit() {
+  const handleSaveEdit = useCallback(async () => {
     const trimmed = editValue.trim();
     if (!trimmed || saving) return;
     setSaving(true);
@@ -124,9 +124,9 @@ export function CommentItem({
     } finally {
       setSaving(false);
     }
-  }
+  }, [editValue, saving, comment._id]);
 
-  async function handleDelete() {
+  const handleDelete = useCallback(async () => {
     if (deleting) return;
     const message = isOwner
       ? "Delete this comment? This can't be undone."
@@ -141,7 +141,20 @@ export function CommentItem({
       setActionError(err instanceof Error ? err.message : "Couldn't delete comment.");
       setDeleting(false);
     }
-  }
+  }, [deleting, isOwner, comment._id]);
+
+  const handleReplyToggle = useCallback(() => setReplying((v) => !v), []);
+  const handleReplyCancel = useCallback(() => setReplying(false), []);
+  const handleStartEdit = useCallback(() => {
+    setEditing(true);
+    setEditValue(content);
+  }, [content]);
+  const handleCancelEdit = useCallback(() => {
+    setEditing(false);
+    setEditValue(content);
+    setActionError(null);
+  }, [content]);
+  const handleLoadMoreReplies = useCallback(() => loadReplies(repliesPage + 1), [loadReplies, repliesPage]);
 
   if (deleted) {
     return (
@@ -204,11 +217,7 @@ export function CommentItem({
                 <Check size={12} /> {saving ? "Saving…" : "Save"}
               </button>
               <button
-                onClick={() => {
-                  setEditing(false);
-                  setEditValue(content);
-                  setActionError(null);
-                }}
+                onClick={handleCancelEdit}
                 className="flex items-center gap-1 font-sans text-xs font-medium text-ink-muted hover:text-ink"
               >
                 <X size={12} /> Cancel
@@ -234,7 +243,7 @@ export function CommentItem({
 
           {!isReply && (
             <button
-              onClick={() => setReplying((v) => !v)}
+              onClick={handleReplyToggle}
               className="flex items-center gap-1 font-sans text-xs font-medium text-ink-muted transition hover:text-accent"
             >
               <MessageCircle size={12} /> Reply
@@ -243,10 +252,7 @@ export function CommentItem({
 
           {isOwner && !editing && (
             <button
-              onClick={() => {
-                setEditing(true);
-                setEditValue(content);
-              }}
+              onClick={handleStartEdit}
               className="flex items-center gap-1 font-sans text-xs font-medium text-ink-muted transition hover:text-accent"
             >
               <Pencil size={12} /> Edit
@@ -279,7 +285,7 @@ export function CommentItem({
               submitLabel="Reply"
               autoFocus
               onSubmit={handlePostReply}
-              onCancel={() => setReplying(false)}
+              onCancel={handleReplyCancel}
             />
           </div>
         )}
@@ -308,7 +314,7 @@ export function CommentItem({
             {loadingReplies && <p className="font-sans text-xs text-ink-muted">Loading…</p>}
             {!loadingReplies && repliesHasMore && (
               <button
-                onClick={() => loadReplies(repliesPage + 1)}
+                onClick={handleLoadMoreReplies}
                 className="self-start font-sans text-xs font-semibold text-accent hover:underline"
               >
                 Load more replies
@@ -335,3 +341,5 @@ export function CommentItem({
     </div>
   );
 }
+
+export const CommentItem = memo(CommentItemBase);
