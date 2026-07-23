@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Heart, CornerDownRight, Loader2, ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { CommentService, type ParagraphCommentDTO } from "@/app/services/CommentService";
 import { Avatar } from "@/components/avatar";
@@ -16,7 +16,7 @@ function timeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString();
 }
 
-function CommentRow({
+function CommentRowComponent({
   comment,
   currentUserId,
   onLove,
@@ -83,10 +83,10 @@ function CommentRow({
     <div className={isReply ? "ml-8 mt-2.5" : ""}>
       <div className="rounded-xl border border-hairline bg-bg p-3">
         <div className="flex items-center gap-2">
-           <Link href={profileHref} className="shrink-0">
+          <Link href={profileHref} className="shrink-0">
             <Avatar avatarUrl={comment.avatarUrl} name={comment.username} size={28} />
           </Link>
-         <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <Link href={profileHref} className="truncate font-sans text-sm font-semibold text-ink hover:text-accent hover:underline">
                 {comment.username}
@@ -239,7 +239,9 @@ function CommentRow({
   );
 }
 
-function ThreadedComment({
+const CommentRow = React.memo(CommentRowComponent);
+
+function ThreadedCommentComponent({
   comment,
   chapterId,
   currentUserId,
@@ -250,7 +252,7 @@ function ThreadedComment({
 }: {
   comment: ParagraphCommentDTO;
   chapterId: string | null;
-  currentUserId?: string| null;
+  currentUserId?: string | null;
   onLove: (id: string) => void;
   onReply: (parentId: string, body: string) => Promise<void>;
   onEdit: (id: string, body: string, isReply: boolean, parentId?: string) => Promise<void>;
@@ -291,10 +293,6 @@ function ThreadedComment({
     setReplies((prev) => (prev ? prev.map((r) => (r.id === id ? { ...r, body } : r)) : prev));
   }
 
-  // Replies are excluded from the server-side ChapterCommentCount counter
-  // (see the POST route's `if (!parentId)` guard), so deleting one must
-  // NOT touch commentCounts/paragraph badge state — only the locally
-  // rendered reply list and this thread's own reply count.
   async function handleDeleteReply(id: string) {
     await CommentService.remove(chapterId, id);
     setReplies((prev) => (prev ? prev.filter((r) => r.id !== id) : prev));
@@ -349,7 +347,9 @@ function ThreadedComment({
   );
 }
 
-export function ParagraphCommentPanel({
+const ThreadedComment = React.memo(ThreadedCommentComponent);
+
+function ParagraphCommentPanelComponent({
   open,
   chapterId,
   paragraphIndex,
@@ -420,7 +420,6 @@ export function ParagraphCommentPanel({
     );
     try {
       const { data } = await CommentService.love(chapterId, id);
-      // Reconcile with server truth in case of race.
       setComments((prev) =>
         prev.map((c) =>
           c.id === id ? { ...c, lovedByMe: data.comment.lovedByMe, helpfulVotes: data.comment.helpfulVotes } : c
@@ -449,8 +448,6 @@ export function ParagraphCommentPanel({
         prev.map((c) => (c.id === id ? { ...c, body, updatedAt: new Date().toISOString() } : c))
       );
     }
-    // Reply-level state (the replies array) is owned by ThreadedComment and
-    // updated there directly — see handleEditReply.
   }
 
   async function handleDeleteTopLevel(id: string) {
@@ -555,3 +552,5 @@ export function ParagraphCommentPanel({
     </div>
   );
 }
+
+export const ParagraphCommentPanel = React.memo(ParagraphCommentPanelComponent);

@@ -1,7 +1,7 @@
 // components/chapter-paragraph.tsx
 "use client";
 
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { MessageCircle } from "lucide-react";
 import { withDropCap } from "@/lib/reader-blocks";
 
@@ -15,16 +15,7 @@ function removeFontFamily(html: string) {
   return doc.body.innerHTML;
 }
 
-export function ChapterParagraph({
-  html,
-  index,
-  isFirst,
-  commentCount,
-  stripFontFamily,
-  fontStack,
-  onOpenComments,
-  highlighted,
-}: {
+interface ChapterParagraphProps {
   html: string;
   index: number;
   isFirst: boolean;
@@ -33,11 +24,26 @@ export function ChapterParagraph({
   fontStack: string;
   onOpenComments: (index: number) => void;
   highlighted?: boolean;
-}) {
-  const rendered = stripFontFamily ? removeFontFamily(html) : html;
-  const finalHtml = isFirst ? withDropCap(rendered) : rendered;
+}
 
+function ChapterParagraphComponent({
+  html,
+  index,
+  isFirst,
+  commentCount,
+  stripFontFamily,
+  fontStack,
+  onOpenComments,
+  highlighted,
+}: ChapterParagraphProps) {
   const [revealed, setRevealed] = useState(false);
+
+  // Recomputing DOMParser + innerHTML on every render is wasted work if
+  // html/stripFontFamily/isFirst haven't changed — memoize the expensive part.
+  const finalHtml = useMemo(() => {
+    const rendered = stripFontFamily ? removeFontFamily(html) : html;
+    return isFirst ? withDropCap(rendered) : rendered;
+  }, [html, stripFontFamily, isFirst]);
 
   const displayCount = Math.max(0, commentCount);
   const iconVisible = displayCount > 0 || revealed;
@@ -85,3 +91,5 @@ export function ChapterParagraph({
     </div>
   );
 }
+
+export const ChapterParagraph = React.memo(ChapterParagraphComponent);

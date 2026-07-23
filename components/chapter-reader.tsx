@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -57,8 +57,6 @@ export function ChapterReader({
   const [ambientAttention, setAmbientAttention] = useState(false);
   const [hasScrolledToHighlight, setHasScrolledToHighlight] = useState(false);
 
-  // Sound library — fetched once from the DB-backed catalog rather than a
-  // static import, so newly-added admin sounds show up without a redeploy.
   const [sounds, setSounds] = useState<PlatformSound[]>([]);
 
   useEffect(() => {
@@ -67,10 +65,7 @@ export function ChapterReader({
       .then(({ data }) => {
         if (!cancelled) setSounds(data.sounds);
       })
-      .catch(() => {
-        // Reader still works without ambient/author sound if this fails —
-        // just falls back to no ambient option being shown.
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -102,10 +97,6 @@ export function ChapterReader({
   const effectiveFontId = presentation.locks.font || mode === "author" ? presentation.fontId : prefs?.fontId ?? presentation.fontId;
   const effectiveFontSize = prefs?.fontSize ?? presentation.fontSize;
 
-  // Two SEPARATE gates. Previously both ambient and page-turn shared one
-  // `soundAllowed` flag that was really just the ambient on/off — so toggling
-  // page-turn on/off while ambient was off (or vice versa) had no effect on
-  // page-turn playback at all. Each sound now checks only its own toggle.
   const ambientAllowed = presentation.locks.sound ? true : mode === "author" ? true : prefs?.soundOn ?? true;
   const pageTurnAllowed = presentation.locks.sound ? true : mode === "author" ? true : Boolean(prefs?.pageTurnSoundId);
 
@@ -117,7 +108,7 @@ export function ChapterReader({
     return authorAmbientSound;
   }, [mode, presentation.locks.sound, prefs?.ambientSoundId, authorAmbientSound, sounds]);
 
-  function toggleAmbientSound() {
+  const toggleAmbientSound = useCallback(() => {
     const audio = ambientAudioRef.current;
     if (!audio || !ambientAllowed) return;
     if (!audio.paused) {
@@ -125,30 +116,28 @@ export function ChapterReader({
     } else {
       audio.play().catch(() => {});
     }
-  }
+  }, [ambientAllowed]);
 
-      useEffect(() => {
-      const audio = ambientAudioRef.current;
-      if (!audio) return;
+  useEffect(() => {
+    const audio = ambientAudioRef.current;
+    if (!audio) return;
 
-      const handlePlay = () => setAmbientPlaying(true);
-      const handlePause = () => setAmbientPlaying(false);
-      // Fires on buffering stalls/network hiccups — treat as paused so the
-      // UI doesn't lie about what's actually audible.
-      const handleStalled = () => setAmbientPlaying(false);
+    const handlePlay = () => setAmbientPlaying(true);
+    const handlePause = () => setAmbientPlaying(false);
+    const handleStalled = () => setAmbientPlaying(false);
 
-      audio.addEventListener("play", handlePlay);
-      audio.addEventListener("pause", handlePause);
-      audio.addEventListener("stalled", handleStalled);
-      audio.addEventListener("suspend", handleStalled);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("stalled", handleStalled);
+    audio.addEventListener("suspend", handleStalled);
 
-      return () => {
-        audio.removeEventListener("play", handlePlay);
-        audio.removeEventListener("pause", handlePause);
-        audio.removeEventListener("stalled", handleStalled);
-        audio.removeEventListener("suspend", handleStalled);
-      };
-    }, [ambientSound?.id]);
+    return () => {
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("stalled", handleStalled);
+      audio.removeEventListener("suspend", handleStalled);
+    };
+  }, [ambientSound?.id]);
 
   useEffect(() => {
     const stored = loadReaderPrefs();
@@ -218,37 +207,35 @@ export function ChapterReader({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  async function toggleFullscreen() {
+  const toggleFullscreen = useCallback(async () => {
     if (!document.fullscreenElement) await containerRef.current?.requestFullscreen?.();
     else await document.exitFullscreen?.();
-  }
+  }, []);
 
-  function updatePrefs(partial: Partial<ReaderPrefs>) {
-    const merged = {
-      mode: prefs?.mode ?? "author",
-      fontId: prefs?.fontId ?? presentation.fontId,
-      fontSize: prefs?.fontSize ?? presentation.fontSize,
-      themeId: prefs?.themeId ?? SHEET_THEMES[0].id,
-      soundOn: prefs?.soundOn ?? true,
-      ambientSoundId: prefs?.ambientSoundId ?? null,
-      pageTurnSoundId: prefs?.pageTurnSoundId ?? null,
-      ...partial,
-    };
+  const updatePrefs = useCallback((partial: Partial<ReaderPrefs>) => {
+    setPrefs((current) => {
+      const merged = {
+        mode: current?.mode ?? "author",
+        fontId: current?.fontId ?? presentation.fontId,
+        fontSize: current?.fontSize ?? presentation.fontSize,
+        themeId: current?.themeId ?? SHEET_THEMES[0].id,
+        soundOn: current?.soundOn ?? true,
+        ambientSoundId: current?.ambientSoundId ?? null,
+        pageTurnSoundId: current?.pageTurnSoundId ?? null,
+        ...partial,
+      };
 
-    const next: ReaderPrefs = {
-      ...merged,
-      pageTurnSoundId: merged.pageTurnSoundId ?? null,
-    };
+      const next: ReaderPrefs = {
+        ...merged,
+        pageTurnSoundId: merged.pageTurnSoundId ?? null,
+      };
 
-    saveReaderPrefs(next);
-    setPrefs(next);
-  }
+      saveReaderPrefs(next);
+      return next;
+    });
+  }, [presentation.fontId, presentation.fontSize]);
 
-  // Called from the settings modal's Save button. The click itself is a
-  // user gesture, so this is the one place we can reliably start ambient
-  // playback in response to picking a sound, instead of making the reader
-  // click a second, separate toggle button right after.
-  function handleSettingsSave(next: ReaderPrefs) {
+  const handleSettingsSave = useCallback((next: ReaderPrefs) => {
     saveReaderPrefs(next);
     setPrefs(next);
     setSettingsOpen(false);
@@ -268,9 +255,9 @@ export function ChapterReader({
       ambientAudioRef.current?.pause();
       setAmbientPlaying(false);
     }
-  }
+  }, [presentation.locks.sound]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (highlightParagraphIndex == null || hasScrolledToHighlight || !mounted) return;
 
     const frame = requestAnimationFrame(() => {
@@ -281,7 +268,7 @@ export function ChapterReader({
       setHasScrolledToHighlight(true);
     });
     return () => cancelAnimationFrame(frame);
-   }, [highlightParagraphIndex, mounted, hasScrolledToHighlight, blocks]);
+  }, [highlightParagraphIndex, mounted, hasScrolledToHighlight, blocks]);
 
   const effectiveTheme = useMemo(() => {
     const wantsCustomTheme = mode === "custom" && !presentation.locks.theme;
@@ -302,16 +289,25 @@ export function ChapterReader({
     };
   }, [mode, presentation, prefs?.themeId]);
 
-  const effectiveFont = FONTS.find((f) => f.id === effectiveFontId) ?? FONTS[0];
+  // getSheetSurfaceStyle(effectiveTheme) would otherwise build a brand-new
+  // style object every render even when effectiveTheme itself hasn't
+  // changed reference (it's already memoized above, so this just needs its
+  // own memo keyed off it) — feeds directly into ReaderContentSheet's props.
+  const surfaceStyle = useMemo(() => getSheetSurfaceStyle(effectiveTheme), [effectiveTheme]);
 
-  function playPageTurn(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+  const effectiveFont = useMemo(
+    () => FONTS.find((f) => f.id === effectiveFontId) ?? FONTS[0],
+    [effectiveFontId]
+  );
+
+  const playPageTurn = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (!pageTurnAllowed || !pageTurnAudioRef.current) return;
     e.preventDefault();
     const audio = pageTurnAudioRef.current;
     audio.currentTime = 0;
     audio.play().catch(() => {});
     setTimeout(() => router.push(href), 150);
-  }
+  }, [pageTurnAllowed, router]);
 
   useEffect(() => {
     if (!ambientAllowed && ambientPlaying) {
@@ -325,12 +321,24 @@ export function ChapterReader({
     setAmbientPlaying(false);
   }, [chapter._id]);
 
-  function handleCommentPosted(paragraphIndex: number) {
+  const handleCommentPosted = useCallback((paragraphIndex: number) => {
     setCommentCounts((prev) => ({
       ...prev,
       [paragraphIndex]: (prev[paragraphIndex] ?? 0) + 1,
     }));
-  }
+  }, []);
+
+  const handleCloseCommentPanel = useCallback(() => setActiveParagraph(null), []);
+  const handleOpenSettings = useCallback(() => setSettingsOpen(true), []);
+  const handleCloseSettings = useCallback(() => setSettingsOpen(false), []);
+  const handleDecreaseFontSize = useCallback(
+    () => updatePrefs({ fontSize: Math.max(14, effectiveFontSize - 2) }),
+    [updatePrefs, effectiveFontSize]
+  );
+  const handleIncreaseFontSize = useCallback(
+    () => updatePrefs({ fontSize: Math.min(26, effectiveFontSize + 2) }),
+    [updatePrefs, effectiveFontSize]
+  );
 
   const currentUserId = useSnapshot(store)._id;
 
@@ -338,10 +346,6 @@ export function ChapterReader({
     <main ref={containerRef} className="relative bg-bg pb-24 [&:fullscreen]:overflow-y-auto [&:fullscreen]:pb-12">
       {(highlightCommentId || highlightParagraphIndex != null) ? null : <ScrollToTop />}
       {PAGE_TURN_SOUND && <audio ref={pageTurnAudioRef} src={PAGE_TURN_SOUND.url} className="hidden" />}
-      {/* key forces the element to remount (and load the new src cleanly)
-          when the reader switches ambient sounds mid-session, rather than
-          mutating the src attribute on an element that may already be
-          mid-playback. */}
       {ambientSound && <audio key={ambientSound.id} ref={ambientAudioRef} src={ambientSound.url} loop className="hidden" />}
 
       {presentation.customCss && <style>{presentation.customCss}</style>}
@@ -362,7 +366,7 @@ export function ChapterReader({
             <div className="flex shrink-0 items-center gap-1">
               <div className="flex items-center gap-0.5 rounded-full border border-hairline px-0.5">
                 <button
-                  onClick={() => updatePrefs({ fontSize: Math.max(14, effectiveFontSize - 2) })}
+                  onClick={handleDecreaseFontSize}
                   className="flex h-9 w-9 items-center justify-center text-ink-muted active:text-accent sm:h-7 sm:w-7"
                   aria-label="Decrease text size"
                 >
@@ -372,7 +376,7 @@ export function ChapterReader({
                   {effectiveFontSize}px
                 </span>
                 <button
-                  onClick={() => updatePrefs({ fontSize: Math.min(26, effectiveFontSize + 2) })}
+                  onClick={handleIncreaseFontSize}
                   className="flex h-9 w-9 items-center justify-center text-ink-muted active:text-accent sm:h-7 sm:w-7"
                   aria-label="Increase text size"
                 >
@@ -396,7 +400,7 @@ export function ChapterReader({
               )}
 
               <button
-                onClick={() => setSettingsOpen(true)}
+                onClick={handleOpenSettings}
                 aria-label="Reading settings"
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-muted hover:border-accent hover:text-accent sm:h-7 sm:w-7"
               >
@@ -417,10 +421,6 @@ export function ChapterReader({
   
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 pt-14 sm:px-6 lg:grid-cols-[1fr_auto_1fr]">
-        {/* Left rail column — equal width to the right column so the
-            center sheet stays visually centered, even though the rail
-            itself is much narrower than the sidebar. Content pinned to
-            the inner (right) edge, right up against the article. */}
         <div className="hidden lg:flex lg:justify-end">
           <ChapterShareRail bookSlug={bookSlug} chapterId={String(chapter._id)} title={chapter.title} />
         </div>
@@ -451,7 +451,7 @@ export function ChapterReader({
             fontSize={effectiveFontSize}
             lineHeight={presentation.lineHeight}
             ruleColor={effectiveTheme.textColor}
-            surfaceStyle={getSheetSurfaceStyle(effectiveTheme)}
+            surfaceStyle={surfaceStyle}
             onOpenComments={setActiveParagraph}
             highlightIndex={hasScrolledToHighlight ? highlightParagraphIndex : null}
           />
@@ -490,8 +490,6 @@ export function ChapterReader({
           <CommentSection chapterId={String(chapter._id)} />
         </article>
 
-        {/* Right column — sidebar pinned to inner (left) edge, matching
-            the left column's width so the article stays centered. */}
         <div className="hidden lg:flex lg:justify-start">
           <RecommendedSidebar bookId={bookId} />
         </div>
@@ -503,7 +501,7 @@ export function ChapterReader({
         paragraphIndex={activeParagraph}
         currentUserId={currentUserId}
         loading={loadingComments}
-        onClose={() => setActiveParagraph(null)}
+        onClose={handleCloseCommentPanel}
         onCommentPosted={handleCommentPosted}
       />
 
@@ -515,7 +513,7 @@ export function ChapterReader({
           currentPrefs={prefs}
           sounds={sounds}
           onSave={handleSettingsSave}
-          onClose={() => setSettingsOpen(false)}
+          onClose={handleCloseSettings}
         />
       )}
 

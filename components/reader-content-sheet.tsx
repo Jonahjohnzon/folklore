@@ -1,7 +1,7 @@
 // components/reader-content-sheet.tsx
 "use client";
 
-import { CSSProperties } from "react";
+import React, { CSSProperties } from "react";
 import { ChapterParagraph } from "@/components/chapter-paragraph";
 import { SheetOpeningRule, SHEET_PADDING, SHEET_RADIUS } from "@/lib/sheet-surface";
 
@@ -15,12 +15,12 @@ interface ReaderContentSheetProps {
   ruleColor: string;
   surfaceStyle: CSSProperties;
   onOpenComments: (index: number) => void;
-  highlightIndex?: number | null; 
+  highlightIndex?: number | null;
 }
 
-export function ReaderContentSheet({
+function ReaderContentSheetComponent({
   blocks, commentCounts, stripFontFamily, fontStack, fontSize, lineHeight, ruleColor, surfaceStyle, onOpenComments,
-  highlightIndex, 
+  highlightIndex,
 }: ReaderContentSheetProps) {
   return (
     <div
@@ -38,9 +38,11 @@ export function ReaderContentSheet({
           stripFontFamily={stripFontFamily}
           fontStack={fontStack}
           onOpenComments={onOpenComments}
-          highlighted={highlightIndex === i} 
+          highlighted={highlightIndex === i}
         />
       ))}
     </div>
   );
 }
+
+export const ReaderContentSheet = React.memo(ReaderContentSheetComponent);

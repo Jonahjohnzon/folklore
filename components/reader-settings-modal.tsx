@@ -1,13 +1,12 @@
 /* eslint-disable jsx-a11y/role-has-required-aria-props */
 "use client";
 
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { X, Check, Lock, Volume2, VolumeX, ChevronDown } from "lucide-react";
 import type { ChapterPresentation } from "@/lib/chapter-presentation";
 import type { ReaderPrefs } from "@/lib/reader-prefs";
 import { SHEET_THEMES } from "@/lib/sheet-themes";
 import { SOUND_CATEGORIES, DEFAULT_PAGE_TURN_SOUND_ID, type PlatformSound } from "@/lib/sounds";
-import {  useRef, useEffect } from "react";
 
 const FONT_OPTIONS = [
   { id: "serif", label: "Source Serif" },
@@ -26,35 +25,33 @@ interface ReaderSettingsModalProps {
   onClose: () => void;
 }
 
-export function ReaderSettingsModal({
+function ReaderSettingsModalComponent({
   open, presentation, authorSoundLabel, currentPrefs, sounds, onSave, onClose,
 }: ReaderSettingsModalProps) {
   const [mode, setMode] = useState<"author" | "custom">(currentPrefs?.mode ?? "author");
   const [fontId, setFontId] = useState(currentPrefs?.fontId ?? presentation.fontId);
   const [fontSize] = useState(currentPrefs?.fontSize ?? presentation.fontSize);
   const [themeId, setThemeId] = useState(currentPrefs?.themeId ?? SHEET_THEMES[0].id);
-  
-  // soundOn = ambient sound on/off. ambientSoundId = which one, when the
-  // reader overrides the author's choice. null means "use the author's pick."
+
   const [soundOn, setSoundOn] = useState(currentPrefs?.soundOn ?? true);
   const [ambientSoundId, setAmbientSoundId] = useState<string | null>(
     currentPrefs?.ambientSoundId ?? null
   );
-  const [soundDropdownOpen, setSoundDropdownOpen] = useState(false); // <-- new
+  const [soundDropdownOpen, setSoundDropdownOpen] = useState(false);
   const soundDropdownRef = useRef<HTMLDivElement>(null);
 
-      useEffect(() => {
-      function handleClickOutside(e: MouseEvent) {
-        if (soundDropdownRef.current && !soundDropdownRef.current.contains(e.target as Node)) {
-          setSoundDropdownOpen(false);
-        }
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (soundDropdownRef.current && !soundDropdownRef.current.contains(e.target as Node)) {
+        setSoundDropdownOpen(false);
       }
-      if (soundDropdownOpen) {
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-      }
-    }, [soundDropdownOpen]);
-  // Page-turn is a single fixed sound — plain on/off, not a picker.
+    }
+    if (soundDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [soundDropdownOpen]);
+
   const [pageTurnOn, setPageTurnOn] = useState(
     (currentPrefs?.pageTurnSoundId ?? null) !== null
   );
@@ -90,8 +87,6 @@ export function ReaderSettingsModal({
       onClose();
     }
   }
-
-  
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
@@ -184,109 +179,107 @@ export function ReaderSettingsModal({
               )}
             </div>
 
-<div>
-  <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Background sound</p>
-  {presentation.locks.sound ? (
-    <LockedNote label={authorSoundLabel ? `${authorSoundLabel} (always on)` : "None"} />
-  ) : (
-    <>
-      <button
-        onClick={() => setSoundOn((s) => !s)}
-        className="mt-2 flex w-full items-center justify-between rounded-lg border border-hairline bg-bg px-3 py-2"
-      >
-        <span className="flex items-center gap-2 font-sans text-sm text-ink">
-          {soundOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
-          {ambientSoundId
-            ? sounds.find((s) => s.id === ambientSoundId)?.label ?? "Ambient sound"
-            : authorSoundLabel ?? "Ambient sound"}
-        </span>
-        <span className={`rounded-full px-2.5 py-1 font-sans text-xs font-medium ${soundOn ? "bg-accent/10 text-accent" : "bg-hairline/40 text-ink-muted"}`}>
-          {soundOn ? "On" : "Off"}
-        </span>
-      </button>
-
-      {soundOn && (
-        <div ref={soundDropdownRef} className="relative mt-2">
-          {/* Trigger — looks like a select box */}
-          <div
-            role="combobox"
-            aria-expanded={soundDropdownOpen}
-            aria-haspopup="listbox"
-            tabIndex={0}
-            onClick={() => setSoundDropdownOpen((o) => !o)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setSoundDropdownOpen((o) => !o);
-              }
-              if (e.key === "Escape") setSoundDropdownOpen(false);
-            }}
-            className={`flex cursor-pointer items-center justify-between rounded-lg border bg-bg px-3 py-2 font-sans text-sm text-ink transition ${
-              soundDropdownOpen ? "border-accent" : "border-hairline hover:border-accent/60"
-            }`}
-          >
-            <span className="truncate">
-              {ambientSoundId
-                ? sounds.find((s) => s.id === ambientSoundId)?.label ?? "Ambient sound"
-                : authorSoundLabel
-                ? `${authorSoundLabel} (author's pick)`
-                : "Author's pick"}
-            </span>
-            <ChevronDown
-              size={14}
-              className={`shrink-0 text-ink-muted transition-transform ${soundDropdownOpen ? "rotate-180" : ""}`}
-            />
-          </div>
-
-          {/* Floating options panel */}
-          {soundDropdownOpen && (
-            <div
-              role="listbox"
-              className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto scrollbar-thin rounded-lg border border-hairline bg-surface shadow-lg"
-            >
-              {sounds.length === 0 ? (
-                <p className="px-3 py-3 font-sans text-xs text-ink-muted">Loading sounds…</p>
+            <div>
+              <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Background sound</p>
+              {presentation.locks.sound ? (
+                <LockedNote label={authorSoundLabel ? `${authorSoundLabel} (always on)` : "None"} />
               ) : (
                 <>
-                  <SoundOption
-                    label={authorSoundLabel ? `${authorSoundLabel} (author's pick)` : "Author's pick"}
-                    selected={ambientSoundId === null}
-                    onClick={() => {
-                      setAmbientSoundId(null);
-                      setSoundDropdownOpen(false);
-                    }}
-                  />
-                  {SOUND_CATEGORIES.map((cat) => {
-                    const items = sounds.filter((s) => s.category === cat.id);
-                    if (items.length === 0) return null;
-                    return (
-                      <div key={cat.id}>
-                        <p className="border-b border-t border-hairline bg-hairline/10 px-3 py-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
-                          {cat.label}
-                        </p>
-                        {items.map((s) => (
-                          <SoundOption
-                            key={s.id}
-                            label={s.label}
-                            selected={ambientSoundId === s.id}
-                            onClick={() => {
-                              setAmbientSoundId(s.id);
-                              setSoundDropdownOpen(false);
-                            }}
-                          />
-                        ))}
+                  <button
+                    onClick={() => setSoundOn((s) => !s)}
+                    className="mt-2 flex w-full items-center justify-between rounded-lg border border-hairline bg-bg px-3 py-2"
+                  >
+                    <span className="flex items-center gap-2 font-sans text-sm text-ink">
+                      {soundOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                      {ambientSoundId
+                        ? sounds.find((s) => s.id === ambientSoundId)?.label ?? "Ambient sound"
+                        : authorSoundLabel ?? "Ambient sound"}
+                    </span>
+                    <span className={`rounded-full px-2.5 py-1 font-sans text-xs font-medium ${soundOn ? "bg-accent/10 text-accent" : "bg-hairline/40 text-ink-muted"}`}>
+                      {soundOn ? "On" : "Off"}
+                    </span>
+                  </button>
+
+                  {soundOn && (
+                    <div ref={soundDropdownRef} className="relative mt-2">
+                      <div
+                        role="combobox"
+                        aria-expanded={soundDropdownOpen}
+                        aria-haspopup="listbox"
+                        tabIndex={0}
+                        onClick={() => setSoundDropdownOpen((o) => !o)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSoundDropdownOpen((o) => !o);
+                          }
+                          if (e.key === "Escape") setSoundDropdownOpen(false);
+                        }}
+                        className={`flex cursor-pointer items-center justify-between rounded-lg border bg-bg px-3 py-2 font-sans text-sm text-ink transition ${
+                          soundDropdownOpen ? "border-accent" : "border-hairline hover:border-accent/60"
+                        }`}
+                      >
+                        <span className="truncate">
+                          {ambientSoundId
+                            ? sounds.find((s) => s.id === ambientSoundId)?.label ?? "Ambient sound"
+                            : authorSoundLabel
+                            ? `${authorSoundLabel} (author's pick)`
+                            : "Author's pick"}
+                        </span>
+                        <ChevronDown
+                          size={14}
+                          className={`shrink-0 text-ink-muted transition-transform ${soundDropdownOpen ? "rotate-180" : ""}`}
+                        />
                       </div>
-                    );
-                  })}
+
+                      {soundDropdownOpen && (
+                        <div
+                          role="listbox"
+                          className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto scrollbar-thin rounded-lg border border-hairline bg-surface shadow-lg"
+                        >
+                          {sounds.length === 0 ? (
+                            <p className="px-3 py-3 font-sans text-xs text-ink-muted">Loading sounds…</p>
+                          ) : (
+                            <>
+                              <SoundOption
+                                label={authorSoundLabel ? `${authorSoundLabel} (author's pick)` : "Author's pick"}
+                                selected={ambientSoundId === null}
+                                onClick={() => {
+                                  setAmbientSoundId(null);
+                                  setSoundDropdownOpen(false);
+                                }}
+                              />
+                              {SOUND_CATEGORIES.map((cat) => {
+                                const items = sounds.filter((s) => s.category === cat.id);
+                                if (items.length === 0) return null;
+                                return (
+                                  <div key={cat.id}>
+                                    <p className="border-b border-t border-hairline bg-hairline/10 px-3 py-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+                                      {cat.label}
+                                    </p>
+                                    {items.map((s) => (
+                                      <SoundOption
+                                        key={s.id}
+                                        label={s.label}
+                                        selected={ambientSoundId === s.id}
+                                        onClick={() => {
+                                          setAmbientSoundId(s.id);
+                                          setSoundDropdownOpen(false);
+                                        }}
+                                      />
+                                    ))}
+                                  </div>
+                                );
+                              })}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
-          )}
-        </div>
-      )}
-    </>
-  )}
-</div>
 
             <div>
               <p className="font-sans text-xs font-semibold uppercase tracking-wide text-ink-muted">Page-turn sound</p>
@@ -351,3 +344,5 @@ function LockedNote({ label }: { label: string }) {
     </div>
   );
 }
+
+export const ReaderSettingsModal = React.memo(ReaderSettingsModalComponent);
