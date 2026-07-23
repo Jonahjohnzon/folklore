@@ -8,7 +8,6 @@ export const DELETE = withAuth(async (req, ctx) => {
   await connectToDatabase();
   const { commentId } = await ctx.params;
   if (!commentId) return fail("Invalid chapter id");
-
   const userId = await req.user?.sub;
   if (!userId) return fail("Sign in required");
 
@@ -19,9 +18,10 @@ export const DELETE = withAuth(async (req, ctx) => {
   if (String(comment.userId) !== String(userId)) {
     return fail("You can only delete your own comment");
   }
+  console.log(comment)
 
   comment.deleted = true;
-  comment.content = "";
+  
   await comment.save();
 
   await Chapter.findByIdAndUpdate(comment.chapterId, { $inc: { commentsCount: -1 } });

@@ -37,4 +37,13 @@ CommentSchema.index({ chapterId: 1, parentId: 1, paragraphIndex: 1, createdAt: -
 // Replies under a given parent, oldest first — reads like a thread.
 CommentSchema.index({ parentId: 1, createdAt: 1 });
 
+CommentSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    if (ret.deleted) {
+      ret.content = ""; // or "[deleted]"
+    }
+    return ret;
+  },
+});
+
 export const Comment = (models.Comment as Model<IComment>) ?? model<IComment>("Comment", CommentSchema);
