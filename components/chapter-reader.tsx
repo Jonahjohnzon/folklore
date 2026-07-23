@@ -340,8 +340,8 @@ export function ChapterReader({
     [updatePrefs, effectiveFontSize]
   );
 
-  const currentUserId = useSnapshot(store)._id;
-
+  const { _id: currentUserId, role } = useSnapshot(store);
+  const isModerator = role === "moderator" || role === "admin";
   return (
     <main ref={containerRef} className="relative bg-bg pb-24 [&:fullscreen]:overflow-y-auto [&:fullscreen]:pb-12">
       {(highlightCommentId || highlightParagraphIndex != null) ? null : <ScrollToTop />}
@@ -503,6 +503,7 @@ export function ChapterReader({
         loading={loadingComments}
         onClose={handleCloseCommentPanel}
         onCommentPosted={handleCommentPosted}
+        isModerator
       />
 
       {mounted && (
