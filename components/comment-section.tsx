@@ -33,7 +33,7 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const pageRef = useRef(1);
   const currentUserId = useSnapshot(store)._id;
-
+  const currentUserRole = useSnapshot(store).role;
   // Computed once at mount, not via effect — this is an initial value, not a sync.
   const [targetId] = useState(getTargetIdFromHash);
   const resolvedRef = useRef(false);
@@ -41,7 +41,6 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
  async function load(pageToLoad: number) {
   if (pageToLoad === 1) setLoading(true);
   else setLoadingMore(true);
-  console.log(pageToLoad)
   try {
     const { data } = await CommentService.getChapterComments(chapterId, pageToLoad, 2);
     setComments((prev) => (pageToLoad === 1 ? data.comments ?? [] : [...prev, ...(data.comments ?? [])]));
@@ -129,6 +128,7 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
             comment={comment}
             chapterId={chapterId}
             currentUserId={currentUserId}
+            currentUserRole={currentUserRole}
           />
         ))}
 

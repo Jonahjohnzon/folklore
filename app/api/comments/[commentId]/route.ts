@@ -1,8 +1,16 @@
 import { Comment } from "@/app/api/lib/models/Comment";
 import { connectToDatabase } from "@/app/api/lib/db/connect";
 import { Chapter } from "@/app/api/lib/models/Chapter";
+import { User } from "@/app/api/lib/models/User";
 import { withAuth } from "@/app/api/auth/withAuth";
 import { ok, fail } from "@/app/api/response";
+
+const MOD_ROLES = ["moderator", "admin"];
+
+async function canModerate(userId: string): Promise<boolean> {
+  const user = await User.findById(userId).select("role").lean();
+  return Boolean(user && MOD_ROLES.includes(user.role));
+}
 
 export const DELETE = withAuth(async (req, ctx) => {
   await connectToDatabase();
@@ -15,13 +23,13 @@ export const DELETE = withAuth(async (req, ctx) => {
   if (!comment || comment.deleted) {
     return fail("Comment not found");
   }
-  if (String(comment.userId) !== String(userId)) {
+
+  const isOwner = String(comment.userId) === String(userId);
+  if (!isOwner && !(await canModerate(userId))) {
     return fail("You can only delete your own comment");
   }
-  console.log(comment)
 
   comment.deleted = true;
-  
   await comment.save();
 
   await Chapter.findByIdAndUpdate(comment.chapterId, { $inc: { commentsCount: -1 } });
@@ -46,6 +54,9 @@ export const PATCH = withAuth(async (req, ctx) => {
   if (!comment || comment.deleted) {
     return fail("Comment not found");
   }
+
+  // Edit stays owner-only, even for mods/admins — moderation should remove
+  // content, not rewrite someone else's words under their name.
   if (String(comment.userId) !== String(userId)) {
     return fail("You can only edit your own comment");
   }

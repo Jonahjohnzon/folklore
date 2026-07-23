@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MessageCircle, Heart, Pencil, Trash2, X, Check } from "lucide-react";
+import { MessageCircle, Heart, Pencil, Trash2, X, Check, ShieldAlert } from "lucide-react";
 import { CommentComposer } from "@/components/comment-composer";
 import { CommentService, type CommentDTO } from "@/app/services/CommentService";
 import { formatTimeAgo } from "@/lib/format-time-ago";
@@ -25,11 +25,13 @@ export function CommentItem({
   chapterId,
   isReply = false,
   currentUserId,
+  currentUserRole,
 }: {
   comment: CommentDTO;
   chapterId: string;
   isReply?: boolean;
   currentUserId?: string | null;
+  currentUserRole?: "user" | "moderator" | "admin";
 }) {
   const [content, setContent] = useState(comment.content);
   const [edited, setEdited] = useState(comment.edited);
@@ -55,6 +57,8 @@ export function CommentItem({
   const [actionError, setActionError] = useState<string | null>(null);
 
   const isOwner = Boolean(currentUserId && comment.user?._id === currentUserId);
+  const isModerator = currentUserRole === "moderator" || currentUserRole === "admin";
+  const canDelete = isOwner || isModerator;
 
   const displayName = comment.user?.name ?? "Reader";
   const profileHref = comment.user?.name ? `/u/${comment.user.name}` : null;
@@ -124,7 +128,10 @@ export function CommentItem({
 
   async function handleDelete() {
     if (deleting) return;
-    if (!window.confirm("Delete this comment? This can't be undone.")) return;
+    const message = isOwner
+      ? "Delete this comment? This can't be undone."
+      : "Remove this comment as a moderator? This can't be undone.";
+    if (!window.confirm(message)) return;
     setDeleting(true);
     setActionError(null);
     try {
@@ -235,28 +242,33 @@ export function CommentItem({
           )}
 
           {isOwner && !editing && (
-            <>
-              <button
-                onClick={() => {
-                  setEditing(true);
-                  setEditValue(content);
-                }}
-                className="flex items-center gap-1 font-sans text-xs font-medium text-ink-muted transition hover:text-accent"
-              >
-                <Pencil size={12} /> Edit
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex items-center gap-1 font-sans text-xs font-medium text-ink-muted transition hover:text-red-600 disabled:opacity-50"
-              >
-                <Trash2 size={12} /> {deleting ? "Deleting…" : "Delete"}
-              </button>
-            </>
+            <button
+              onClick={() => {
+                setEditing(true);
+                setEditValue(content);
+              }}
+              className="flex items-center gap-1 font-sans text-xs font-medium text-ink-muted transition hover:text-accent"
+            >
+              <Pencil size={12} /> Edit
+            </button>
+          )}
+
+          {canDelete && !editing && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className={`flex items-center gap-1 font-sans text-xs font-medium transition disabled:opacity-50 ${
+                isOwner ? "text-ink-muted hover:text-red-600" : "text-amber-600 hover:text-red-600"
+              }`}
+              title={!isOwner ? "Remove as moderator" : undefined}
+            >
+              {!isOwner && <ShieldAlert size={12} />}
+              <Trash2 size={12} /> {deleting ? "Deleting…" : !isOwner ? "Remove" : "Delete"}
+            </button>
           )}
         </div>
 
-        {!editing && actionError && !editing && (
+        {!editing && actionError && (
           <p className="mt-1 font-sans text-xs text-red-600">{actionError}</p>
         )}
 
@@ -290,6 +302,7 @@ export function CommentItem({
                 chapterId={chapterId}
                 isReply
                 currentUserId={currentUserId}
+                currentUserRole={currentUserRole}
               />
             ))}
             {loadingReplies && <p className="font-sans text-xs text-ink-muted">Loading…</p>}
