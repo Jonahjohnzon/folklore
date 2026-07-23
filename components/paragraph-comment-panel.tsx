@@ -19,6 +19,7 @@ function timeAgo(dateStr: string) {
 function CommentRowComponent({
   comment,
   currentUserId,
+  isModerator = false,
   onLove,
   onReply,
   onEdit,
@@ -27,6 +28,7 @@ function CommentRowComponent({
 }: {
   comment: ParagraphCommentDTO;
   currentUserId?: string | null;
+  isModerator?: boolean;
   onLove: (id: string) => void;
   onReply: (parentId: string, body: string) => Promise<void>;
   onEdit: (id: string, body: string) => Promise<void>;
@@ -44,6 +46,7 @@ function CommentRowComponent({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const isOwn = !!currentUserId && comment.userId === currentUserId;
+  const canDelete = isOwn || isModerator;
   const wasEdited = comment.updatedAt && comment.updatedAt !== comment.createdAt;
 
   async function submitReply() {
@@ -103,25 +106,29 @@ function CommentRowComponent({
             </p>
           </div>
 
-          {isOwn && !editing && !confirmingDelete && (
+          {!editing && !confirmingDelete && (isOwn || isModerator) && (
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setEditDraft(comment.body);
-                  setEditing(true);
-                }}
-                aria-label="Edit comment"
-                className="text-ink-muted hover:text-accent"
-              >
-                <Pencil size={13} />
-              </button>
-              <button
-                onClick={() => setConfirmingDelete(true)}
-                aria-label="Delete comment"
-                className="text-ink-muted hover:text-danger"
-              >
-                <Trash2 size={13} />
-              </button>
+              {isOwn && (
+                <button
+                  onClick={() => {
+                    setEditDraft(comment.body);
+                    setEditing(true);
+                  }}
+                  aria-label="Edit comment"
+                  className="text-ink-muted hover:text-accent"
+                >
+                  <Pencil size={13} />
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={() => setConfirmingDelete(true)}
+                  aria-label={isOwn ? "Delete comment" : "Remove comment (moderator)"}
+                  className="text-ink-muted hover:text-danger"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -161,7 +168,13 @@ function CommentRowComponent({
         {confirmingDelete && (
           <div className="mt-2 flex items-center gap-2 rounded-lg bg-danger/10 px-2.5 py-1.5">
             <span className="font-sans text-xs text-ink">
-              {isReply ? "Delete this reply?" : "Delete this comment and its replies?"}
+              {isReply
+                ? isOwn
+                  ? "Delete this reply?"
+                  : "Remove this reply as a moderator?"
+                : isOwn
+                ? "Delete this comment and its replies?"
+                : "Remove this comment and its replies as a moderator?"}
             </span>
             <button
               disabled={deleting}
@@ -169,7 +182,7 @@ function CommentRowComponent({
               className="ml-auto flex items-center gap-1 font-sans text-xs font-semibold text-danger hover:opacity-80 disabled:opacity-50"
             >
               {deleting && <Loader2 size={11} className="animate-spin" />}
-              Delete
+              {isOwn ? "Delete" : "Remove"}
             </button>
             <button
               disabled={deleting}
@@ -245,6 +258,7 @@ function ThreadedCommentComponent({
   comment,
   chapterId,
   currentUserId,
+  isModerator = false,
   onLove,
   onReply,
   onEdit,
@@ -253,6 +267,7 @@ function ThreadedCommentComponent({
   comment: ParagraphCommentDTO;
   chapterId: string | null;
   currentUserId?: string | null;
+  isModerator?: boolean;
   onLove: (id: string) => void;
   onReply: (parentId: string, body: string) => Promise<void>;
   onEdit: (id: string, body: string, isReply: boolean, parentId?: string) => Promise<void>;
@@ -304,6 +319,7 @@ function ThreadedCommentComponent({
       <CommentRow
         comment={comment}
         currentUserId={currentUserId}
+        isModerator={isModerator}
         onLove={onLove}
         onReply={handleReplyHere}
         onEdit={(id, body) => onEdit(id, body, false)}
@@ -334,6 +350,7 @@ function ThreadedCommentComponent({
                 key={r.id}
                 comment={r}
                 currentUserId={currentUserId}
+                isModerator={isModerator}
                 onLove={onLove}
                 onReply={handleReplyHere}
                 onEdit={handleEditReply}
@@ -354,6 +371,7 @@ function ParagraphCommentPanelComponent({
   chapterId,
   paragraphIndex,
   currentUserId,
+  isModerator = false,
   loading = false,
   onClose,
   onCommentPosted,
@@ -362,6 +380,7 @@ function ParagraphCommentPanelComponent({
   chapterId: string | null;
   paragraphIndex: number | null;
   currentUserId?: string | null;
+  isModerator?: boolean;
   loading?: boolean;
   onClose: () => void;
   onCommentPosted?: (paragraphIndex: number) => void;
@@ -510,6 +529,7 @@ function ParagraphCommentPanelComponent({
                 comment={c}
                 chapterId={chapterId}
                 currentUserId={currentUserId}
+                isModerator={isModerator}
                 onLove={handleLove}
                 onReply={handleReply}
                 onEdit={handleEdit}
