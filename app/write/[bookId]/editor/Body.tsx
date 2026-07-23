@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { getSheetSurfaceStyle, SheetOpeningRule } from "@/lib/sheet-surface";
 import { useRef, useState, useCallback, useEffect } from "react";
