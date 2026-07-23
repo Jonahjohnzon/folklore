@@ -135,10 +135,7 @@ export const BookService = {
   restore: (bookId: string) =>
     api.post<{ success: boolean; data: { book: Book } }>(`/api/books/${bookId}/restore`, {}),
 
-  // Uploads straight to Cloudinary from the browser (signed by our backend,
-  // see lib/cloudinary-client.ts), then just persists the resulting URL —
-  // the image bytes never pass through our own server.
-// app/services/BookService.ts
+
     uploadCover: (bookId: string, file: File) => {
       const formData = new FormData();
       formData.append("cover", file);

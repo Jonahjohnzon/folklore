@@ -121,6 +121,12 @@ export const CommentService = {
   toggleCommentLike(commentId: string) {
     return api.post<{ data:{liked: boolean; likesCount: number} }>(`/api/comments/${commentId}/like`);
   },
+    updateComment(commentId: string, content: string) {
+    return api.patch<{ data: { comment: { _id: string; content: string; edited: boolean; updatedAt: string } } }>(
+      `/api/comments/${commentId}`,
+      { content }
+    );
+  },
  
   deleteComment(commentId: string) {
     return api.delete<{ success: boolean }>(`/api/comments/${commentId}`);

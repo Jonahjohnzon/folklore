@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { CommentComposer } from "@/components/comment-composer";
 import { CommentItem } from "@/components/comment-item";
 import { CommentService, type CommentDTO } from "@/app/services/CommentService";
+import { useSnapshot } from "valtio";
+import { store } from "@/app/store/userStore";
 
 // If CommentDTO nests replies under a different key, adjust here.
 function findCommentDeep(comments: CommentDTO[], id: string): boolean {
@@ -30,6 +32,8 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const pageRef = useRef(1);
+  const currentUserId = useSnapshot(store)._id;
+
   // Computed once at mount, not via effect — this is an initial value, not a sync.
   const [targetId] = useState(getTargetIdFromHash);
   const resolvedRef = useRef(false);
@@ -119,8 +123,13 @@ export function CommentSection({ chapterId }: { chapterId: string }) {
           <p className="font-sans text-sm text-ink-muted">Be the first to comment.</p>
         )}
 
-        {comments.map((comment) => (
-          <CommentItem key={comment._id} comment={comment} chapterId={chapterId} />
+         {comments.map((comment) => (
+          <CommentItem
+            key={comment._id}
+            comment={comment}
+            chapterId={chapterId}
+            currentUserId={currentUserId}
+          />
         ))}
 
         {!loading && hasMore && !locating && (
