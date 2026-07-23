@@ -503,7 +503,7 @@ export function ChapterReader({
         loading={loadingComments}
         onClose={handleCloseCommentPanel}
         onCommentPosted={handleCommentPosted}
-        isModerator
+        isModerator={isModerator}
       />
 
       {mounted && (
