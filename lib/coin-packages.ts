@@ -23,7 +23,6 @@ export function bonusPercent(pkg: CoinPackage): number {
   return pkg.coins > 0 ? Math.round((pkg.bonusCoins / pkg.coins) * 100) : 0;
 }
 
-// No price fields, no currencies, no FX — Google Play is the single source of
-// truth for what a package costs. The app reads live localized prices straight
-// from Google via useIAP's `product.displayPrice` (see CoinsScreen.tsx).
-// The web page never charges money, so it never needs a price at all.
+// No price fields here on purpose. Google Play determines the buyer's country
+// and currency automatically -- the app reads live localized prices straight
+// from useIAP's product.displayPrice / product.currency at runtime.
