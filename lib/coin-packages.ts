@@ -14,36 +14,39 @@ export interface CoinPackage {
   coins: number;
   bonusCoins: number;
   popular?: boolean;
-  // Real-money price per currency. Precomputed from mid-market FX rates as of
-  // July 2026 (1 USD ≈ 1,380 NGN / 11.19 GHS / 16.50 ZAR / 129.44 KES), then
-  // rounded to a "nice" number. NGN/GHS/KES move fast — re-check every few
-  // weeks, ideally by pulling a live rate rather than hardcoding forever.
+  playProductId: string; // must match Google Play Console product ID exactly
   prices: Record<PaystackCurrency, number>;
 }
 
 export const COIN_PACKAGES: CoinPackage[] = [
   {
     id: "starter", coins: 100, bonusCoins: 0,
+    playProductId: "coins_starter",
     prices: { NGN: 1000, GHS: 11, ZAR: 17, KES: 130, USD: 1.00 },
   },
   {
     id: "popular", coins: 550, bonusCoins: 50, popular: true,
+    playProductId: "coins_popular",
     prices: { NGN: 5500, GHS: 56, ZAR: 85, KES: 650, USD: 4.99 },
   },
   {
     id: "value", coins: 1200, bonusCoins: 150,
+    playProductId: "coins_value",
     prices: { NGN: 12000, GHS: 115, ZAR: 165, KES: 1300, USD: 9.99 },
   },
   {
     id: "plus", coins: 2500, bonusCoins: 400,
+    playProductId: "coins_plus",
     prices: { NGN: 25000, GHS: 225, ZAR: 330, KES: 2600, USD: 19.99 },
   },
   {
     id: "max", coins: 6500, bonusCoins: 1200,
+    playProductId: "coins_max",
     prices: { NGN: 65000, GHS: 560, ZAR: 825, KES: 6500, USD: 49.99 },
   },
   {
     id: "whale", coins: 14000, bonusCoins: 3000,
+    playProductId: "coins_whale",
     prices: { NGN: 140000, GHS: 1120, ZAR: 1650, KES: 13000, USD: 99.99 },
   },
 ];
